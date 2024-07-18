@@ -1,0 +1,10 @@
+.login {
+  font-size: 1rem;
+  border: none;
+  outline: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background-color: var(--primary-color);
+  color: white;
+  margin: 0 10px;
+}

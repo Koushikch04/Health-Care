@@ -220,6 +220,16 @@ body.dark .search-field input {
   color: white;
 }
 
+.signUpLink {
+  text-align: center;
+  text-decoration: none;
+  color: var(--nav-text-color);
+}
+
+.sign-up-link:hover {
+  background-color: var(--primary-color-dark);
+}
+
 @media (max-width: 790px) {
   nav .nav-bar .sidebarOpen {
     display: block;

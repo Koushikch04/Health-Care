@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Navbar.css";
 import "boxicons/css/boxicons.min.css";
+import Button from "../Button/Button";
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState(() => {
@@ -101,6 +102,14 @@ const Navbar = () => {
               </div>
             )}
           </div>
+        </div>
+        <div className="loginSignUp">
+          <Link to="/login">
+            <Button classType={"login"}>Login</Button>
+          </Link>
+          <Link to="/signup" className="signUpLink">
+            Register
+          </Link>
         </div>
       </div>
     </nav>

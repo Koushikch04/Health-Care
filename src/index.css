@@ -74,7 +74,7 @@ button:focus-visible {
 }
 
 :root {
-  --body-color: #e4e8f7;
+  /* --body-color: #e4e8f7; */
   --nav-color: rgba(255, 255, 255, 0.4);
   --nav-side: #010718;
   --nav-text-color: #000;
