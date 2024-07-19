@@ -1,0 +1,38 @@
+.results-list {
+  width: 100%;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0px 0px 8px #ddd;
+  border-radius: 10px;
+  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  position: absolute;
+  top: 2.5rem;
+  left: 0;
+  z-index: 1;
+}
+
+.search_suggestion_line {
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  text-decoration: none;
+  color: black;
+}
+.results-list::-webkit-scrollbar {
+  display: none;
+}
+
+.search_suggestion_line:hover,
+.search_suggestion_line.active {
+  background: #f0f0f0;
+}
+
+.search_suggestion_line .specialty {
+  font-size: 12px;
+  color: gray;
+}
