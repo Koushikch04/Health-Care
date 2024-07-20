@@ -1,9 +1,8 @@
 import React, { useEffect } from "react";
 import ScrollReveal from "scrollreveal";
 import "./SearchBarResults.css";
-import { Opacity } from "@mui/icons-material";
 
-const SearchBarResults = ({ searchData, selectedItem }) => {
+const SearchBarResults = ({ searchData, selectedItem, onItemClick }) => {
   useEffect(() => {
     const sr = ScrollReveal();
     sr.reveal(".results-list a", {
@@ -19,24 +18,22 @@ const SearchBarResults = ({ searchData, selectedItem }) => {
 
   return (
     <div className="results-list">
-      {searchData.length > 0 ? (
-        searchData.map((data, index) => (
-          <a
-            href={data.url}
-            key={index}
-            target="_blank"
-            className={`search_suggestion_line ${
-              selectedItem === index ? "active" : ""
-            }`}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <span>{data.name}</span>
-            <span className="specialty">{data.specialty}</span>
-          </a>
-        ))
-      ) : (
-        <div>No results found</div>
-      )}
+      {searchData.map((data, index) => (
+        <a
+          href="#"
+          key={index}
+          className={`search_suggestion_line ${
+            selectedItem === index ? "active" : ""
+          }`}
+          onClick={(e) => {
+            e.preventDefault();
+            onItemClick(data);
+          }}
+        >
+          <span>{data.name}</span>
+          <span className="specialty">{data.specialty}</span>
+        </a>
+      ))}
     </div>
   );
 };

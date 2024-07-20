@@ -1,0 +1,11 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.currrent {
+  margin-top: auto; /* Pushes pagination to the bottom */
+}

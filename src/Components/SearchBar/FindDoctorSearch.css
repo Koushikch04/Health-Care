@@ -1,5 +1,4 @@
 .input-wrapper {
-  /* width: 100%; */
   width: 400px;
   height: 3rem;
   border: none;
@@ -10,7 +9,32 @@
   display: flex;
   align-items: center;
   position: relative;
-  margin: 0 auto;
+  margin: 2px auto;
+}
+
+.availableDoctors {
+  width: 1000px;
+  border: none;
+  padding: 0 15px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin: 2px auto;
+}
+
+.image {
+  max-width: 400px;
+  max-height: 400px;
+  margin-inline: auto;
+  margin-bottom: 10px;
+}
+
+.image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
 }
 
 input {

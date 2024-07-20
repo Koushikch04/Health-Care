@@ -15,6 +15,7 @@
 }
 
 .search_suggestion_line {
+  margin: 0;
   padding: 10px;
   display: flex;
   justify-content: space-between;
