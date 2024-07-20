@@ -72,6 +72,10 @@ button:focus-visible {
   padding: 0;
   box-sizing: border-box;
 }
+@font-face {
+  font-family: "Brilliant";
+  src: url("/fonts/brilliant.woff2");
+}
 
 :root {
   --nav-color: rgba(255, 255, 255, 0.4);

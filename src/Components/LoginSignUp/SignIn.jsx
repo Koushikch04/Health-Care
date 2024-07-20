@@ -19,12 +19,12 @@ const SignIn = () => {
         <div className="form-outer">
           <form>
             <FormPage isVisible={true}>
-              <div class="field">
-                <div class="label">Email</div>
+              <div className="field">
+                <div className="label">Email</div>
                 <input type="email" />
               </div>
-              <div class="field">
-                <div class="label">Password</div>
+              <div className="field">
+                <div className="label">Password</div>
                 <input type="password" />
               </div>
               <button type="button">Submit</button>

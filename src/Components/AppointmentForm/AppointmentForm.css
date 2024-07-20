@@ -1,0 +1,77 @@
+/* AppointmentForm.css */
+.appointment-form {
+  padding: 20px;
+  text-align: center;
+}
+
+.appointment-form h2 {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.details-booking {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 20px;
+  position: relative;
+}
+
+.details-booking::before {
+  content: "";
+  grid-column: 2 / 3;
+  grid-row: 1 / -1;
+  width: 2px;
+  height: 100%;
+  background-color: #ccc;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-column: 1 / 2;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-column: 3 / 4;
+}
+
+.form-group .field {
+  width: 330px;
+  height: 45px;
+  margin: 30px 0;
+  display: flex;
+  position: relative;
+}
+
+.form-group label {
+  position: absolute;
+  top: -30px;
+  font-weight: 500;
+}
+
+.form-group .field input {
+  height: 100%;
+  width: 100%;
+  border: 1px solid lightgrey;
+  border-radius: 5px;
+  padding-left: 15px;
+  font-size: 18px;
+}
+
+.book-button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.book-button:hover {
+  background-color: #0056b3;
+}
