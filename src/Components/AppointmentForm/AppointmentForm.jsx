@@ -1,38 +1,8 @@
-import React, { useState } from "react";
+// AppointmentForm.js
+import React from "react";
 import "./AppointmentForm.css";
 
 const AppointmentForm = ({ image, name, experience, rating, profile }) => {
-  const [formData, setFormData] = useState({ name: "", phone: "" });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData({ ...formData, [id]: value });
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.name) newErrors.name = "Name is required";
-    if (!formData.phone) newErrors.phone = "Phone Number is required";
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-    } else {
-      setLoading(true);
-      // Simulate an API call
-      setTimeout(() => {
-        setLoading(false);
-        alert("Appointment booked successfully!");
-      }, 2000);
-    }
-  };
-
   return (
     <div className="appointment-form">
       <h2>Book an Appointment</h2>
@@ -48,44 +18,26 @@ const AppointmentForm = ({ image, name, experience, rating, profile }) => {
             <p>{profile}</p>
           </div>
         </div>
-        <form className="form-group" onSubmit={handleSubmit} noValidate>
+        <form className="form-group">
           <div className="field">
             <label htmlFor="name">Name:</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              aria-describedby="nameError"
-              required
-            />
-            {errors.name && (
-              <p id="nameError" className="error">
-                {errors.name}
-              </p>
-            )}
+            <input type="text" id="name" name="name" required />
           </div>
           <div className="field">
             <label htmlFor="phone">Phone Number:</label>
-            <input
-              type="text"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              aria-describedby="phoneError"
-              required
-            />
-            {errors.phone && (
-              <p id="phoneError" className="error">
-                {errors.phone}
-              </p>
-            )}
+            <input type="text" id="phone" name="phone" required />
+          </div>
+          <div className="field">
+            <label htmlFor="date">Date of Appointment:</label>
+            <input type="date" id="date" name="date" required />
+          </div>
+          <div className="field">
+            <label htmlFor="time">Book Time Slot:</label>
+            <input type="time" id="time" name="time" required />
           </div>
 
-          <button type="submit" className="book-button" disabled={loading}>
-            {loading ? "Booking..." : "Book Now"}
+          <button type="submit" className="book-button">
+            Book Now
           </button>
         </form>
       </div>

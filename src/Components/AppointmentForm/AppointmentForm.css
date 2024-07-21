@@ -1,6 +1,6 @@
 /* AppointmentForm.css */
 .appointment-form {
-  padding: 20px;
+  padding: 15px;
   text-align: center;
 }
 
@@ -38,19 +38,26 @@
   flex-direction: column;
   align-items: center;
   grid-column: 3 / 4;
+  max-height: 25vh;
+  overflow-y: auto;
+}
+
+.form-group::-webkit-scrollbar {
+  display: none;
 }
 
 .form-group .field {
-  width: 330px;
-  height: 45px;
-  margin: 30px 0;
+  width: 250px;
+  height: 30px;
+  margin: 20px 0;
   display: flex;
   position: relative;
 }
 
 .form-group label {
   position: absolute;
-  top: -30px;
+  top: -25px;
+  left: 10px;
   font-weight: 500;
 }
 
@@ -66,7 +73,7 @@
 .book-button {
   background-color: #007bff;
   color: white;
-  padding: 10px 20px;
+  padding: 10px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
