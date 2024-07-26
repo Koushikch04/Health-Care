@@ -1,16 +1,20 @@
 // AvailableDoctors.js
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DoctorList from "./DoctorList";
 import Pagination from "./Pagination";
 import "./AvailableDoctors.css";
 
 const AvailableDoctors = ({ doctorData, selectedSpecialty }) => {
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [postsPerPage] = React.useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [postsPerPage] = useState(5);
 
   const lastPostIndex = currentPage * postsPerPage;
   const firstPostIndex = lastPostIndex - postsPerPage;
   const currentPosts = doctorData.slice(firstPostIndex, lastPostIndex);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedSpecialty]);
 
   return (
     <div className="app">

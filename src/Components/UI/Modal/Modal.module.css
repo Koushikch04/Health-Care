@@ -8,6 +8,16 @@
   background-color: rgba(0, 0, 0, 0.75);
 }
 
+.closeButton {
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
+
 .modal {
   position: fixed;
   top: 15vh;

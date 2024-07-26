@@ -1,5 +1,6 @@
 import { Fragment, useEffect } from "react";
 import ReactDOM from "react-dom";
+import { Close as CloseIcon } from "@mui/icons-material";
 
 import classes from "./Modal.module.css";
 
@@ -11,7 +12,7 @@ const ModalOverlay = (props) => {
   return (
     <div className={classes.modal}>
       <button className={classes.closeButton} onClick={props.onClose}>
-        &times;
+        <CloseIcon />
       </button>
       <div className={classes.content}>{props.children}</div>
     </div>

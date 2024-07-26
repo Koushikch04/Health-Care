@@ -1,16 +1,9 @@
-// src/AppointmentForm/AppointmentForm.js
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import "./AppointmentForm.css";
-import Notification from "../UI/Notification/Notification";
+import Toast from "../UI/Notification/Toast/Toast";
+import ToastContainer from "../UI/Notification/ToastContainer/ToastContainer";
 
-const AppointmentForm = ({
-  image,
-  name,
-  experience,
-  rating,
-  profile,
-  onBooking,
-}) => {
+const AppointmentForm = ({ image, name, experience, rating, profile }) => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -18,7 +11,8 @@ const AppointmentForm = ({
     time: "",
   });
 
-  const [notificationMessage, setNotificationMessage] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToast, setShowToast] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -30,21 +24,13 @@ const AppointmentForm = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setNotificationMessage("Appointment booked successfully!");
-  };
-  useEffect(() => {
-    if (notificationMessage) {
-      console.log(notificationMessage);
-      alert(notificationMessage);
-      // Clear notification after some time
-      const timer = setTimeout(() => {
-        setNotificationMessage("");
-      }, 3000);
+    setToastMessage("Appointment booked successfully!");
+    setShowToast(true);
 
-      // Cleanup timer on component unmount
-      return () => clearTimeout(timer);
-    }
-  }, [notificationMessage]);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000); // Auto-dismiss after 3 seconds
+  };
 
   return (
     <div className="appointment-form">
@@ -112,7 +98,15 @@ const AppointmentForm = ({
           </button>
         </form>
       </div>
-      {notificationMessage && <Notification message={notificationMessage} />}
+      {showToast && (
+        <ToastContainer>
+          <Toast
+            title={"success"}
+            text={toastMessage}
+            onClose={() => setShowToast(false)}
+          />
+        </ToastContainer>
+      )}
     </div>
   );
 };
