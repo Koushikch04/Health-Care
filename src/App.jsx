@@ -7,8 +7,11 @@ import LandingPage from "./Components/LandingPage/LandingPage";
 import SignUp from "./Components/LoginSignUp/SignUp";
 import SignIn from "./Components/LoginSignUp/SignIn";
 import FindDoctorSearch from "./Components/SearchBar/FindDoctorSearch";
+import useAlert from "./hooks/useAlert";
 
 function App() {
+  const alert = useAlert();
+
   return (
     <BrowserRouter>
       {/* // <NavBar /> */}

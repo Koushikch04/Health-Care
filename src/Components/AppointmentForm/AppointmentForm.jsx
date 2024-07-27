@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import "./AppointmentForm.css";
-import Toast from "../UI/Notification/Toast/Toast";
-import ToastContainer from "../UI/Notification/ToastContainer/ToastContainer";
+import Toast from "../UI/Notification/Alert/Alert";
+import ToastContainer from "../UI/Notification/AlertsContainer/AlertsContainer";
+import alertContext from "../../store/alert-context";
+import useAlert from "../../hooks/useAlert";
 
 const AppointmentForm = ({ image, name, experience, rating, profile }) => {
   const [formData, setFormData] = useState({
@@ -10,6 +12,8 @@ const AppointmentForm = ({ image, name, experience, rating, profile }) => {
     date: "",
     time: "",
   });
+
+  const alert = useAlert();
 
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
@@ -24,7 +28,10 @@ const AppointmentForm = ({ image, name, experience, rating, profile }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    alert.success("Appointment booked successfully!");
+
     setToastMessage("Appointment booked successfully!");
+
     setShowToast(true);
 
     setTimeout(() => {
@@ -98,15 +105,15 @@ const AppointmentForm = ({ image, name, experience, rating, profile }) => {
           </button>
         </form>
       </div>
-      {showToast && (
-        <ToastContainer>
+      {/* {showToast && (
+        <ToastContainer toasts={[]}>
           <Toast
             title={"success"}
             text={toastMessage}
             onClose={() => setShowToast(false)}
           />
         </ToastContainer>
-      )}
+      )} */}
     </div>
   );
 };
