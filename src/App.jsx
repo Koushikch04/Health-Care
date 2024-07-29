@@ -3,23 +3,24 @@ import { useRef, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 
 import LandingPage from "./Components/LandingPage/LandingPage";
-// import NavBar from "./Components/Navbar/Navbar";
+import NavBar from "./Components/Navbar/Navbar";
 import SignUp from "./Components/LoginSignUp/SignUp";
 import SignIn from "./Components/LoginSignUp/SignIn";
 import FindDoctorSearch from "./Components/SearchBar/FindDoctorSearch";
 import useAlert from "./hooks/useAlert";
+import Review from "./Components/Reviews/Review";
 
 function App() {
   const alert = useAlert();
 
   return (
     <BrowserRouter>
-      {/* // <NavBar /> */}
+      {/* <NavBar /> */}
       {/* <LandingPage /> */}
       {/* <SignUp /> */}
       {/* <SignIn /> */}
-      <FindDoctorSearch />
-      {/* <CryptoPagination /> */}
+      {/* <FindDoctorSearch /> */}
+      <Review />
     </BrowserRouter>
   );
 }

@@ -39,6 +39,7 @@ const DoctorCard = ({ image, name, experience, rating, profile }) => {
             experience={experience}
             rating={rating}
             profile={profile}
+            onSubmit={closeModalHandler}
           />
         </Modal>
       )}
