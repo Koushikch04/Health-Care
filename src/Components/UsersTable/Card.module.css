@@ -1,0 +1,55 @@
+.card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 30px; /* Increased padding */
+  width: 360px; /* Increased width */
+  height: 200px; /* Increased height */
+  text-align: center;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-5px);
+}
+
+.cardHeader {
+  margin-bottom: 20px; /* Increased margin */
+}
+
+.cardTitle {
+  font-size: 1.6em; /* Increased font size */
+  margin-bottom: 10px; /* Increased margin */
+  color: #333;
+}
+
+.cardSpeciality {
+  font-size: 1.2em; /* Increased font size */
+  color: #666;
+}
+
+.cardBody {
+  font-size: 1.2em; /* Increased font size */
+  color: #555;
+}
+
+.cardBody p {
+  margin: 15px 0; /* Increased margin */
+}
+
+.cardBody button {
+  background-color: #6b5b95;
+  color: white;
+  border: none;
+  padding: 12px 20px; /* Increased padding */
+  cursor: pointer;
+  border-radius: 30px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.cardBody button:hover {
+  background-color: #5a4b8b;
+  transform: scale(1.05);
+}

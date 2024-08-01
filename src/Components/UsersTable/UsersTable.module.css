@@ -1,0 +1,40 @@
+.tableContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  max-width: 1200px; /* Limit the maximum width */
+  padding: 20px;
+}
+
+.searchBar {
+  margin-bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.cardContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px; /* Fixed width */
+  min-height: 420px; /* Set a minimum height */
+  margin-bottom: 20px; /* Space for pagination */
+}
+
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}

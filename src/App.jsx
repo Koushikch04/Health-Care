@@ -15,7 +15,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* <NavBar /> */}
+      <NavBar />
       {/* <LandingPage /> */}
       {/* <SignUp /> */}
       {/* <SignIn /> */}
