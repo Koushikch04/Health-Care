@@ -1,6 +1,6 @@
 import { useReducer } from "react";
 import alertContext from "./alert-context";
-import ToastContainer from "../Components/UI/Notification/AlertsContainer/AlertsContainer";
+import ToastContainer from "../components/UI/Notification/AlertsContainer/AlertsContainer";
 const defaultAlertState = {
   alerts: [],
 };

@@ -1,26 +1,29 @@
 import { useRef, useState } from "react";
-// import "./App.css";
+import "./App.css";
 import { BrowserRouter } from "react-router-dom";
 
-import LandingPage from "./Components/LandingPage/LandingPage";
-import NavBar from "./Components/Navbar/Navbar";
-import SignUp from "./Components/LoginSignUp/SignUp";
-import SignIn from "./Components/LoginSignUp/SignIn";
-import FindDoctorSearch from "./Components/SearchBar/FindDoctorSearch";
+import LandingPage from "./components/LandingPage/LandingPage";
+import NavBar from "./components/Navbar/Navbar";
+import SignUp from "./components/LoginSignUp/SignUp";
+import SignIn from "./components/LoginSignUp/SignIn";
+import FindDoctorSearch from "./components/SearchBar/FindDoctorSearch";
 import useAlert from "./hooks/useAlert";
-import Review from "./Components/Reviews/Review";
+import Review from "./components/Reviews/Review";
+import Profile from "./components/Profile/Profile";
 
 function App() {
   const alert = useAlert();
 
   return (
     <BrowserRouter>
-      <NavBar />
+      {/* <NavBar /> */}
       {/* <LandingPage /> */}
       {/* <SignUp /> */}
       {/* <SignIn /> */}
       {/* <FindDoctorSearch /> */}
-      <Review />
+      {/* <ProfileForm /> */}
+      {/* <Review /> */}
+      <Profile />
     </BrowserRouter>
   );
 }

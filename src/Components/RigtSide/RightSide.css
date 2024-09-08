@@ -1,0 +1,36 @@
+.RightSide::before {
+  content: "";
+  position: absolute;
+  top: 6rem;
+  right: 22rem;
+  width: 2px;
+  height: 80%;
+  background-color: var(--primary-color-dark);
+  z-index: 1; /* Ensure it's above the background but below other content */
+}
+
+.RightSide {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+  justify-content: space-evenly;
+}
+
+@media screen and (max-width: 1200px) {
+  .RightSide {
+    justify-content: flex-start;
+    margin-top: 3rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .RightSide {
+    width: 100%;
+    margin-top: 0;
+  }
+  .RightSide > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
