@@ -2,7 +2,7 @@ import "./Profile.css";
 import Sidebar from "../SideBar/Sidebar";
 import MainDash from "../MainDash/MainDash";
 import RightSide from "../RigtSide/RightSide";
-import ProfileForm from "../../Pages/ProfileForm";
+import ProfileDetails from "../../Pages/ProfileDetails";
 
 function Profile() {
   return (
@@ -10,7 +10,7 @@ function Profile() {
       <div className="ProfileClass">
         <Sidebar />
         {/* <MainDash /> */}
-        <ProfileForm />
+        <ProfileDetails />
         <RightSide />
       </div>
     </div>

@@ -66,7 +66,7 @@
 }
 
 .active {
-  background: var(--primary-color-dark); /* Updated color */
+  background: var(--primary-color-dark);
   margin-left: 0;
 }
 
