@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import "./ProfileDetails.css";
 const ProfileDetails = () => {
-  const [profileImage, setProfileImage] = useState();
-  ("https://bootdey.com/img/Content/avatar/avatar1.png");
+  const [profileImage, setProfileImage] = useState(
+    "https://bootdey.com/img/Content/avatar/avatar1.png"
+  );
   const [username, setUsername] = useState("nmaxwell");
   const [name, setName] = useState("Nelle Maxwell");
   const [email, setEmail] = useState("nmaxwell@mail.com");
@@ -65,7 +66,11 @@ const ProfileDetails = () => {
               />
             </label>
             &nbsp;
-            <button type="button" className="btn" onClick={handleReset}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleReset}
+            >
               Reset
             </button>
             <div className="text-light small mt-1">

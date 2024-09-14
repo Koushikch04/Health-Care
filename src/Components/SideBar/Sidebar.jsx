@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./Sidebar.css";
+import classes from "./Sidebar.module.css";
 import Logo from "../../imgs/logo.png";
 import { UilSignOutAlt } from "@iconscout/react-unicons";
 import { SidebarData } from "../../Data/Data";
@@ -22,30 +22,34 @@ const Sidebar = () => {
   return (
     <>
       <div
-        className="bars"
+        className={classes.bars}
         style={expanded ? { left: "60%" } : { left: "5%" }}
         onClick={() => setExpaned(!expanded)}
       >
         <UilBars />
       </div>
       <motion.div
-        className="sidebar"
+        className={classes.sidebar}
         variants={sidebarVariants}
         animate={window.innerWidth <= 768 ? `${expanded}` : ""}
       >
         {/* logo */}
-        <div className="logo">
+        <div className={classes.logo}>
           {/* <img src={Logo} alt="logo" /> */}
           <span>
             <span>Health</span>Care
           </span>
         </div>
 
-        <div className="menu">
+        <div className={classes.menu}>
           {SidebarData.map((item, index) => {
             return (
               <div
-                className={selected === index ? "menuItem active" : "menuItem"}
+                className={
+                  selected === index
+                    ? `${classes.menuItem} ${classes.active}`
+                    : classes.menuItem
+                }
                 key={index}
                 onClick={() => setSelected(index)}
               >
@@ -55,7 +59,7 @@ const Sidebar = () => {
             );
           })}
           {/* signoutIcon */}
-          <div className="menuItem">
+          <div className={classes.menuItem}>
             <UilSignOutAlt />
           </div>
         </div>
