@@ -1,11 +1,13 @@
 import React from "react";
 import Navbar from "../Navbar/Navbar";
 
-function Layout(props) {
+function Layout({ navbarPresent = false, children }) {
   return (
     <>
-      <Navbar />
-      <main style={{ paddingTop: "70px" }}>{props.children}</main>
+      {navbarPresent && <Navbar />}
+      <main style={{ paddingTop: navbarPresent ? "70px" : "0px" }}>
+        {children}
+      </main>
     </>
   );
 }
