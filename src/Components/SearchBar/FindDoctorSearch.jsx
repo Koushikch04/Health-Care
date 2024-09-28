@@ -16,49 +16,49 @@ const specialties = [
         name: "Dr. Alice Johnson",
         experience: 12,
         rating: 4.7,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Specializes in cosmetic and restorative dentistry.",
       },
       {
         name: "Dr. Bob Smith",
         experience: 8,
         rating: 4.5,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Expert in pediatric and general dentistry.",
       },
       {
         name: "Dr. Bob Smith",
         experience: 8,
         rating: 4.5,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Expert in pediatric and general dentistry.",
       },
       {
         name: "Dr. Bob Smith",
         experience: 8,
         rating: 4.5,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Expert in pediatric and general dentistry.",
       },
       {
         name: "Dr. Bob Smith",
         experience: 8,
         rating: 4.5,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Expert in pediatric and general dentistry.",
       },
       {
         name: "Dr. Bob Smith",
         experience: 8,
         rating: 4.5,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Expert in pediatric and general dentistry.",
       },
       {
         name: "Dr. Bob Smith",
         experience: 8,
         rating: 4.5,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Expert in pediatric and general dentistry.",
       },
     ],
@@ -72,7 +72,7 @@ const specialties = [
         name: "Dr. Carol Brown",
         experience: 15,
         rating: 4.9,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile:
           "Experienced in high-risk pregnancies and gynecological surgeries.",
       },
@@ -80,7 +80,7 @@ const specialties = [
         name: "Dr. David Wilson",
         experience: 10,
         rating: 4.6,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Focuses on women's reproductive health and menopause.",
       },
     ],
@@ -94,7 +94,7 @@ const specialties = [
         name: "Dr. Emily Davis",
         experience: 7,
         rating: 4.3,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile:
           "Provides comprehensive care and treatment for common illnesses.",
       },
@@ -102,7 +102,7 @@ const specialties = [
         name: "Dr. Frank Miller",
         experience: 9,
         rating: 4.4,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile:
           "Specializes in preventive medicine and chronic disease management.",
       },
@@ -117,14 +117,14 @@ const specialties = [
         name: "Dr. Grace Lee",
         experience: 11,
         rating: 4.8,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Expert in skin conditions and cosmetic dermatology.",
       },
       {
         name: "Dr. Henry Martinez",
         experience: 6,
         rating: 4.2,
-        image: "/Images/DoctorCard/doctor.png",
+        image: "/Images/Appointment/DoctorCard/doctor.png",
         profile: "Specializes in acne treatment and skin cancer screenings.",
       },
     ],
@@ -213,7 +213,7 @@ const FindDoctorSearch = () => {
     <div className="doctorSearch">
       {showImage && (
         <div className="image">
-          <img src="/Images/LandingPage/single_doctor.jpg" alt="Banner" />
+          <img src="/Images/Appointment/doctorSearch.png" alt="Banner" />
         </div>
       )}
       <div

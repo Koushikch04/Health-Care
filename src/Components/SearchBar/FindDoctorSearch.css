@@ -9,7 +9,9 @@
   display: flex;
   align-items: center;
   position: relative;
-  margin: 10px auto;
+  margin-top: 3rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .availableDoctors {
@@ -28,7 +30,7 @@
   max-width: 300px;
   max-height: 300px;
   margin-inline: auto;
-  /* margin-bottom: 10px; */
+  margin-top: 3rem;
 }
 
 .image img {
