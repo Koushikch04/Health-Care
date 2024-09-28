@@ -36,7 +36,7 @@
   position: absolute;
   width: 500px;
   height: 500px;
-  background-color: var(--primary-color);
+  background-color: #7b98dc;
   border-radius: 50%;
   z-index: 0;
   left: 50%;
@@ -49,10 +49,11 @@
 }
 
 .doctor__content .section__header {
-  margin-bottom: 1rem;
+  margin-bottom: 5rem;
 }
 
 .doctor__list {
+  margin-top: 2rem;
   display: grid;
   gap: 0.5rem;
 }
@@ -69,12 +70,7 @@
   font-size: 1.5rem;
 }
 
-.doctor__list li:nth-child(1) span {
+.doctor__list span {
+  margin-top: 0.5rem;
   color: #62b15c;
-}
-.doctor__list li:nth-child(2) span {
-  color: #ff3e67;
-}
-.doctor__list li:nth-child(3) span {
-  color: #185adb;
 }

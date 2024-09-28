@@ -67,3 +67,29 @@
 .banner__card a:hover span {
   transform: translateX(10px);
 }
+
+@media (min-width: 540px) {
+  .special__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .banner__container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer__container {
+    grid-template-columns: 3fr 2fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .banner__container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .banner__container {
+    gap: 2rem;
+  }
+}

@@ -1,0 +1,126 @@
+/* .special__container :is(.section__header, .section__description) {
+  max-width: 600px;
+  margin-inline: auto;
+} */
+
+.special__grid {
+  margin-top: 4rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.doctor__image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.special__card {
+  position: relative;
+  padding: 1rem;
+  text-align: center;
+  border-radius: 2rem;
+  transition: 0.3s;
+}
+
+.special__card:hover {
+  box-shadow: 10px 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.special__card img {
+  max-width: 200px;
+  margin-inline: auto;
+  margin-bottom: 1rem;
+  filter: drop-shadow(10px 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+.special__card h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.special__card p {
+  margin-bottom: 2.5rem;
+  color: var(--text-light);
+  line-height: 1.75rem;
+}
+
+.description {
+  margin: 0 284px;
+}
+
+.special__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  border: 1px solid #ddd;
+  max-width: 350px;
+  margin: 10px;
+}
+
+.special__footer {
+  position: absolute;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  bottom: 10px;
+}
+
+.special__ratings {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: goldenrod;
+}
+
+.special__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.special__footer .price {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.booking__btn {
+  color: var(--primary-color);
+  border: 1px solid rgba(24, 28, 33, 0.1);
+  background: rgba(0, 0, 0, 0);
+  padding: 10px 10px;
+  border-radius: 4px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+@media (min-width: 540px) {
+  .special__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .special__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .special__grid {
+    gap: 2rem;
+  }
+
+  .special__card {
+    padding: 2rem;
+    border-radius: 3rem;
+  }
+}

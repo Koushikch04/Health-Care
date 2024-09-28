@@ -1,23 +1,27 @@
 import React from "react";
-import "./styles/Footer.css";
+import styles from "./styles/Footer.module.css";
+import landingPageStyles from "./styles/LandingPage.module.css";
+
 const Footer = () => (
-  <footer className="footer" id="contact">
-    <div className="section__container footer__container">
-      <div className="footer__col">
-        <div className="logo footer__logo">
+  <footer className={`${styles.footer}`} id="contact">
+    <div
+      className={`${landingPageStyles.section__container} ${styles.footer__container}`}
+    >
+      <div className={`${styles.footer__col}`}>
+        <div className={`${styles.logo} ${styles.footer__logo}`}>
           <a href="#">
             Health<span>Care</span>
           </a>
         </div>
-        <p className="section__description">
+        <p className={`${styles.section__description}`}>
           Join HealthCare for a journey towards better health, where every
           appointment is a step towards wellness and every blog post brings
           valuable insights.
         </p>
       </div>
-      <div className="footer__col">
+      <div className={`${styles.footer__col}`}>
         <h4>Services</h4>
-        <ul className="footer__links">
+        <ul className={`${styles.footer__links}`}>
           <li>
             <a href="#">Appointments</a>
           </li>
@@ -35,9 +39,9 @@ const Footer = () => (
           </li>
         </ul>
       </div>
-      <div className="footer__col">
+      <div className={`${styles.footer__col}`}>
         <h4>Information</h4>
-        <ul className="footer__links">
+        <ul className={`${styles.footer__links}`}>
           <li>
             <a href="#">About Us</a>
           </li>
@@ -52,9 +56,9 @@ const Footer = () => (
           </li>
         </ul>
       </div>
-      <div className="footer__col">
+      <div className={`${styles.footer__col}`}>
         <h4>Company</h4>
-        <ul className="footer__links">
+        <ul className={`${styles.footer__links}`}>
           <li>
             <a href="#">Our Story</a>
           </li>
@@ -73,7 +77,7 @@ const Footer = () => (
         </ul>
       </div>
     </div>
-    <div className="footer__bar">
+    <div className={`${styles.footer__bar}`}>
       Copyright © 2024 HealthCare. All rights reserved.
     </div>
   </footer>

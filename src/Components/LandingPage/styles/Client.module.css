@@ -24,6 +24,14 @@
   width: 100%;
 }
 
+.heading {
+  margin: 0 284px 16px;
+}
+
+p.description {
+  margin: 0 284px;
+}
+
 .client__card {
   text-align: center;
 }
@@ -56,4 +64,10 @@
 
 .swiper-pagination-bullet-active {
   background-color: var(--primary-color);
+}
+
+@media (min-width: 768px) {
+  .client__swiper {
+    padding: 3rem 2rem;
+  }
 }

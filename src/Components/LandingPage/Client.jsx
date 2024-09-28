@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import Swiper from "swiper";
-import "./styles/Client.css";
-import "./styles/LandingPage.css";
+import styles from "./styles/Client.module.css";
+import landingPageStyles from "./styles/LandingPage.module.css";
 
 import "swiper/swiper-bundle.css";
 
@@ -16,18 +16,25 @@ const Client = () => {
   }, []);
 
   return (
-    <section className="section__container client__container" id="client">
-      <h2 className="section__header">What Our Patients Are Saying</h2>
-      <p className="section__description">
+    <section
+      className={`${landingPageStyles.section__container} ${styles.client__container}}`}
+      id="client"
+    >
+      <h2 className={`${landingPageStyles.section__header} ${styles.heading}`}>
+        What Our Patients Are Saying
+      </h2>
+      <p
+        className={`${landingPageStyles.section__description} ${styles.description}`}
+      >
         Hear directly from our patients about their experiences with our
         healthcare services. Their testimonials highlight our commitment to
         compassionate care and effective treatment.
       </p>
-      <div className="client__swiper">
+      <div className={`${styles.client__swiper}`}>
         <div className="swiper">
           <div className="swiper-wrapper">
             <div className="swiper-slide">
-              <div className="client__card">
+              <div className={`${styles.client__card}`}>
                 <p>
                   The staff at HealthCare Clinic made my visit so comfortable
                   and stress-free. The doctor was thorough and took the time to
@@ -39,7 +46,7 @@ const Client = () => {
               </div>
             </div>
             <div className="swiper-slide">
-              <div className="client__card">
+              <div className={`${styles.client__card}`}>
                 <p>
                   I had a wonderful experience with the telemedicine service. I
                   was able to consult with a specialist from home and received
@@ -51,7 +58,7 @@ const Client = () => {
               </div>
             </div>
             <div className="swiper-slide">
-              <div className="client__card">
+              <div className={`${styles.client__card}`}>
                 <p>
                   The general check-up was quick and efficient. The clinic is
                   well-organized, and the medical staff are very professional.

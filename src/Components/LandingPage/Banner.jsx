@@ -1,78 +1,67 @@
 import React from "react";
-import "./styles/Banner.css";
-import "./styles/LandingPage.css";
+import styles from "./styles/Banner.module.css";
+import landingPageStyles from "./styles/LandingPage.module.css";
 
-const Banner = () => (
-  <section className="section__container banner__container">
-    <div className="banner__card">
-      <span className="banner__icon">
-        <i className="ri-bowl-fill"></i>
-      </span>
-      <h4>Instant Consultation</h4>
-      <p>
-        Seamlessly place your food orders online with just a few clicks. Enjoy
-        convenience and efficiency as you select from our diverse menu of
-        delectable dishes.
-      </p>
-      <a href="#">
-        Read more
-        <span>
-          <i className="ri-arrow-right-line"></i>
-        </span>
-      </a>
-    </div>
-    <div className="banner__card">
-      <span className="banner__icon">
-        <i className="ri-truck-fill"></i>
-      </span>
-      <h4>Book an Appointment</h4>
-      <p>
-        Customize your dining experience by choosing from a tantalizing array of
-        options. For savory, sweet, or in between craving, find the perfect meal
-        to satisfy your appetite.
-      </p>
-      <a href="#">
-        Read more
-        <span>
-          <i className="ri-arrow-right-line"></i>
-        </span>
-      </a>
-    </div>
-    <div className="banner__card">
-      <span className="banner__icon">
-        <i className="ri-star-smile-fill"></i>
-      </span>
-      <h4>Self Checkup</h4>
-      <p>
-        Sit back, relax, and savor the flavors as your meticulously prepared
-        meal arrives. Delight in the deliciousness of every bite, knowing that
-        your satisfaction is our top priority.
-      </p>
-      <a href="#">
-        Read more
-        <span>
-          <i className="ri-arrow-right-line"></i>
-        </span>
-      </a>
-    </div>
-    <div className="banner__card">
-      <span className="banner__icon">
-        <i className="ri-star-smile-fill"></i>
-      </span>
-      <h4>Healthtips and guidance</h4>
-      <p>
-        Sit back, relax, and savor the flavors as your meticulously prepared
-        meal arrives. Delight in the deliciousness of every bite, knowing that
-        your satisfaction is our top priority.
-      </p>
-      <a href="#">
-        Read more
-        <span>
-          <i className="ri-arrow-right-line"></i>
-        </span>
-      </a>
-    </div>
-  </section>
-);
+import BannerCard from "./BannerCard";
+import {
+  RiHeartFill,
+  RiCalendarFill,
+  RiStethoscopeFill,
+  RiLightbulbFill,
+} from "react-icons/ri";
+
+const Banner = () => {
+  const cards = [
+    {
+      Icon: RiHeartFill,
+      title: "Instant Consultation",
+      description:
+        "Connect with our experienced doctors through instant online consultations. Get the medical advice you need from the comfort of your home.",
+      link: "/appointments",
+      iconBgColor: "#62b15c",
+    },
+    {
+      Icon: RiCalendarFill,
+      title: "Book an Appointment",
+      description:
+        "Schedule appointments with our healthcare professionals easily. Choose a time that works best for you and receive quality care.",
+      link: "/appointments",
+      iconBgColor: "#ff3e67",
+    },
+    {
+      Icon: RiStethoscopeFill,
+      title: "Self Checkup",
+      description:
+        "Utilize our online self-checkup tools to assess your health conditions. Understand your symptoms and get recommendations.",
+      link: "#",
+      iconBgColor: "#185adb",
+    },
+    {
+      Icon: RiLightbulbFill,
+      title: "Health Tips and Guidance",
+      description:
+        "Access expert health tips and guidance tailored to your needs. Stay informed with articles and resources to improve your well-being.",
+      link: "#",
+      iconBgColor: "#ff9900",
+    },
+  ];
+
+  return (
+    <section
+      className={`${landingPageStyles.section__container} ${styles.banner__container}`}
+    >
+      {cards.map((card, index) => (
+        <BannerCard
+          key={index}
+          Icon={card.Icon}
+          title={card.title}
+          description={card.description}
+          link={card.link}
+          iconBgColor={card.iconBgColor}
+        />
+      ))}
+    </section>
+  );
+};
 
 export default Banner;

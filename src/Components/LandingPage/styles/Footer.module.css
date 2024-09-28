@@ -13,6 +13,8 @@
 
 .footer__col .section__description {
   text-align: left;
+  color: var(--text-light);
+  line-height: 1.75rem;
 }
 
 .footer__col h4 {
@@ -40,4 +42,16 @@
   font-size: 0.9rem;
   color: var(--text-light);
   text-align: center;
+}
+
+@media (min-width: 540px) {
+  .footer__container {
+    grid-template-columns: 3fr 2fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .footer__container {
+    grid-template-columns: 2fr repeat(3, 1fr);
+  }
 }

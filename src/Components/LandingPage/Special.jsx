@@ -1,104 +1,56 @@
 import React from "react";
-import "./styles/Special.css";
-import "./styles/LandingPage.css";
+import styles from "./styles/Special.module.css";
+import landingPageStyles from "./styles/LandingPage.module.css";
+import SpecialCard from "./SpecialCard";
+
+const doctors = [
+  {
+    image: "/Images/LandingPage/female_doctor.png",
+    name: "Dr. Sarah Johnson",
+    experience: "20 years of experience",
+    description:
+      "A leading cardiologist known for her groundbreaking work in heart disease prevention and treatment, offering personalized care to each patient.",
+  },
+  {
+    image: "/Images/LandingPage/male_doctor.png",
+    name: "Dr. James Lee",
+    experience: "15 years of experience",
+    description:
+      "An expert in pediatric care, Dr. Lee is known for his gentle approach and dedication to the health and well-being of children.",
+  },
+  {
+    image: "/Images/LandingPage/female_doctor.png",
+    name: "Dr. Maria Gonzalez",
+    experience: "18 years of experience",
+    description:
+      "Specializing in neurology, Dr. Gonzalez has a reputation for her innovative treatments and compassionate care for patients with neurological disorders.",
+  },
+];
 
 const Special = () => (
-  <section className="section__container special__container" id="special">
-    <h2 className="section__header">Our Famous Doctors</h2>
-    <p className="section__description">
+  <section
+    className={`${landingPageStyles.section__container} ${styles.special__container}`}
+    id="special"
+  >
+    <h2 className={`${landingPageStyles.section__header}`}>
+      Our Famous Doctors
+    </h2>
+    <p
+      className={`${landingPageStyles.section__description} ${styles.description}`}
+    >
       Meet our world-renowned doctors, each dedicated to providing exceptional
       healthcare with a blend of innovation and compassionate care.
     </p>
-    <div className="special__grid">
-      <div className="special__card">
-        <img src="assets/doctor-1.png" alt="doctor" />
-        <h4>Dr. Sarah Johnson</h4>
-        <p>
-          A leading cardiologist known for her groundbreaking work in heart
-          disease prevention and treatment, offering personalized care to each
-          patient.
-        </p>
-        <div className="special__ratings">
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-        </div>
-        <div className="special__footer">
-          <p className="experience">20 years of experience</p>
-          <button className="btn">Book Appointment</button>
-        </div>
-      </div>
-      <div className="special__card">
-        <img src="assets/doctor-2.png" alt="doctor" />
-        <h4>Dr. James Lee</h4>
-        <p>
-          An expert in pediatric care, Dr. Lee is known for his gentle approach
-          and dedication to the health and well-being of children.
-        </p>
-        <div className="special__ratings">
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-        </div>
-        <div className="special__footer">
-          <p className="experience">15 years of experience</p>
-          <button className="btn">Book Appointment</button>
-        </div>
-      </div>
-      <div className="special__card">
-        <img src="assets/doctor-3.png" alt="doctor" />
-        <h4>Dr. Maria Gonzalez</h4>
-        <p>
-          Specializing in neurology, Dr. Gonzalez has a reputation for her
-          innovative treatments and compassionate care for patients with
-          neurological disorders.
-        </p>
-        <div className="special__ratings">
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-          <span>
-            <i className="ri-star-fill"></i>
-          </span>
-        </div>
-        <div className="special__footer">
-          <p className="experience">18 years of experience</p>
-          <button className="btn">Book Appointment</button>
-        </div>
-      </div>
+    <div className={`${styles.special__grid}`}>
+      {doctors.map((doctor, index) => (
+        <SpecialCard
+          key={index}
+          image={doctor.image}
+          name={doctor.name}
+          experience={doctor.experience}
+          description={doctor.description}
+        />
+      ))}
     </div>
   </section>
 );

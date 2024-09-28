@@ -72,10 +72,6 @@ button:focus-visible {
   padding: 0;
   box-sizing: border-box;
 }
-@font-face {
-  font-family: "Brilliant";
-  src: url("/fonts/brilliant.woff2");
-}
 
 :root {
   --nav-color: rgba(255, 255, 255, 0.4);
@@ -90,7 +86,7 @@ button:focus-visible {
   --primary-color-dark: #2c50a1;
   --text-dark: #18181b;
   --text-light: #6b7280;
-  --white: #ffffff;
+  --white: #fff;
   --max-width: 1200px;
   /* Landing page end */
 }
