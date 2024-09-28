@@ -1,10 +1,10 @@
 import React from "react";
 import DoctorCard from "./DoctorCard";
-import "./DoctorList.css";
+import styles from "./DoctorList.module.css";
 
 const DoctorList = ({ doctorData }) => {
   return (
-    <div className="doctor_list">
+    <div className={styles.doctor_list}>
       {doctorData.map((doctor, index) => {
         return (
           <DoctorCard

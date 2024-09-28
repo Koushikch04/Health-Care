@@ -1,5 +1,5 @@
 import React from "react";
-import "./Pagination.css";
+import styles from "./Pagination.module.css";
 
 const Pagination = ({
   totalPosts,
@@ -41,18 +41,18 @@ const Pagination = ({
           <>
             <span
               onClick={() => handlePageChange(1)}
-              className="pagination-item"
+              className={styles.pagination_item}
             >
               1
             </span>
-            <span className="pagination-ellipsis">...</span>
+            <span className={styles.pagination_ellipsis}>...</span>
           </>
         )}
         {displayedPageNumbers.map((number) => (
           <span
             key={number}
             onClick={() => handlePageChange(number)}
-            className={`pagination-item ${
+            className={`${styles.pagination_item} ${
               number === currentPage ? "active" : ""
             }`}
           >
@@ -61,10 +61,10 @@ const Pagination = ({
         ))}
         {endPage < pageNumbers.length - 1 && (
           <>
-            <span className="pagination-ellipsis">...</span>
+            <span className={styles.pagination_ellipsis}>...</span>
             <span
               onClick={() => handlePageChange(pageNumbers.length)}
-              className="pagination-item"
+              className={styles.pagination_item}
             >
               {pageNumbers.length}
             </span>
@@ -75,11 +75,11 @@ const Pagination = ({
   };
 
   return (
-    <div className="pagination">
+    <div className={styles.pagination}>
       <button
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="pagination-button"
+        className={styles.pagination_button}
       >
         &lt;
       </button>
@@ -87,7 +87,7 @@ const Pagination = ({
       <button
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage === pageNumbers.length}
-        className="pagination-button"
+        className={styles.pagination_button}
       >
         &gt;
       </button>

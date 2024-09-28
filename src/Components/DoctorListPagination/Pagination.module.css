@@ -5,7 +5,7 @@
   margin-top: 20px;
 }
 
-.pagination-button {
+.pagination_button {
   background-color: #f0f0f0;
   border: none;
   padding: 8px 12px;
@@ -14,16 +14,16 @@
   transition: background-color 0.3s ease;
 }
 
-.pagination-button:hover {
+.pagination_button:hover {
   background-color: #d0d0d0;
 }
 
-.pagination-button:disabled {
+.pagination_button:disabled {
   background-color: #e0e0e0;
   cursor: not-allowed;
 }
 
-.pagination-item {
+.pagination_item {
   background-color: #f0f0f0;
   border: none;
   padding: 8px 12px;
@@ -32,12 +32,12 @@
   transition: background-color 0.3s ease;
 }
 
-.pagination-item:hover {
+.pagination_item:hover {
   background-color: #d0d0d0;
 }
 
-.pagination-item.active {
-  background-color: #6b5b95;
+.paginatio_item.active {
+  background-color: var(--primary-color);
   color: white;
 }
 

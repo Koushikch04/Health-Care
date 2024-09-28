@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import DoctorList from "./DoctorList";
 import Pagination from "./Pagination";
-import "./AvailableDoctors.css";
+import styles from "./AvailableDoctors.module.css";
 
 const AvailableDoctors = ({ doctorData, selectedSpecialty }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,7 +17,7 @@ const AvailableDoctors = ({ doctorData, selectedSpecialty }) => {
   }, [selectedSpecialty]);
 
   return (
-    <div className="app">
+    <div className={styles.app}>
       <h1>
         {doctorData.length} doctors available in {selectedSpecialty}
       </h1>

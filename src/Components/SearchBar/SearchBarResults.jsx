@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import ScrollReveal from "scrollreveal";
-import "./SearchBarResults.css";
+import styles from "./SearchBarResults.module.css";
 
 const SearchBarResults = ({ searchData, selectedItem, onItemClick }) => {
   useEffect(() => {
     const sr = ScrollReveal();
-    sr.reveal(".results-list a", {
+    sr.reveal(`.${styles.search_suggestion_line}`, {
       duration: 500,
       distance: "20px",
       easing: "ease-in-out",
@@ -17,13 +17,13 @@ const SearchBarResults = ({ searchData, selectedItem, onItemClick }) => {
   }, [searchData]);
 
   return (
-    <div className="results-list">
+    <div className={styles.results_list}>
       {searchData.map((data, index) => (
         <a
           href="#"
           key={index}
-          className={`search_suggestion_line ${
-            selectedItem === index ? "active" : ""
+          className={`${styles.search_suggestion_line} ${
+            selectedItem === index ? styles.active : ""
           }`}
           onClick={(e) => {
             e.preventDefault();
@@ -31,7 +31,7 @@ const SearchBarResults = ({ searchData, selectedItem, onItemClick }) => {
           }}
         >
           <span>{data.name}</span>
-          <span className="specialty">{data.specialty}</span>
+          <span className={styles.specialty}>{data.specialty}</span>
         </a>
       ))}
     </div>

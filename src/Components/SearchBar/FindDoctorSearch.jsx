@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
 import CloseIcon from "@mui/icons-material/Close";
-import "./FindDoctorSearch.css";
+import styles from "./FindDoctorSearch.module.css";
 import SearchBarResults from "./SearchBarResults";
 import AvailableDoctors from "../DoctorListPagination/AvailableDoctors";
 
@@ -210,14 +210,14 @@ const FindDoctorSearch = () => {
   }, [searchRef]);
 
   return (
-    <div className="doctorSearch">
+    <div className={styles.doctorSearch}>
       {showImage && (
-        <div className="image">
+        <div className={styles.image}>
           <img src="/Images/Appointment/doctorSearch.png" alt="Banner" />
         </div>
       )}
       <div
-        className={`input-wrapper ${moveToTop ? "move-to-top" : ""}`}
+        className={`${styles.input_wrapper} ${moveToTop ? "move-to-top" : ""}`}
         ref={searchRef}
       >
         <input
@@ -249,7 +249,7 @@ const FindDoctorSearch = () => {
         )}
       </div>
       {selectedDoctors.length > 0 && (
-        <div className="availableDoctors">
+        <div className={styles.availableDoctors}>
           <AvailableDoctors
             doctorData={selectedDoctors}
             selectedSpecialty={selectedSpecialty}
