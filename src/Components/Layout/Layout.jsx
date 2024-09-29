@@ -1,7 +1,7 @@
 import React from "react";
 import Navbar from "../Navbar/Navbar";
 
-function Layout({ navbarPresent = false, children }) {
+function Layout({ navbarPresent = true, children }) {
   return (
     <>
       {navbarPresent && <Navbar />}

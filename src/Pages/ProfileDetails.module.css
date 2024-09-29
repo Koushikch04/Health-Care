@@ -1,14 +1,14 @@
-.profile-form {
+.profile_form {
   margin-top: 6rem;
 }
-.profile-form {
+.profile_form {
   background-color: #fff;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 1px 4px rgba(24, 28, 33, 0.012);
 }
 
-.card-body {
+.card_body {
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -19,17 +19,17 @@
   align-items: center;
 }
 
-.ui-w-80 {
+.ui_w_80 {
   width: 80px;
   height: 80px;
-  border-radius: 50%; /* Circular profile image */
+  border-radius: 50%;
 }
 
-.profile-image {
+.profile_image {
   margin-left: 20px;
 }
 
-.upload-btn {
+.upload_btn {
   cursor: pointer;
   color: #26b4ff;
   border: 1px solid #26b4ff;
@@ -39,7 +39,7 @@
   display: inline-block;
 }
 
-.upload-btn input {
+.upload_btn input {
   display: none; /* Hide the input element */
 }
 
@@ -53,21 +53,21 @@
   cursor: pointer;
 }
 
-.btn-primary {
+.btn_primary {
   background-color: var(--primary-color);
 }
 
-.btn-default {
+.btn_default {
   color: var(--primary-color);
 }
 
-.btn-primary:hover {
+.btn_primary:hover {
   background-color: #000;
 }
-.btn-default:hover {
+.btn-defaul_:hover {
   background-color: #fff;
 }
-.text-light.small {
+.text_light.small {
   font-size: 0.875rem;
   color: #babbbc;
   margin-top: 5px;
@@ -78,18 +78,18 @@ hr {
   margin: 20px 0;
 }
 
-.form-group {
+.form_group {
   margin-bottom: 1.5rem;
 }
 
-.form-label {
+.form_label {
   /* font-weight: bold; */
   margin-bottom: 0.5rem;
   margin-left: 0.5rem;
   display: block;
 }
 
-.form-control {
+.form_control {
   border: 1px solid #ced4da;
   border-radius: 4px;
   padding: 10px;
@@ -97,30 +97,30 @@ hr {
   box-sizing: border-box;
 }
 
-.form-control:focus {
+.form_control:focus {
   border-color: #26b4ff;
   outline: 0;
   box-shadow: 0 0 0 0.2rem rgba(38, 180, 255, 0.25);
 }
 
-.mb-1 {
+.mb_1 {
   margin-bottom: 1rem;
 }
 
-.text-right {
+.text_right {
   text-align: right;
   margin-top: 1rem;
 }
 
 @media screen and (max-width: 1200px) {
-  .profile-form {
+  .profile_form {
     justify-content: flex-start;
     margin-top: 2rem;
   }
 }
 
 @media screen and (max-width: 768px) {
-  .profile-form {
+  .profile_form {
     align-items: center;
   }
 }

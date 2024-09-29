@@ -27,26 +27,32 @@ export const SidebarData = [
   {
     icon: Dashboard,
     heading: "Overview",
+    url: "/profile/",
   },
   {
     icon: UilUsersAlt,
     heading: "Account",
+    url: "details",
   },
   {
     icon: UilClipboardAlt,
     heading: "Patients",
+    url: "/",
   },
   {
     icon: CalendarMonth,
     heading: "Calender",
+    url: "",
   },
   {
     icon: MessageSharp,
     heading: "Messages",
+    url: "/",
   },
   {
     icon: Settings,
     heading: "Settings",
+    url: "/",
   },
 ];
 

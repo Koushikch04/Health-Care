@@ -2,6 +2,23 @@
   background-color: var(--primary-color-light);
 }
 
+nav .nav_bar .logo a {
+  font-size: 30px;
+  /* font-weight: 500;
+  color: var(--nav-text-color); */
+  text-decoration: none;
+}
+
+.logo a {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.logo a span {
+  color: var(--text-dark);
+}
+
 .footer__container {
   display: grid;
   gap: 4rem 2rem;
