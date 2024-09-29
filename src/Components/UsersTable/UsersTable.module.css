@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: center;
   margin: 0 auto;
-  max-width: 1200px; /* Limit the maximum width */
+  max-width: 1200px;
   padding: 20px;
 }
 
@@ -28,9 +28,9 @@
   gap: 20px;
   justify-content: center;
   width: 100%;
-  max-width: 1200px; /* Fixed width */
-  min-height: 420px; /* Set a minimum height */
-  margin-bottom: 20px; /* Space for pagination */
+  max-width: 1200px;
+  min-height: 420px;
+  margin-bottom: 20px;
 }
 
 .paginationContainer {

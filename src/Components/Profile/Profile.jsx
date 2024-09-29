@@ -1,15 +1,15 @@
 import React from "react";
-import "./Profile.css";
+import styles from "./Profile.module.css";
 import Sidebar from "../SideBar/Sidebar";
 import RightSide from "../RigtSide/RightSide";
 import { Outlet } from "react-router-dom";
 
 function Profile() {
   return (
-    <div className="Profile">
-      <div className="ProfileClass">
+    <div className={styles.Profile}>
+      <div className={styles.ProfileClass}>
         <Sidebar />
-        <div className="PageContent">
+        <div className={styles.PageContent}>
           <Outlet />
         </div>
         <RightSide />
