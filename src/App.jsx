@@ -3,8 +3,6 @@ import { BrowserRouter } from "react-router-dom";
 
 import useAlert from "./hooks/useAlert";
 import Navbar from "./components/Navbar/Navbar";
-// import Layout from "./components/Layout/Layout";
-// import MainRoutes from "./components/Routes/MainRoutes";
 function App() {
   const alert = useAlert();
 
