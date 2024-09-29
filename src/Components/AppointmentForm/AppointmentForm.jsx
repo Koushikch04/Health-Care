@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
-import "./AppointmentForm.css";
 import useAlert from "../../hooks/useAlert";
+import styles from "./AppointmentForm.module.css";
+import cardStyles from "../DoctorListPagination/DoctorCard.module.css";
 
 const AppointmentForm = ({
   image,
@@ -37,22 +38,22 @@ const AppointmentForm = ({
   };
 
   return (
-    <div className="appointment-form">
+    <div className={styles.appointment_form}>
       <h2>Book an Appointment</h2>
-      <div className="details-booking">
-        <div className="details">
-          <div className="card_image">
+      <div className={styles.details_booking}>
+        <div className={styles.details}>
+          <div className={cardStyles.card_image}>
             <img src={image} alt={`${name}`} />
           </div>
-          <div className="card_info">
+          <div className={cardStyles.card_info}>
             <h2>{name}</h2>
             <h3>{experience} years of experience</h3>
-            <p className="rating">Rating: {rating}</p>
+            <p className={cardStyles.rating}>Rating: {rating}</p>
             <p>{profile}</p>
           </div>
         </div>
-        <form className="form-group" onSubmit={handleSubmit}>
-          <div className="field">
+        <form className={styles.form_group} onSubmit={handleSubmit}>
+          <div className={styles.field}>
             <label htmlFor="name">Name:</label>
             <input
               type="text"
@@ -63,7 +64,7 @@ const AppointmentForm = ({
               required
             />
           </div>
-          <div className="field">
+          <div className={styles.field}>
             <label htmlFor="phone">Phone Number:</label>
             <input
               type="text"
@@ -74,7 +75,7 @@ const AppointmentForm = ({
               required
             />
           </div>
-          <div className="field">
+          <div className={styles.field}>
             <label htmlFor="date">Date of Appointment:</label>
             <input
               type="date"
@@ -85,7 +86,7 @@ const AppointmentForm = ({
               required
             />
           </div>
-          <div className="field">
+          <div className={styles.field}>
             <label htmlFor="time">Book Time Slot:</label>
             <input
               type="time"
@@ -97,7 +98,7 @@ const AppointmentForm = ({
             />
           </div>
 
-          <button type="submit" className="book-button">
+          <button type="submit" className={styles.book_button}>
             Book Now
           </button>
         </form>

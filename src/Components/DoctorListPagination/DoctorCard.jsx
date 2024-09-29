@@ -1,7 +1,6 @@
-// DoctorCard.js
 import React, { useState } from "react";
 import Modal from "../UI/Modal/Modal";
-import "./DoctorCard.css";
+import styles from "./DoctorCard.module.css";
 import AppointmentForm from "../AppointmentForm/AppointmentForm";
 
 const DoctorCard = ({ image, name, experience, rating, profile }) => {
@@ -16,16 +15,16 @@ const DoctorCard = ({ image, name, experience, rating, profile }) => {
   };
 
   return (
-    <div className="card">
-      <div className="card_image">
+    <div className={styles.card}>
+      <div className={styles.card_image}>
         <img src={image} alt={`${name}`} />
       </div>
-      <div className="card_info">
+      <div className={styles.card_info}>
         <h2>{name}</h2>
         <h3>{experience} years of experience</h3>
-        <p className="rating">Rating: {rating}</p>
+        <p className={styles.rating}>Rating: {rating}</p>
       </div>
-      <div className="card_button">
+      <div className={styles.card_button}>
         <button onClick={openModalHandler}>
           <p>Book Appointment</p>
           <span>No Booking Fee</span>
