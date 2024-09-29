@@ -1,22 +1,30 @@
 import React from "react";
-import "./styles/SignUp.css";
+import styles from "./styles/SignUp.module.css";
 
 const ProgressBar = ({ steps, currentStep }) => {
   let index = 1;
   return (
-    <div className="progress-bar">
+    <div className={styles.progress_bar}>
       {steps.map((step) => (
         <div
           key={index++}
-          className={`step ${currentStep > index ? "active" : ""}`}
+          className={`${styles.step} ${
+            currentStep > index ? `${styles.active}` : ""
+          }`}
         >
-          <p className={`${currentStep > index ? "active" : ""}`}>{step}</p>
-          <div className={`bullet ${currentStep > index ? "active" : ""}`}>
+          <p className={`${currentStep > index ? `${styles.active}` : ""}`}>
+            {step}
+          </p>
+          <div
+            className={`${styles.bullet} ${
+              currentStep > index ? `${styles.active}` : ""
+            }`}
+          >
             <span>{index}</span>
           </div>
           <div
-            className={`check fas fa-check ${
-              currentStep > index ? "active" : ""
+            className={`${styles.check} fas fa-check ${
+              currentStep > index ? `${styles.active}` : ""
             }`}
           />
         </div>

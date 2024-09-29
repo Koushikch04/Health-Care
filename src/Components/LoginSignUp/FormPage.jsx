@@ -1,5 +1,5 @@
 import React from "react";
-import "./styles/SignUp.css";
+import styles from "./styles/SignUp.module.css";
 
 const FormPage = ({
   title,
@@ -13,22 +13,26 @@ const FormPage = ({
   showSubmit,
 }) => {
   return (
-    <div className={`page slide-page ${isVisible ? "visible" : ""}`}>
-      <div className="title">{title}</div>
+    <div
+      className={`${styles.page} ${styles.slide_page} ${
+        isVisible ? `${styles.visible}` : ""
+      }`}
+    >
+      <div className={styles.title}>{title}</div>
       {children}
-      <div className="field btns">
+      <div className={`${styles.field} ${styles.btns}`}>
         {showPrev && (
-          <button type="button" className="prev" onClick={onPrev}>
+          <button type="button" className={styles.prev} onClick={onPrev}>
             Previous
           </button>
         )}
         {showNext && (
-          <button type="button" className="next" onClick={onNext}>
+          <button type="button" className={styles.next} onClick={onNext}>
             Next
           </button>
         )}
         {showSubmit && (
-          <button type="button" className="submit" onClick={onSubmit}>
+          <button type="button" className={styles.submit} onClick={onSubmit}>
             Submit
           </button>
         )}

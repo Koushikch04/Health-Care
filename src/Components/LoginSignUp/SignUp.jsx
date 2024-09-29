@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ProgressBar from "./ProgressBar";
 import FormPage from "./FormPage";
-import "./styles/SignUp.css";
+import styles from "./styles/SignUp.module.css";
 
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -26,11 +26,11 @@ const SignUp = () => {
   const steps = ["Name", "Contact", "Birth", "Submit"];
 
   return (
-    <div className="body">
-      <div className="container">
+    <div className={styles.body}>
+      <div className={styles.container}>
         <header>Registration</header>
         <ProgressBar steps={steps} currentStep={currentStep} />
-        <div className="form-outer">
+        <div className={styles.form_outer}>
           <form>
             <FormPage
               title="Basic Info:"
@@ -38,12 +38,12 @@ const SignUp = () => {
               onNext={nextStep}
               showNext={true}
             >
-              <div className="field">
-                <div className="label">First Name</div>
+              <div className={styles.field}>
+                <div className={styles.label}>First Name</div>
                 <input type="text" required />
               </div>
-              <div className="field">
-                <div className="label">Last Name</div>
+              <div className={styles.field}>
+                <div className={styles.label}>Last Name</div>
                 <input type="text" required />
               </div>
             </FormPage>
@@ -55,12 +55,12 @@ const SignUp = () => {
               showPrev={true}
               showNext={true}
             >
-              <div className="field">
-                <div className="label">Username</div>
+              <div className={styles.field}>
+                <div className={styles.label}>Username</div>
                 <input type="text" name="username" required />
               </div>
-              <div className="field">
-                <div className="label">Phone Number</div>
+              <div className={styles.field}>
+                <div className={styles.label}>Phone Number</div>
                 <input type="number" required />
               </div>
             </FormPage>
@@ -72,12 +72,12 @@ const SignUp = () => {
               showPrev={true}
               showNext={true}
             >
-              <div className="field">
-                <div className="label">Date</div>
+              <div className={styles.field}>
+                <div className={styles.label}>Date</div>
                 <input type="date" required />
               </div>
-              <div className="field">
-                <div className="label">Gender</div>
+              <div className={styles.field}>
+                <div className={styles.label}>Gender</div>
                 <select required>
                   <option>Male</option>
                   <option>Female</option>
@@ -94,12 +94,12 @@ const SignUp = () => {
               showNext={false}
               showSubmit={true}
             >
-              <div className="field">
-                <div className="label">Email Address</div>
+              <div className={styles.field}>
+                <div className={styles.label}>Email Address</div>
                 <input type="email" required />
               </div>
-              <div className="field">
-                <div className="label">Password</div>
+              <div className={styles.field}>
+                <div className={styles.label}>Password</div>
                 <input type="password" required />
               </div>
             </FormPage>

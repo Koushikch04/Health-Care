@@ -29,28 +29,28 @@
   font-weight: 600;
   margin: 0 0 30px 0;
 }
-.container .form-outer {
+.container .form_outer {
   width: 100%;
   overflow: hidden;
 }
-.container .form-outer form {
+.container .form_outer form {
   display: flex;
   width: 400%;
 }
-.form-outer form .page {
+.form_outer form .page {
   width: 25%;
   transition: margin-left 0.3s ease-in-out;
   display: none;
 }
-.form-outer form .page.visible {
+.form_outer form .page.visible {
   display: block;
 }
-.form-outer form .page .title {
+.form_outer form .page .title {
   text-align: left;
   font-size: 25px;
   font-weight: 500;
 }
-.form-outer form .page .field {
+.form_outer form .page .field {
   width: 330px;
   height: 45px;
   margin: 30px 0;
@@ -104,23 +104,43 @@ form .page .btns button.prev {
 form .page .btns button.next {
   margin-left: 3px;
 }
-.container .progress-bar {
+
+.signInButton {
+  width: 100%;
+  border: none;
+  background: var(--primary-color-dark);
+  padding: 5px;
+  margin-top: -20px;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: 0.5s ease;
+}
+.signInButton:hover {
+  background: #344563;
+}
+
+.container .progress_bar {
   display: flex;
   margin: 40px 0;
   user-select: none;
 }
-.container .progress-bar .step {
+.container .progress_bar .step {
   text-align: center;
   width: 100%;
   position: relative;
 }
-.container .progress-bar .step p {
+.container .progress_bar .step p {
   font-weight: 500;
   font-size: 18px;
   color: #000;
   margin-bottom: 8px;
 }
-.progress-bar .step .bullet {
+.progress_bar .step .bullet {
   height: 25px;
   width: 25px;
   border: 2px solid #000;
@@ -132,20 +152,20 @@ form .page .btns button.next {
   font-size: 17px;
   line-height: 25px;
 }
-.progress-bar .step .bullet.active {
+.progress_bar .step .bullet.active {
   border-color: var(--primary-color-dark);
   background: var(--primary-color-dark);
 }
-.progress-bar .step .bullet span {
+.progress_bar .step .bullet span {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 }
-.progress-bar .step .bullet.active span {
+.progress_bar .step .bullet.active span {
   display: none;
 }
-.progress-bar .step .bullet:before,
-.progress-bar .step .bullet:after {
+.progress_bar .step .bullet:before,
+.progress_bar .step .bullet:after {
   position: absolute;
   content: "";
   bottom: 11px;
@@ -154,7 +174,7 @@ form .page .btns button.next {
   width: 44px;
   background: #262626;
 }
-.progress-bar .step .bullet.active:after {
+.progress_bar .step .bullet.active:after {
   background: var(--text-light);
   transform: scaleX(0);
   transform-origin: left;
@@ -165,15 +185,15 @@ form .page .btns button.next {
     transform: scaleX(1);
   }
 }
-.progress-bar .step:last-child .bullet:before,
-.progress-bar .step:last-child .bullet:after {
+.progress_bar .step:last-child .bullet:before,
+.progress_bar .step:last-child .bullet:after {
   display: none;
 }
-.progress-bar .step p.active {
+.progress_bar .step p.active {
   color: var(--text-light);
   transition: 0.2s linear;
 }
-.progress-bar .step .check {
+.progress_bar .step .check {
   position: absolute;
   left: 50%;
   top: 70%;
@@ -181,7 +201,7 @@ form .page .btns button.next {
   transform: translate(-50%, -50%);
   display: none;
 }
-.progress-bar .step .check.active {
+.progress_bar .step .check.active {
   display: block;
   color: #fff;
 }
