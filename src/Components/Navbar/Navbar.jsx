@@ -4,7 +4,6 @@ import styles from "./Navbar.module.css";
 
 import "boxicons/css/boxicons.min.css";
 import Button from "../Button/Button";
-import { RiMenu2Fill } from "react-icons/ri";
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState(() => {
