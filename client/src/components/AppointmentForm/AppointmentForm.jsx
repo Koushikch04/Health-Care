@@ -10,10 +10,9 @@ const AppointmentForm = ({
   rating,
   profile,
   onSubmit,
+  cost,
 }) => {
   const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
     date: "",
     time: "",
   });
@@ -39,7 +38,7 @@ const AppointmentForm = ({
 
   return (
     <div className={styles.appointment_form}>
-      <h2>Book an Appointment</h2>
+      <h2 className={styles.title}>Book an Appointment</h2>
       <div className={styles.details_booking}>
         <div className={styles.details}>
           <div className={cardStyles.card_image}>
@@ -49,32 +48,13 @@ const AppointmentForm = ({
             <h2>{name}</h2>
             <h3>{experience} years of experience</h3>
             <p className={cardStyles.rating}>Rating: {rating}</p>
+
             <p>{profile}</p>
           </div>
         </div>
         <form className={styles.form_group} onSubmit={handleSubmit}>
-          <div className={styles.field}>
-            <label htmlFor="name">Name:</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="phone">Phone Number:</label>
-            <input
-              type="text"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
+          <p className={styles.fees}>Fees : {cost}</p>
+
           <div className={styles.field}>
             <label htmlFor="date">Date of Appointment:</label>
             <input

@@ -3,7 +3,7 @@ import Modal from "../UI/Modal/Modal";
 import styles from "./DoctorCard.module.css";
 import AppointmentForm from "../AppointmentForm/AppointmentForm";
 
-const DoctorCard = ({ image, name, experience, rating, profile }) => {
+const DoctorCard = ({ image, name, experience, rating, profile, cost }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModalHandler = () => {
@@ -23,6 +23,7 @@ const DoctorCard = ({ image, name, experience, rating, profile }) => {
         <h2>{name}</h2>
         <h3>{experience} years of experience</h3>
         <p className={styles.rating}>Rating: {rating}</p>
+        <p>Fees: {cost}</p>
       </div>
       <div className={styles.card_button}>
         <button onClick={openModalHandler}>
@@ -38,6 +39,7 @@ const DoctorCard = ({ image, name, experience, rating, profile }) => {
             experience={experience}
             rating={rating}
             profile={profile}
+            cost={cost}
             onSubmit={closeModalHandler}
           />
         </Modal>

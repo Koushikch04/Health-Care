@@ -40,7 +40,7 @@ const Client = () => {
                   and stress-free. The doctor was thorough and took the time to
                   answer all my questions.
                 </p>
-                <img src="assets/client-1.jpg" alt="client" />
+                <img src="/Images/LandingPage/Client/img1.png" alt="client" />
                 <h4>Sarah Mitchell</h4>
                 <h5>Graphic Designer</h5>
               </div>
@@ -52,7 +52,7 @@ const Client = () => {
                   was able to consult with a specialist from home and received
                   excellent care.
                 </p>
-                <img src="assets/client-2.jpg" alt="client" />
+                <img src="/Images/LandingPage/Client/img2.png" alt="client" />
                 <h4>John Doe</h4>
                 <h5>Software Engineer</h5>
               </div>
@@ -63,7 +63,7 @@ const Client = () => {
                   The general check-up was quick and efficient. The clinic is
                   well-organized, and the medical staff are very professional.
                 </p>
-                <img src="assets/client-3.jpg" alt="client" />
+                <img src="/Images/LandingPage/Client/img3.png" alt="client" />
                 <h4>Emily Roberts</h4>
                 <h5>Teacher</h5>
               </div>

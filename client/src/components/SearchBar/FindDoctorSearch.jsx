@@ -17,6 +17,7 @@ const specialties = [
         experience: 12,
         rating: 4.7,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 1500,
         profile: "Specializes in cosmetic and restorative dentistry.",
       },
       {
@@ -24,6 +25,7 @@ const specialties = [
         experience: 8,
         rating: 4.5,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 1500,
         profile: "Expert in pediatric and general dentistry.",
       },
       {
@@ -31,6 +33,7 @@ const specialties = [
         experience: 8,
         rating: 4.5,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 1000,
         profile: "Expert in pediatric and general dentistry.",
       },
       {
@@ -38,6 +41,7 @@ const specialties = [
         experience: 8,
         rating: 4.5,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 500,
         profile: "Expert in pediatric and general dentistry.",
       },
       {
@@ -45,6 +49,7 @@ const specialties = [
         experience: 8,
         rating: 4.5,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 500,
         profile: "Expert in pediatric and general dentistry.",
       },
       {
@@ -52,6 +57,7 @@ const specialties = [
         experience: 8,
         rating: 4.5,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 750,
         profile: "Expert in pediatric and general dentistry.",
       },
       {
@@ -59,6 +65,7 @@ const specialties = [
         experience: 8,
         rating: 4.5,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 1500,
         profile: "Expert in pediatric and general dentistry.",
       },
     ],
@@ -73,6 +80,7 @@ const specialties = [
         experience: 15,
         rating: 4.9,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 500,
         profile:
           "Experienced in high-risk pregnancies and gynecological surgeries.",
       },
@@ -81,6 +89,7 @@ const specialties = [
         experience: 10,
         rating: 4.6,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 2500,
         profile: "Focuses on women's reproductive health and menopause.",
       },
     ],
@@ -95,6 +104,7 @@ const specialties = [
         experience: 7,
         rating: 4.3,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 2000,
         profile:
           "Provides comprehensive care and treatment for common illnesses.",
       },
@@ -103,6 +113,7 @@ const specialties = [
         experience: 9,
         rating: 4.4,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 1500,
         profile:
           "Specializes in preventive medicine and chronic disease management.",
       },
@@ -118,6 +129,7 @@ const specialties = [
         experience: 11,
         rating: 4.8,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 1000,
         profile: "Expert in skin conditions and cosmetic dermatology.",
       },
       {
@@ -125,6 +137,7 @@ const specialties = [
         experience: 6,
         rating: 4.2,
         image: "/Images/Appointment/DoctorCard/doctor.png",
+        cost: 500,
         profile: "Specializes in acne treatment and skin cancer screenings.",
       },
     ],

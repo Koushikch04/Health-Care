@@ -3,8 +3,12 @@
   text-align: center;
 }
 
-.appointment_form h2 {
+.appointment_form .title {
   margin-bottom: 20px;
+}
+
+.appointment_form h2 {
+  margin-bottom: 5px;
   position: relative;
 }
 
@@ -37,12 +41,17 @@
   flex-direction: column;
   align-items: center;
   grid-column: 3 / 4;
-  max-height: 25vh;
+  max-height: 30vh;
   overflow-y: auto;
 }
 
 .form_group::-webkit-scrollbar {
   display: none;
+}
+
+.form_group .fees {
+  font-size: 1.2rem;
+  font-weight: 900;
 }
 
 .form_group .field {

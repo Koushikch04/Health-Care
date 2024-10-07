@@ -14,6 +14,7 @@ const DoctorList = ({ doctorData }) => {
             experience={doctor.experience}
             rating={doctor.rating}
             profile={doctor.profile}
+            cost={doctor.cost}
           />
         );
       })}

@@ -3,18 +3,8 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const nameSchema = new Schema({
-  firstName: {
-    type: String,
-    required: true,
-    min: 2,
-    max: 50,
-  },
-  lastName: {
-    type: String,
-    required: false,
-    min: 2,
-    max: 50,
-  },
+  firstName: { type: String, required: true, min: 2, max: 50 },
+  lastName: { type: String, required: false, min: 2, max: 50 },
 });
 
 const emailSchema = new Schema({
@@ -26,15 +16,10 @@ const emailSchema = new Schema({
 });
 
 const phoneSchema = new Schema({
-  phone: {
-    type: Number,
-    required: true,
-  },
-  emergency: {
-    type: Number,
-    required: false,
-  },
+  phone: { type: Number, required: true },
+  emergency: { type: Number, required: false },
 });
+
 const userSchema = new Schema({
   name: nameSchema,
   contact: phoneSchema,
@@ -44,14 +29,12 @@ const userSchema = new Schema({
     required: true,
     min: 8,
   },
-  dob: {},
+  dob: { type: Date, required: true },
+  gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
   appointments: {
-    type: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Appointment",
-      },
-    ],
+    type: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
     default: [],
   },
 });
+
+module.exports = mongoose.model("User", userSchema);
