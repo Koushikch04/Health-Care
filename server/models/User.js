@@ -44,6 +44,7 @@ const userSchema = new Schema({
     required: true,
     min: 8,
   },
+  dob: {},
   appointments: {
     type: [
       {
