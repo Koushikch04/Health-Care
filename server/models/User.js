@@ -7,14 +7,6 @@ const nameSchema = new Schema({
   lastName: { type: String, required: false, min: 2, max: 50 },
 });
 
-const emailSchema = new Schema({
-  type: String,
-  required: true,
-  unique: true,
-  max: 50,
-  match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-});
-
 const phoneSchema = new Schema({
   phone: { type: Number, required: true },
   emergency: { type: Number, required: false },
@@ -23,7 +15,13 @@ const phoneSchema = new Schema({
 const userSchema = new Schema({
   name: nameSchema,
   contact: phoneSchema,
-  email: emailSchema,
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    maxlength: 50,
+    match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+  },
   password: {
     type: String,
     required: true,
@@ -37,4 +35,5 @@ const userSchema = new Schema({
   },
 });
 
-module.exports = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;
