@@ -56,11 +56,11 @@ const SignUp = () => {
               showNext={true}
             >
               <div className={styles.field}>
-                <div className={styles.label}>Username</div>
-                <input type="text" name="username" required />
+                <div className={styles.label}>Phone Number</div>
+                <input type="number" required />
               </div>
               <div className={styles.field}>
-                <div className={styles.label}>Phone Number</div>
+                <div className={styles.label}>Emergency Contact</div>
                 <input type="number" required />
               </div>
             </FormPage>

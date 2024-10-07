@@ -71,6 +71,11 @@ const Navbar = () => {
                 Appointments
               </Link>
             </li>
+            {/* <li>
+              <Link to="/instant-consultation" onClick={closeMenu}>
+                Instant-Consultation
+              </Link>
+            </li> */}
             <li>
               <Link to="/health-blog" onClick={closeMenu}>
                 Health Blog

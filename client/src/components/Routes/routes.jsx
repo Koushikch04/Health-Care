@@ -8,6 +8,7 @@ import Review from "../Reviews/Review";
 import Profile from "../Profile/Profile";
 import MainDash from "../MainDash/MainDash";
 import ProfileDetails from "../../Pages/ProfileDetails";
+import InstantConsultation from "../InstantConsultation/InstantConsultation";
 
 const routes = [
   { path: "/", element: <LandingPage /> },
@@ -15,6 +16,7 @@ const routes = [
   { path: "/login", element: <SignIn /> },
   { path: "/appointments", element: <FindDoctorSearch /> },
   { path: "/reviews", element: <Review /> },
+  // { path: "instant-consultation", element: <InstantConsultation /> },
   {
     path: "/profile",
     element: <Profile />,
