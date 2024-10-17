@@ -1,4 +1,6 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
+
 import { login, registerUser } from "../controllers/auth.js";
 import {
   changePassword,
@@ -7,12 +9,21 @@ import {
 } from "../controllers/resetPassword.js";
 import { verifyToken } from "../middleware/authVerification.js";
 
-const router = express.Router();
-router.post("/register/user", registerUser);
-router.post("/login", login);
-router.post("/forgotPassword", validateAndOtpSender);
-router.post("/validateOtp", validateOtp);
-router.put("/changePassword", verifyToken, changePassword);
-// router.put("/resetPassword", resetPassword);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  message: {
+    status: "failure",
+    message: "Too many requests from this IP, please try again later.",
+  },
+});
 
-export default router;
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    status: "failure",
+    message:
+      "Too many password reset requests from this IP, please try again later.",
+  },
+});
