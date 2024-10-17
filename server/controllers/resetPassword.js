@@ -1,17 +1,17 @@
 import bcrypt from "bcrypt";
-import User from "../models/User.js";
+import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
+import dotenv from "dotenv";
+
 import sendMail from "../middleware/sendMail.js";
+
+import User from "../models/User.js";
 import Otp from "../models/Otp.js";
 
-const otpSessions = {};
 export const validateAndOtpSender = async (req, res) => {
   try {
-    let user;
     const { email } = req.body;
-    console.log(email);
-
-    user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email });
     if (!user)
       return res.status(401).json({
         title: "Failed",
@@ -27,12 +27,9 @@ export const validateAndOtpSender = async (req, res) => {
     });
 
     await sendMail({ email: email, otp: otpNumber });
-    const otp = new Otp({
-      email,
-      otpNumber: otpNumber,
-    });
-    const savedOtp = await otp.save();
-    console.log(savedOtp);
+    const otp = new Otp({ email, otpNumber });
+    await otp.save();
+
     return res.status(201).json({
       title: "Success",
       message: "Otp sent Successfully!",
@@ -48,7 +45,7 @@ export const validateAndOtpSender = async (req, res) => {
 export const validateOtp = async (req, res) => {
   try {
     const { email, otpNumber } = req.body;
-    const otp = await Otp.findOne({ email: email, otpNumber: otpNumber });
+    const otp = await Otp.findOne({ email, otpNumber });
 
     if (!otp) {
       return res.status(401).json({
@@ -58,21 +55,26 @@ export const validateOtp = async (req, res) => {
       });
     }
 
-    if (!req.session) {
-      return res.status(500).json({
-        title: "Session Error",
-        message: "Session is not initialized.",
-        status: "failure",
-      });
-    }
+    // if (!req.session) {
+    //   return res.status(500).json({
+    //     title: "Session Error",
+    //     message: "Session is not initialized.",
+    //     status: "failure",
+    //   });
+    // }
+    // req.session.verifiedEmail = email;
 
-    req.session.verifiedEmail = email;
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+      expiresIn: "5m",
+    });
+
     await Otp.deleteOne({ email, otpNumber });
 
     return res.status(200).json({
       message: "OTP successfully validated!",
       status: "success",
       title: "Success!",
+      token,
     });
   } catch (error) {
     return res
@@ -83,23 +85,46 @@ export const validateOtp = async (req, res) => {
 
 export const changePassword = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!req.session || req.session.verifiedEmail !== email) {
-      return res.status(403).json({
+    const { newPassword } = req.body;
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({
         title: "Unauthorized",
-        message: "You must verify your OTP before changing the password.",
+        message: "Token is missing. Please validate your OTP first.",
         status: "failure",
       });
     }
-    let person;
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({
+        title: "Unauthorized",
+        message: "Token is invalid or has expired.",
+        status: "failure",
+      });
+    }
+    const email = decoded.email;
+
+    // if (!req.session || req.session.verifiedEmail !== email) {
+    //   return res.status(403).json({
+    //     title: "Unauthorized",
+    //     message: "You must verify your OTP before changing the password.",
+    //     status: "failure",
+    //   });
+    // }
     const salt = await bcrypt.genSalt();
-    const passwordHash = await bcrypt.hash(password, salt);
-    person = await User.findOneAndUpdate(
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    const user = await User.findOneAndUpdate(
       { email: email },
       { password: passwordHash },
       { new: true }
     );
-    if (!person) {
+
+    if (!user) {
       return res.status(404).json({
         title: "User Not Found",
         message: "User not found for this email!",
@@ -107,7 +132,7 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    delete req.session.verifiedEmail;
+    // delete req.session.verifiedEmail;
 
     return res.status(200).json({
       title: "Success!",

@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 export const registerUser = async (req, res, next) => {
   try {
@@ -12,8 +13,6 @@ export const registerUser = async (req, res, next) => {
       dob,
       gender,
     } = req.body;
-
-    console.log(email);
 
     if (!email) return res.status(400).json({ error: "Email is required." });
     if (!firstName || !lastName || !phone || !password || !dob || !gender) {
@@ -66,12 +65,17 @@ export const login = async (req, res, next) => {
     const matched = bcrypt.compareSync(password, person.password);
 
     if (!matched) return res.status(401).json({ msg: "Invalid Credentials" });
+    person.password = "";
 
     // const token = jwt.sign({ id: person._id }, process.env.JWT_SECRET);
     // await person.populate("appointment.appointmentid");
-    person.password = "";
-    req.session.isLoggedIn = true;
-    return res.status(200).json({ person });
+    // req.session.isLoggedIn = true;
+
+    const token = jwt.sign({ id: person._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    return res.status(200).json({ token, person });
   } catch (err) {
     console.error("Login error:", err);
     return res
@@ -81,10 +85,10 @@ export const login = async (req, res, next) => {
 };
 
 export const logout = (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Could not log out." });
-    }
-    res.status(200).json({ message: "Logged out successfully." });
-  });
+  // req.session.destroy((err) => {
+  //   if (err) {
+  //     return res.status(500).json({ error: "Could not log out." });
+  //   }
+  // });
+  res.status(200).json({ message: "Logged out successfully." });
 };

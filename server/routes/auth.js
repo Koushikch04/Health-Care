@@ -5,13 +5,14 @@ import {
   validateAndOtpSender,
   validateOtp,
 } from "../controllers/resetPassword.js";
+import { verifyToken } from "../middleware/authVerification.js";
 
 const router = express.Router();
 router.post("/register/user", registerUser);
 router.post("/login", login);
 router.post("/forgotPassword", validateAndOtpSender);
 router.post("/validateOtp", validateOtp);
-router.put("/changePassword", changePassword);
+router.put("/changePassword", verifyToken, changePassword);
 // router.put("/resetPassword", resetPassword);
 
 export default router;
