@@ -12,9 +12,9 @@ import {
 import { UilUsdSquare, UilMoneyWithdrawal } from "@iconscout/react-unicons";
 
 // Recent Card Imports
-import img1 from "../imgs/img1.png";
-import img2 from "../imgs/img2.png";
-import img3 from "../imgs/img3.png";
+import img1 from "/Images/LandingPage/Client/img1.png";
+import img2 from "/Images/LandingPage/Client/img2.png";
+import img3 from "/Images/LandingPage/Client/img3.png";
 import {
   CalendarMonth,
   Dashboard,

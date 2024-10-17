@@ -70,6 +70,7 @@ export const login = async (req, res, next) => {
     // const token = jwt.sign({ id: person._id }, process.env.JWT_SECRET);
     // await person.populate("appointment.appointmentid");
     person.password = "";
+    req.session.isLoggedIn = true;
     return res.status(200).json({ person });
   } catch (err) {
     console.error("Login error:", err);
@@ -77,4 +78,13 @@ export const login = async (req, res, next) => {
       .status(500)
       .json({ error: "An internal server error occurred." });
   }
+};
+
+export const logout = (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Could not log out." });
+    }
+    res.status(200).json({ message: "Logged out successfully." });
+  });
 };

@@ -19,7 +19,7 @@ const SignUp = () => {
     setCurrentStep((prev) => prev + 1);
     setTimeout(function () {
       alert("Your Form Successfully Signed up");
-      location.reload();
+      // location.reload();
     }, 800);
   };
 
