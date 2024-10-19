@@ -1,4 +1,4 @@
-import Appointment from "../models/Appointment";
+import Appointment from "../models/Appointment.js";
 
 export const createAppointment = async (req, res) => {
   const { patientName, reasonForVisit, additionalNotes, date, time } = req.body;
@@ -32,12 +32,15 @@ export const createAppointment = async (req, res) => {
 
 export const getUserAppointments = async (req, res) => {
   try {
+    // console.log(req.userId);
     const appointments = await Appointment.find({ user: req.user.id })
-      .populate("doctor", "name experience rating") // Populate doctor details if needed
-      .sort({ createdAt: -1 }); // Sort appointments by creation date
+      .populate("doctor", "name experience rating")
+      .sort({ createdAt: -1 });
 
     return res.status(200).json(appointments);
   } catch (error) {
+    console.log(error.message);
+
     return res
       .status(500)
       .json({ message: "Error retrieving appointments", error });

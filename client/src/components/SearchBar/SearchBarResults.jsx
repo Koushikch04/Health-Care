@@ -3,6 +3,9 @@ import ScrollReveal from "scrollreveal";
 import styles from "./SearchBarResults.module.css";
 
 const SearchBarResults = ({ searchData, selectedItem, onItemClick }) => {
+  if (!Array.isArray(searchData)) {
+    return null;
+  }
   useEffect(() => {
     const sr = ScrollReveal();
     sr.reveal(`.${styles.search_suggestion_line}`, {

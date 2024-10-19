@@ -5,145 +5,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import styles from "./FindDoctorSearch.module.css";
 import SearchBarResults from "./SearchBarResults";
 import AvailableDoctors from "../DoctorListPagination/AvailableDoctors";
+import { baseURL } from "../../api/api";
 
-const specialties = [
-  {
-    name: "Dentist",
-    url: "#",
-    specialty: "Dental Care",
-    doctors: [
-      {
-        name: "Dr. Alice Johnson",
-        experience: 12,
-        rating: 4.7,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 1500,
-        profile: "Specializes in cosmetic and restorative dentistry.",
-      },
-      {
-        name: "Dr. Bob Smith",
-        experience: 8,
-        rating: 4.5,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 1500,
-        profile: "Expert in pediatric and general dentistry.",
-      },
-      {
-        name: "Dr. Bob Smith",
-        experience: 8,
-        rating: 4.5,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 1000,
-        profile: "Expert in pediatric and general dentistry.",
-      },
-      {
-        name: "Dr. Bob Smith",
-        experience: 8,
-        rating: 4.5,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 500,
-        profile: "Expert in pediatric and general dentistry.",
-      },
-      {
-        name: "Dr. Bob Smith",
-        experience: 8,
-        rating: 4.5,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 500,
-        profile: "Expert in pediatric and general dentistry.",
-      },
-      {
-        name: "Dr. Bob Smith",
-        experience: 8,
-        rating: 4.5,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 750,
-        profile: "Expert in pediatric and general dentistry.",
-      },
-      {
-        name: "Dr. Bob Smith",
-        experience: 8,
-        rating: 4.5,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 1500,
-        profile: "Expert in pediatric and general dentistry.",
-      },
-    ],
-  },
-  {
-    name: "Gynecologist/Obstetrician",
-    url: "#",
-    specialty: "Women's Health",
-    doctors: [
-      {
-        name: "Dr. Carol Brown",
-        experience: 15,
-        rating: 4.9,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 500,
-        profile:
-          "Experienced in high-risk pregnancies and gynecological surgeries.",
-      },
-      {
-        name: "Dr. David Wilson",
-        experience: 10,
-        rating: 4.6,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 2500,
-        profile: "Focuses on women's reproductive health and menopause.",
-      },
-    ],
-  },
-  {
-    name: "General Physician",
-    url: "#",
-    specialty: "Primary Care",
-    doctors: [
-      {
-        name: "Dr. Emily Davis",
-        experience: 7,
-        rating: 4.3,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 2000,
-        profile:
-          "Provides comprehensive care and treatment for common illnesses.",
-      },
-      {
-        name: "Dr. Frank Miller",
-        experience: 9,
-        rating: 4.4,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 1500,
-        profile:
-          "Specializes in preventive medicine and chronic disease management.",
-      },
-    ],
-  },
-  {
-    name: "Dermatologist",
-    url: "#",
-    specialty: "Skin Care",
-    doctors: [
-      {
-        name: "Dr. Grace Lee",
-        experience: 11,
-        rating: 4.8,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 1000,
-        profile: "Expert in skin conditions and cosmetic dermatology.",
-      },
-      {
-        name: "Dr. Henry Martinez",
-        experience: 6,
-        rating: 4.2,
-        image: "/Images/Appointment/DoctorCard/doctor.png",
-        cost: 500,
-        profile: "Specializes in acne treatment and skin cancer screenings.",
-      },
-    ],
-  },
-];
 const FindDoctorSearch = () => {
+  const [specialties, setSpecialties] = useState([]);
   const [search, setSearch] = useState("");
   const [searchData, setSearchData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(-1);
@@ -174,7 +39,7 @@ const FindDoctorSearch = () => {
   const handleSpecialtySelect = (specialty) => {
     setSelectedSpecialty(specialty.name);
     const filteredDoctors = filterDoctors(specialty.doctors);
-    setSelectedDoctors(filteredDoctors); // Set doctors without filtering here
+    setSelectedDoctors(filteredDoctors);
     setShowSuggestions(false);
     setMoveToTop(true);
     setShowImage(false);
@@ -255,6 +120,21 @@ const FindDoctorSearch = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [searchRef]);
+
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        const response = await fetch(`${baseURL}/specialty/details`);
+        const data = await response.json();
+        setSpecialties(data);
+        setSearchData(data);
+      } catch (error) {
+        console.error("Error fetching specialties:", error);
+      }
+    };
+
+    fetchSpecialties();
+  }, []);
 
   return (
     <div className={styles.doctorSearch}>

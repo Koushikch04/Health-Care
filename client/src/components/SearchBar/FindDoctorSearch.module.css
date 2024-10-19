@@ -1,5 +1,5 @@
 .filterSection {
-  margin: 20px 0;
+  /* margin: 20px 0; */
   padding: 10px;
   background-color: #f9f9f9;
   border-radius: 8px;
@@ -7,13 +7,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 20px auto;
+  max-width: 800px;
+  width: 100%;
 }
 
 .filterSection label {
   /* display: block; */
   margin-bottom: 5px;
   margin-left: 5px;
-  font-weight: bold;
+  /* font-weight: bold; */
 }
 
 .filterSection input {

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import useAlert from "../../hooks/useAlert";
 import styles from "./AppointmentForm.module.css";
 import cardStyles from "../DoctorListPagination/DoctorCard.module.css";
@@ -15,12 +15,11 @@ const AppointmentForm = ({
   const [formData, setFormData] = useState({
     date: "",
     time: "",
+    name: "",
+    phone: "",
   });
 
   const alert = useAlert();
-
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToast, setShowToast] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -30,10 +29,18 @@ const AppointmentForm = ({
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit();
+    // Submit the form data to the API
+    await fetch("/api/book-appointment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
     alert.success("Appointment booked successfully!");
+    onSubmit(); // Close modal
   };
 
   return (
@@ -48,7 +55,6 @@ const AppointmentForm = ({
             <h2>{name}</h2>
             <h3>{experience} years of experience</h3>
             <p className={cardStyles.rating}>Rating: {rating}</p>
-
             <p>{profile}</p>
           </div>
         </div>
@@ -57,11 +63,25 @@ const AppointmentForm = ({
 
           <div className={styles.field}>
             <label htmlFor="name">Name:</label>
-            <input type="text" id="name" name="name" required />
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
           </div>
           <div className={styles.field}>
             <label htmlFor="phone">Phone Number:</label>
-            <input type="text" id="phone" name="phone" required />
+            <input
+              type="text"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              required
+            />
           </div>
 
           <div className={styles.field}>
