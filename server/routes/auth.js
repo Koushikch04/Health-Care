@@ -27,3 +27,13 @@ const passwordResetLimiter = rateLimit({
       "Too many password reset requests from this IP, please try again later.",
   },
 });
+
+const router = express.Router();
+router.post("/register/user", authLimiter, registerUser);
+router.post("/login", authLimiter, login);
+router.post("/forgotPassword", passwordResetLimiter, validateAndOtpSender);
+router.post("/validateOtp", passwordResetLimiter, validateOtp);
+router.put("/changePassword", verifyToken, changePassword);
+// router.put("/resetPassword", resetPassword);
+
+export default router;

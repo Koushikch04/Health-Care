@@ -152,6 +152,12 @@ const FindDoctorSearch = () => {
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [moveToTop, setMoveToTop] = useState(false);
   const [showImage, setShowImage] = useState(true);
+  const [filters, setFilters] = useState({
+    minExperience: 0,
+    minRating: 0,
+    maxCost: Infinity,
+  });
+
   const searchRef = useRef(null);
 
   const handleClose = () => {
@@ -163,6 +169,15 @@ const FindDoctorSearch = () => {
     setShowImage(true);
     setMoveToTop(false);
     setSelectedSpecialty("");
+  };
+
+  const handleSpecialtySelect = (specialty) => {
+    setSelectedSpecialty(specialty.name);
+    const filteredDoctors = filterDoctors(specialty.doctors);
+    setSelectedDoctors(filteredDoctors); // Set doctors without filtering here
+    setShowSuggestions(false);
+    setMoveToTop(true);
+    setShowImage(false);
   };
 
   const handleChange = (e) => {
@@ -210,6 +225,25 @@ const FindDoctorSearch = () => {
     }
   };
 
+  const filterDoctors = (doctors) => {
+    return doctors.filter(
+      (doctor) =>
+        doctor.experience >= filters.minExperience &&
+        doctor.rating >= filters.minRating &&
+        doctor.cost <= filters.maxCost
+    );
+  };
+
+  const applyFilters = () => {
+    if (selectedSpecialty) {
+      const specialty = specialties.find(
+        (spec) => spec.name === selectedSpecialty
+      );
+      const filteredDoctors = filterDoctors(specialty.doctors);
+      setSelectedDoctors(filteredDoctors);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -246,13 +280,7 @@ const FindDoctorSearch = () => {
           <SearchBarResults
             searchData={searchData}
             selectedItem={selectedItem}
-            onItemClick={(item) => {
-              setSelectedDoctors(item.doctors);
-              setSelectedSpecialty(item.name);
-              setShowSuggestions(false);
-              setMoveToTop(true);
-              setShowImage(false);
-            }}
+            onItemClick={handleSpecialtySelect}
           />
         )}
         {search ? (
@@ -261,6 +289,44 @@ const FindDoctorSearch = () => {
           <FaSearch id="search-icon" />
         )}
       </div>
+      {!showImage && (
+        <div className={styles.filterSection}>
+          <label>Min Experience:</label>
+          <input
+            type="number"
+            min="0"
+            onChange={(e) =>
+              setFilters({ ...filters, minExperience: e.target.value })
+            }
+          />
+
+          <label>Min Rating:</label>
+          <input
+            type="number"
+            min="0"
+            max="5"
+            step="0.1"
+            onChange={(e) =>
+              setFilters({ ...filters, minRating: e.target.value })
+            }
+          />
+
+          <label>Max Cost:</label>
+          <input
+            type="number"
+            min="0"
+            step="100"
+            onChange={(e) =>
+              setFilters({ ...filters, maxCost: e.target.value })
+            }
+          />
+
+          <button className={styles.applyFiltersButton} onClick={applyFilters}>
+            Apply Filters
+          </button>
+        </div>
+      )}
+
       {selectedDoctors.length > 0 && (
         <div className={styles.availableDoctors}>
           <AvailableDoctors

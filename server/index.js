@@ -1,10 +1,16 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import Appointment from "./models/Appointment.js";
+import Speciality from "./models/Specialty.js";
+import Review from "./models/Review.js";
+import Doctor from "./models/Doctor.js";
+
 // import session from "express-session";
 // import MongoDBStore from "connect-mongodb-session";
 
 import authRoutes from "./routes/auth.js";
+import doctorRoutes from "./routes/doctor.js";
 
 import { verifyToken } from "./middleware/authVerification.js";
 
@@ -33,6 +39,7 @@ app.use(express.json());
 // );
 
 app.use("/auth", authRoutes);
+app.use("/doctors", doctorRoutes);
 app.get("/", verifyToken, (req, res) => {
   res.send("Sever Home Page");
 });

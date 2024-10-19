@@ -56,6 +56,15 @@ const AppointmentForm = ({
           <p className={styles.fees}>Fees : {cost}</p>
 
           <div className={styles.field}>
+            <label htmlFor="name">Name:</label>
+            <input type="text" id="name" name="name" required />
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="phone">Phone Number:</label>
+            <input type="text" id="phone" name="phone" required />
+          </div>
+
+          <div className={styles.field}>
             <label htmlFor="date">Date of Appointment:</label>
             <input
               type="date"
