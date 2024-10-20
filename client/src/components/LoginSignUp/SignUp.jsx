@@ -2,10 +2,21 @@ import React, { useState } from "react";
 import ProgressBar from "./ProgressBar";
 import FormPage from "./FormPage";
 import styles from "./styles/SignUp.module.css";
+import { baseURL } from "../../api/api";
 
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  console.log(currentStep);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    emergency: "",
+    dob: "",
+    gender: "Male",
+    email: "",
+    password: "",
+  });
+
   const nextStep = () => {
     setCurrentStep((prev) => prev + 1);
   };
@@ -14,13 +25,36 @@ const SignUp = () => {
     setCurrentStep((prev) => prev - 1);
   };
 
-  const handleSubmit = (event) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setCurrentStep((prev) => prev + 1);
-    setTimeout(function () {
-      alert("Your Form Successfully Signed up");
-      // location.reload();
-    }, 800);
+
+    try {
+      const response = await fetch(`${baseURL}/auth/register/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.error);
+        return;
+      }
+
+      const data = await response.json();
+      alert(data.message);
+      setCurrentStep((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred during registration.");
+    }
   };
 
   const steps = ["Name", "Contact", "Birth", "Submit"];
@@ -40,11 +74,16 @@ const SignUp = () => {
             >
               <div className={styles.field}>
                 <div className={styles.label}>First Name</div>
-                <input type="text" required />
+                <input
+                  type="text"
+                  name="firstName"
+                  required
+                  onChange={handleChange}
+                />
               </div>
               <div className={styles.field}>
                 <div className={styles.label}>Last Name</div>
-                <input type="text" required />
+                <input type="text" name="lastName" onChange={handleChange} />
               </div>
             </FormPage>
             <FormPage
@@ -57,11 +96,16 @@ const SignUp = () => {
             >
               <div className={styles.field}>
                 <div className={styles.label}>Phone Number</div>
-                <input type="number" required />
+                <input
+                  type="tel"
+                  name="phone"
+                  required
+                  onChange={handleChange}
+                />
               </div>
               <div className={styles.field}>
                 <div className={styles.label}>Emergency Contact</div>
-                <input type="number" required />
+                <input type="tel" name="emergency" onChange={handleChange} />
               </div>
             </FormPage>
             <FormPage
@@ -74,14 +118,19 @@ const SignUp = () => {
             >
               <div className={styles.field}>
                 <div className={styles.label}>Date</div>
-                <input type="date" required />
+                <input
+                  type="date"
+                  name="dob"
+                  required
+                  onChange={handleChange}
+                />
               </div>
               <div className={styles.field}>
                 <div className={styles.label}>Gender</div>
-                <select required>
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Other</option>
+                <select name="gender" required onChange={handleChange}>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </FormPage>
@@ -96,11 +145,21 @@ const SignUp = () => {
             >
               <div className={styles.field}>
                 <div className={styles.label}>Email Address</div>
-                <input type="email" required />
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  onChange={handleChange}
+                />
               </div>
               <div className={styles.field}>
                 <div className={styles.label}>Password</div>
-                <input type="password" required />
+                <input
+                  type="password"
+                  name="password"
+                  required
+                  onChange={handleChange}
+                />
               </div>
             </FormPage>
           </form>
