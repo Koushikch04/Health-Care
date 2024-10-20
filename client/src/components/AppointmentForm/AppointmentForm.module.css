@@ -78,6 +78,21 @@
   font-size: 18px;
 }
 
+.form_group .field select {
+  height: 100%;
+  width: 100%;
+  border: 1px solid lightgrey;
+  border-radius: 5px;
+  padding-left: 15px;
+  font-size: 18px;
+  appearance: none;
+}
+
+.form_group .field select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
 .book_button {
   background-color: #007bff;
   color: white;

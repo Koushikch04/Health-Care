@@ -9,6 +9,7 @@ const DoctorList = ({ doctorData }) => {
         return (
           <DoctorCard
             key={index}
+            doctorId={doctor.id}
             image={doctor.image}
             name={doctor.name}
             experience={doctor.experience}

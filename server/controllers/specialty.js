@@ -28,6 +28,7 @@ export const getSpecialityDetails = async (req, res) => {
         url: "#", // Replace with actual URL if needed
         specialty: specialty.description,
         doctors: specialtyDoctors.map((doctor) => ({
+          id: doctor._id,
           name: doctor.name,
           experience: doctor.experience,
           rating: doctor.rating,

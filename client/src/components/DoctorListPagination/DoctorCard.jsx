@@ -3,7 +3,15 @@ import Modal from "../UI/Modal/Modal";
 import styles from "./DoctorCard.module.css";
 import AppointmentForm from "../AppointmentForm/AppointmentForm";
 
-const DoctorCard = ({ image, name, experience, rating, profile, cost }) => {
+const DoctorCard = ({
+  doctorId,
+  image,
+  name,
+  experience,
+  rating,
+  profile,
+  cost,
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModalHandler = () => {
@@ -34,6 +42,7 @@ const DoctorCard = ({ image, name, experience, rating, profile, cost }) => {
       {isModalOpen && (
         <Modal onClose={closeModalHandler}>
           <AppointmentForm
+            doctorId={doctorId}
             image={image}
             name={name}
             experience={experience}

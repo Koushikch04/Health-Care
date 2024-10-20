@@ -1,3 +1,4 @@
+import Appointment from "../models/Appointment.js";
 import Doctor from "../models/Doctor.js";
 import Specialty from "../models/Specialty.js";
 
@@ -51,6 +52,24 @@ export const createDoctor = async (req, res) => {
     res.status(201).json(savedDoctor);
   } catch (error) {
     res.status(500).json({ message: "Error creating doctor", error });
+  }
+};
+
+// In your appointment controller
+export const getDoctorAppointmentsForDate = async (req, res) => {
+  const { doctorId, date } = req.params;
+
+  try {
+    const appointments = await Appointment.find({
+      doctor: doctorId,
+      date: new Date(date),
+    }).select("time");
+
+    return res.status(200).json(appointments);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error retrieving appointments", error });
   }
 };
 
