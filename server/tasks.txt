@@ -3,7 +3,7 @@ we are just responding with a success message at the backend
 
 2.Error Handling for Date of Birth: You might want to check if the user is of an appropriate age (e.g., 13 years or older) based on your application's requirements.
 
-3.Rate Limiting: Implement rate limiting on your OTP and login endpoints to prevent brute-force attacks.
+//3.Rate Limiting: Implement rate limiting on your OTP and login endpoints to prevent brute-force attacks.
 
 4.Secure Storage: Ensure that any sensitive information (like JWTs) is stored securely on the client side (preferably in HttpOnly cookies rather than local storage).
 

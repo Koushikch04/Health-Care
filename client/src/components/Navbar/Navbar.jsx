@@ -4,6 +4,7 @@ import styles from "./Navbar.module.css";
 
 import "boxicons/css/boxicons.min.css";
 import Button from "../Button/Button";
+import Profile from "./Profile";
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState(() => {
@@ -113,14 +114,15 @@ const Navbar = () => {
             )}
           </div>
         </div>
-        <div className="loginSignUp">
+        {/* <div className="loginSignUp">
           <Link to="/login">
             <Button classType={"login"}>Login</Button>
           </Link>
           <Link to="/signup" className={styles.signUpLink}>
             Register
           </Link>
-        </div>
+        </div> */}
+        <Profile />
       </div>
     </nav>
   );
