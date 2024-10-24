@@ -37,7 +37,16 @@ const SignUp = () => {
     valueChangeHandler: phoneChangeHandler,
     inputBlurHandler: phoneBlurHandler,
     isTouched: phoneIsTouched,
-  } = useInput((value) => value.trim().length === 10); // Assume phone number is 10 digits
+  } = useInput((value) => /^\d{10}$/.test(value)); // Assume phone number is 10 digits
+
+  const {
+    value: emergency,
+    isValid: emergencyIsValid,
+    hasError: emergencyHasError,
+    valueChangeHandler: emergencyChangeHandler,
+    inputBlurHandler: emergencyBlurHandler,
+    isTouched: emergencyIsTouched,
+  } = useInput((value) => value === "" || /^\d{10}$/.test(value));
 
   // Date of Birth Validation (non-empty)
   const {
@@ -193,7 +202,11 @@ const SignUp = () => {
               onPrev={prevStep}
               showPrev={true}
               showNext={true}
-              disabled={!phoneIsTouched || !phoneIsValid}
+              disabled={
+                !phoneIsTouched ||
+                !phoneIsValid ||
+                (emergencyIsTouched && !emergencyIsValid)
+              }
             >
               <div className={styles.field}>
                 <div className={styles.label}>Phone Number</div>
@@ -208,6 +221,21 @@ const SignUp = () => {
                 {phoneHasError && (
                   <div className={styles.error}>
                     Enter a valid 10-digit phone number.
+                  </div>
+                )}
+              </div>
+              <div className={styles.field}>
+                <div className={styles.label}>Emergency Contact (Optional)</div>
+                <input
+                  type="tel"
+                  name="emergency"
+                  value={emergency}
+                  onChange={emergencyChangeHandler}
+                  onBlur={emergencyBlurHandler}
+                />
+                {emergencyHasError && (
+                  <div className={styles.error}>
+                    Emergency contact must be 10 digits if provided.
                   </div>
                 )}
               </div>
