@@ -3,19 +3,81 @@ import ProgressBar from "./ProgressBar";
 import FormPage from "./FormPage";
 import styles from "./styles/SignUp.module.css";
 import { baseURL } from "../../api/api";
+import useInput from "../../hooks/useInput"; // Import useInput hook for validation
 
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    emergency: "",
-    dob: "",
-    gender: "Male",
-    email: "",
-    password: "",
-  });
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // First Name Validation
+  const {
+    value: firstName,
+    isValid: firstNameIsValid,
+    hasError: firstNameHasError,
+    valueChangeHandler: firstNameChangeHandler,
+    inputBlurHandler: firstNameBlurHandler,
+    isTouched: firstNameIsTouched,
+  } = useInput((value) => value.trim() !== ""); // Non-empty validation
+
+  // Last Name Validation
+  const {
+    value: lastName,
+    isValid: lastNameIsValid,
+    hasError: lastNameHasError,
+    valueChangeHandler: lastNameChangeHandler,
+    inputBlurHandler: lastNameBlurHandler,
+    isTouched: lastNameIsTouched,
+  } = useInput((value) => value.trim() !== ""); // Non-empty validation
+
+  // Phone Validation
+  const {
+    value: phone,
+    isValid: phoneIsValid,
+    hasError: phoneHasError,
+    valueChangeHandler: phoneChangeHandler,
+    inputBlurHandler: phoneBlurHandler,
+    isTouched: phoneIsTouched,
+  } = useInput((value) => value.trim().length === 10); // Assume phone number is 10 digits
+
+  // Date of Birth Validation (non-empty)
+  const {
+    value: dob,
+    isValid: dobIsValid,
+    hasError: dobHasError,
+    valueChangeHandler: dobChangeHandler,
+    inputBlurHandler: dobBlurHandler,
+    isTouched: dobIsTouched,
+  } = useInput((value) => value.trim() !== ""); // Ensures a date is selected
+
+  // Gender Validation (must select one)
+  const {
+    value: gender,
+    isValid: genderIsValid,
+    hasError: genderHasError,
+    valueChangeHandler: genderChangeHandler,
+    inputBlurHandler: genderBlurHandler,
+    isTouched: genderIsTouched,
+  } = useInput((value) => value !== ""); // Ensures a selection is made
+
+  // Email Validation
+  const {
+    value: email,
+    isValid: emailIsValid,
+    hasError: emailHasError,
+    valueChangeHandler: emailChangeHandler,
+    inputBlurHandler: emailBlurHandler,
+    isTouched: emailIsTouched,
+  } = useInput((value) => value.includes("@"));
+
+  // Password Validation
+  const {
+    value: password,
+    isValid: passwordIsValid,
+    hasError: passwordHasError,
+    valueChangeHandler: passwordChangeHandler,
+    inputBlurHandler: passwordBlurHandler,
+    isTouched: passwordIsTouched,
+  } = useInput((value) => value.trim().length > 6);
 
   const nextStep = () => {
     setCurrentStep((prev) => prev + 1);
@@ -25,13 +87,21 @@ const SignUp = () => {
     setCurrentStep((prev) => prev - 1);
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (
+      !firstNameIsValid ||
+      !lastNameIsValid ||
+      !phoneIsValid ||
+      !dobIsValid ||
+      !genderIsValid ||
+      !emailIsValid ||
+      !passwordIsValid
+    ) {
+      setErrorMessage("Please fill out all fields correctly.");
+      return;
+    }
 
     try {
       const response = await fetch(`${baseURL}/auth/register/user`, {
@@ -39,7 +109,15 @@ const SignUp = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          phone,
+          dob,
+          gender,
+          email,
+          password,
+        }),
       });
 
       if (!response.ok) {
@@ -65,27 +143,49 @@ const SignUp = () => {
         <header>Registration</header>
         <ProgressBar steps={steps} currentStep={currentStep} />
         <div className={styles.form_outer}>
-          <form>
+          <form onSubmit={handleSubmit}>
             <FormPage
               title="Basic Info:"
               isVisible={currentStep === 1}
               onNext={nextStep}
               showNext={true}
+              disabled={
+                !firstNameIsTouched ||
+                !lastNameIsTouched ||
+                !firstNameIsValid ||
+                !lastNameIsValid
+              }
             >
               <div className={styles.field}>
                 <div className={styles.label}>First Name</div>
                 <input
                   type="text"
                   name="firstName"
+                  value={firstName}
+                  onChange={firstNameChangeHandler}
+                  onBlur={firstNameBlurHandler}
                   required
-                  onChange={handleChange}
                 />
+                {firstNameHasError && (
+                  <div className={styles.error}>First name is required.</div>
+                )}
               </div>
               <div className={styles.field}>
                 <div className={styles.label}>Last Name</div>
-                <input type="text" name="lastName" onChange={handleChange} />
+                <input
+                  type="text"
+                  name="lastName"
+                  value={lastName}
+                  onChange={lastNameChangeHandler}
+                  onBlur={lastNameBlurHandler}
+                  required
+                />
+                {lastNameHasError && (
+                  <div className={styles.error}>Last name is required.</div>
+                )}
               </div>
             </FormPage>
+
             <FormPage
               title="Contact Info:"
               isVisible={currentStep === 2}
@@ -93,19 +193,23 @@ const SignUp = () => {
               onPrev={prevStep}
               showPrev={true}
               showNext={true}
+              disabled={!phoneIsTouched || !phoneIsValid}
             >
               <div className={styles.field}>
                 <div className={styles.label}>Phone Number</div>
                 <input
                   type="tel"
                   name="phone"
+                  value={phone}
+                  onChange={phoneChangeHandler}
+                  onBlur={phoneBlurHandler}
                   required
-                  onChange={handleChange}
                 />
-              </div>
-              <div className={styles.field}>
-                <div className={styles.label}>Emergency Contact</div>
-                <input type="tel" name="emergency" onChange={handleChange} />
+                {phoneHasError && (
+                  <div className={styles.error}>
+                    Enter a valid 10-digit phone number.
+                  </div>
+                )}
               </div>
             </FormPage>
             <FormPage
@@ -115,23 +219,46 @@ const SignUp = () => {
               onPrev={prevStep}
               showPrev={true}
               showNext={true}
+              disabled={
+                !dobIsTouched ||
+                !genderIsTouched ||
+                !dobIsValid ||
+                !genderIsValid
+              }
             >
               <div className={styles.field}>
                 <div className={styles.label}>Date</div>
                 <input
                   type="date"
                   name="dob"
+                  value={dob}
+                  onChange={dobChangeHandler}
+                  onBlur={dobBlurHandler}
                   required
-                  onChange={handleChange}
                 />
+                {dobHasError && (
+                  <div className={styles.error}>
+                    Please select your date of birth.
+                  </div>
+                )}
               </div>
               <div className={styles.field}>
                 <div className={styles.label}>Gender</div>
-                <select name="gender" required onChange={handleChange}>
+                <select
+                  name="gender"
+                  value={gender}
+                  onChange={genderChangeHandler}
+                  onBlur={genderBlurHandler}
+                  required
+                >
+                  <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
+                {genderHasError && (
+                  <div className={styles.error}>Please select your gender.</div>
+                )}
               </div>
             </FormPage>
             <FormPage
@@ -142,25 +269,46 @@ const SignUp = () => {
               showPrev={true}
               showNext={false}
               showSubmit={true}
+              disabled={
+                !emailIsTouched ||
+                !passwordIsTouched ||
+                !emailIsValid ||
+                !passwordIsValid
+              }
             >
               <div className={styles.field}>
                 <div className={styles.label}>Email Address</div>
                 <input
                   type="email"
                   name="email"
+                  value={email}
+                  onChange={emailChangeHandler}
+                  onBlur={emailBlurHandler}
                   required
-                  onChange={handleChange}
                 />
+                {emailHasError && (
+                  <div className={styles.error}>Invalid email address.</div>
+                )}
               </div>
               <div className={styles.field}>
                 <div className={styles.label}>Password</div>
                 <input
                   type="password"
                   name="password"
+                  value={password}
+                  onChange={passwordChangeHandler}
+                  onBlur={passwordBlurHandler}
                   required
-                  onChange={handleChange}
                 />
+                {passwordHasError && (
+                  <div className={styles.error}>
+                    Password must be at least 7 characters long.
+                  </div>
+                )}
               </div>
+              {errorMessage && (
+                <div className={styles.error}>{errorMessage}</div>
+              )}
             </FormPage>
           </form>
         </div>

@@ -11,6 +11,7 @@ const FormPage = ({
   showPrev,
   showNext,
   showSubmit,
+  disabled = false,
 }) => {
   return (
     <div
@@ -20,23 +21,42 @@ const FormPage = ({
     >
       <div className={styles.title}>{title}</div>
       {children}
-      <div className={`${styles.field} ${styles.btns}`}>
-        {showPrev && (
-          <button type="button" className={styles.prev} onClick={onPrev}>
-            Previous
-          </button>
-        )}
-        {showNext && (
-          <button type="button" className={styles.next} onClick={onNext}>
-            Next
-          </button>
-        )}
-        {showSubmit && (
-          <button type="button" className={styles.submit} onClick={onSubmit}>
-            Submit
-          </button>
-        )}
-      </div>
+      {(showNext || showPrev || showSubmit) && (
+        <div
+          className={`${styles.field} ${styles.btns}`}
+          style={{ display: "flex" }}
+        >
+          {showPrev && (
+            <button
+              type="button"
+              className={`${styles.prev} ${styles.signupbtn}`}
+              onClick={onPrev}
+            >
+              Previous
+            </button>
+          )}
+          {showNext && (
+            <button
+              type="button"
+              className={`${styles.next} ${styles.signupbtn}`}
+              onClick={onNext}
+              disabled={disabled}
+            >
+              Next
+            </button>
+          )}
+          {showSubmit && (
+            <button
+              type="button"
+              className={`${styles.submit} ${styles.signupbtn}`}
+              onClick={onSubmit}
+              disabled={disabled}
+            >
+              Submit
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
