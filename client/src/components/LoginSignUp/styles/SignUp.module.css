@@ -131,8 +131,7 @@ form .page .btns button.prev {
 form .page .btns button.next {
   margin-left: 3px;
 }
-
-form .page .btns button:disabled {
+button:disabled {
   background-color: #d6d6d6;
   color: #a1a1a1;
   cursor: not-allowed;

@@ -142,10 +142,9 @@ const SignUp = () => {
               onNext={nextStep}
               showNext={true}
               disabled={
-                !firstNameIsTouched ||
-                !lastNameIsTouched ||
-                !firstNameIsValid ||
-                !lastNameIsValid
+                // !firstNameIsTouched ||
+                // !lastNameIsTouched ||
+                !firstNameIsValid || !lastNameIsValid
               }
             >
               <div className={styles.field}>

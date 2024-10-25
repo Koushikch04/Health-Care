@@ -14,7 +14,7 @@ const authLimiter = rateLimit({
   max: 10,
   message: {
     status: "failure",
-    message: "Too many requests from this IP, please try again later.",
+    msg: "Too many requests from this IP, please try again later.",
   },
 });
 
@@ -23,8 +23,7 @@ const passwordResetLimiter = rateLimit({
   max: 5,
   message: {
     status: "failure",
-    message:
-      "Too many password reset requests from this IP, please try again later.",
+    msg: "Too many password reset requests from this IP, please try again later.",
   },
 });
 

@@ -2,13 +2,16 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import FormPage from "./FormPage";
-import styles from "./styles/SignUp.module.css";
 import useInput from "../../hooks/useInput";
 import { loginUser } from "../../store/auth/auth-actions";
+import useAlert from "../../hooks/useAlert";
+
+import styles from "./styles/SignUp.module.css";
 
 const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const dispatch = useDispatch();
+  const { alert } = useAlert();
 
   const {
     value: email,
@@ -34,7 +37,7 @@ const SignIn = () => {
       return;
     }
 
-    dispatch(loginUser(email, password));
+    dispatch(loginUser({ email, password }, alert));
   };
 
   return (
@@ -89,7 +92,11 @@ const SignIn = () => {
                 )}{" "}
                 {/* Inline error */}
               </div>
-              <button className={styles.signInButton} type="submit">
+              <button
+                className={styles.signInButton}
+                disabled={!emailIsValid || !passwordIsValid}
+                type="submit"
+              >
                 Submit
               </button>
             </FormPage>

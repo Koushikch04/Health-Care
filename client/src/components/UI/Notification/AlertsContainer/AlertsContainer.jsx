@@ -5,7 +5,6 @@ import Alert from "../Alert/Alert";
 
 const AlertsContainer = ({ position = "top-right" }) => {
   const alerts = useSelector((state) => state.alerts.alerts);
-  console.log(alerts);
 
   return (
     <div className={`alerts-container ${position}`}>

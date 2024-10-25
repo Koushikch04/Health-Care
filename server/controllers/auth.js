@@ -75,12 +75,12 @@ export const login = async (req, res, next) => {
       expiresIn: "1h",
     });
 
-    return res.status(200).json({ token, person });
+    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+
+    return res.status(200).json({ token, person, expiresAt });
   } catch (err) {
     console.error("Login error:", err);
-    return res
-      .status(500)
-      .json({ error: "An internal server error occurred." });
+    return res.status(500).json({ msg: "An internal server error occurred." });
   }
 };
 

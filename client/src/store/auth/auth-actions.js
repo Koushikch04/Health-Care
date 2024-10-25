@@ -1,7 +1,6 @@
 import { baseURL } from "../../api/api";
-// Action Types
+import { authActions } from "./auth-slice";
 
-// Async Action Creators
 export const registerUser = (userData) => async (dispatch) => {
   try {
     const response = await fetch(`${baseURL}/auth/register/user`, {
@@ -24,26 +23,43 @@ export const registerUser = (userData) => async (dispatch) => {
   }
 };
 
-export const loginUser = (email, password) => async (dispatch) => {
+export const loginUser = (userData, alert) => async (dispatch) => {
   try {
     const response = await fetch(`${baseURL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email: userData.email,
+        password: userData.password,
+      }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      dispatch(loginFailure(errorData.msg || "Login failed"));
+      // dispatch(errorData.msg || "Login failed");
+      alert.error({
+        message: errorData.msg || "Login failed",
+        title: "Login failed",
+      });
       return;
     }
 
     const data = await response.json();
     localStorage.setItem("token", data.token);
-    dispatch(loginSuccess(data.token));
-    alert("Sign-In Successful");
+    console.log(data);
+
+    alert.success({
+      message: `Hello, ${data.person.name.firstName} `,
+      title: "Login Success",
+    });
+    dispatch(authActions.login(data.person, data.token, data.expiresAt));
+    // dispatch(loginSuccess(data.token));
+    // alert("Sign-In Successful");
   } catch (error) {
-    dispatch(loginFailure("An unexpected error occurred"));
+    alert.error({
+      message: error.msg || "An unexpected error occurred",
+      title: "Login failed",
+    });
   }
 };
 
@@ -52,7 +68,7 @@ export const logoutUser = () => async (dispatch) => {
     // You could also call your API for logout if needed
     localStorage.removeItem("token");
     dispatch(logout());
-    alert("Logged out successfully");
+    // alert("Logged out successfully");
   } catch (error) {
     console.error("Logout error:", error);
   }
