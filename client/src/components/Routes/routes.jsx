@@ -9,17 +9,16 @@ import Profile from "../Profile/Profile";
 import MainDash from "../MainDash/MainDash";
 import ProfileDetails from "../../Pages/ProfileDetails";
 import InstantConsultation from "../InstantConsultation/InstantConsultation";
-
 const routes = [
-  { path: "/", element: <LandingPage /> },
-  { path: "/signup", element: <SignUp /> },
-  { path: "/login", element: <SignIn /> },
-  { path: "/appointments", element: <FindDoctorSearch /> },
-  { path: "/reviews", element: <Review /> },
-  // { path: "instant-consultation", element: <InstantConsultation /> },
+  { path: "/", element: <LandingPage />, requiresAuth: false },
+  { path: "/signup", element: <SignUp />, requiresAuth: false },
+  { path: "/login", element: <SignIn />, requiresAuth: false },
+  { path: "/appointments", element: <FindDoctorSearch />, requiresAuth: true },
+  { path: "/reviews", element: <Review />, requiresAuth: true },
   {
     path: "/profile",
     element: <Profile />,
+    requiresAuth: true,
     children: [
       { path: "details", element: <ProfileDetails /> },
       { path: "", element: <MainDash /> },

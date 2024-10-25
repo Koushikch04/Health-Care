@@ -52,7 +52,13 @@ export const loginUser = (userData, alert) => async (dispatch) => {
       message: `Hello, ${data.person.name.firstName} `,
       title: "Login Success",
     });
-    dispatch(authActions.login(data.person, data.token, data.expiresAt));
+    dispatch(
+      authActions.login({
+        person: data.person,
+        token: data.token,
+        expiresAt: data.expiresAt,
+      })
+    );
     // dispatch(loginSuccess(data.token));
     // alert("Sign-In Successful");
   } catch (error) {

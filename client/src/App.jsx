@@ -1,15 +1,23 @@
 import "./App.css";
 import { BrowserRouter } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 // import useAlert from "./hooks/useAlert";
 import Layout from "./components/Layout/Layout";
 import MainRoutes from "./components/Routes/MainRoutes";
-function App() {
-  // const alert = useAlert();
+import { useEffect } from "react";
+import { authActions } from "./store/auth/auth-slice";
 
+function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(authActions.checkAuth());
+  }, [dispatch]);
+  const isProfileRoute = location.pathname.startsWith("/profile");
   return (
     <BrowserRouter>
-      <Layout>
+      <Layout navbarPresent={!isProfileRoute}>
         <MainRoutes />
       </Layout>
     </BrowserRouter>

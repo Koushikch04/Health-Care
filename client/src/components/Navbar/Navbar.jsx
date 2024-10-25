@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import styles from "./Navbar.module.css";
+import { useSelector } from "react-redux";
 
 import "boxicons/css/boxicons.min.css";
 import Button from "../Button/Button";
 import Profile from "./Profile";
+
+import styles from "./Navbar.module.css";
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState(() => {
@@ -13,6 +15,8 @@ const Navbar = () => {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const userLoggedIn = useSelector((state) => state.auth.userLoggedIn);
 
   useEffect(() => {
     if (darkMode) {
@@ -114,15 +118,17 @@ const Navbar = () => {
             )}
           </div>
         </div>
-        {/* <div className="loginSignUp">
-          <Link to="/login">
-            <Button classType={"login"}>Login</Button>
-          </Link>
-          <Link to="/signup" className={styles.signUpLink}>
-            Register
-          </Link>
-        </div> */}
-        <Profile />
+        {!userLoggedIn && (
+          <div className="loginSignUp">
+            <Link to="/login">
+              <Button classType={"login"}>Login</Button>
+            </Link>
+            <Link to="/signup" className={styles.signUpLink}>
+              Register
+            </Link>
+          </div>
+        )}
+        {userLoggedIn && <Profile />}
       </div>
     </nav>
   );

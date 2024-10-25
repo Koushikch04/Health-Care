@@ -1,12 +1,16 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 
 import styles from "./Profile.module.css";
 
 function Profile() {
   const [toggleMenu, setToggleMenu] = useState(false);
+
+  const userInfo = useSelector((state) => state.auth.userInfo);
+
   const menuItems = [
-    { label: "Edit Profile", link: "#" },
-    { label: "Settings", link: "#" },
+    { label: "Edit Profile", link: "/profile" },
+    { label: "Appointments", link: "#" },
     { label: "Logout", link: "#" },
   ];
 
@@ -23,7 +27,11 @@ function Profile() {
           <div className={styles.menu}>
             <div className={styles.user_info}>
               <img src="/Images/Navbar/avatar.png" alt="User avatar" />
-              <h2>Koushik</h2>
+              <h2>
+                {userInfo
+                  ? userInfo.name.firstName + " " + userInfo.name.lastName
+                  : "John Doe"}
+              </h2>
             </div>
             <hr />
             {menuItems.map((item, index) => (

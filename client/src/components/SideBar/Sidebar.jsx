@@ -62,7 +62,7 @@ const Sidebar = () => {
             );
           })}
           <div className={classes.menuItem}>
-            <UilSignOutAlt />
+            <UilSignOutAlt /> <span>Logout</span>
           </div>
         </div>
       </motion.div>
