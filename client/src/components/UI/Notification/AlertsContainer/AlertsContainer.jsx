@@ -1,8 +1,12 @@
 import React from "react";
-import "./AlertsContainer.css"; // For container styling
+import { useSelector } from "react-redux";
+import "./AlertsContainer.css";
 import Alert from "../Alert/Alert";
 
-const AlertsContainer = ({ alerts, position = "top-right" }) => {
+const AlertsContainer = ({ position = "top-right" }) => {
+  const alerts = useSelector((state) => state.alerts.alerts);
+  console.log(alerts);
+
   return (
     <div className={`alerts-container ${position}`}>
       {alerts.map((alert) => (

@@ -1,5 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const TOKEN_EXPIRATION_DURATION = 24184287;
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -41,7 +43,10 @@ const authSlice = createSlice({
     // },
     checkAuth(state, action) {
       const lastLoggedIn = localStorage.getItem("lastLoggedIn");
-      if (lastLoggedIn && +new Date() - lastLoggedIn > 24184287) {
+      if (
+        lastLoggedIn &&
+        +new Date() - lastLoggedIn > TOKEN_EXPIRATION_DURATION
+      ) {
         state.userLoggedIn = false;
         state.userInfo = null;
         localStorage.removeItem("token");

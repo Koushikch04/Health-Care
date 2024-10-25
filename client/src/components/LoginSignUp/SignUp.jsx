@@ -1,14 +1,16 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
 import ProgressBar from "./ProgressBar";
 import FormPage from "./FormPage";
 import styles from "./styles/SignUp.module.css";
-import { baseURL } from "../../api/api";
 import useInput from "../../hooks/useInput"; // Import useInput hook for validation
+import { registerUser } from "../../store/auth/auth-actions";
 
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
-
+  const dispatch = useDispatch();
   // First Name Validation
   const {
     value: firstName,
@@ -112,36 +114,17 @@ const SignUp = () => {
       return;
     }
 
-    try {
-      const response = await fetch(`${baseURL}/auth/register/user`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          phone,
-          dob,
-          gender,
-          email,
-          password,
-        }),
-      });
+    const userData = {
+      firstName,
+      lastName,
+      phone,
+      dob,
+      gender,
+      email,
+      password,
+    };
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        alert(errorData.error);
-        return;
-      }
-
-      const data = await response.json();
-      alert(data.message);
-      setCurrentStep((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred during registration.");
-    }
+    dispatch(registerUser(userData));
   };
 
   const steps = ["Name", "Contact", "Birth", "Submit"];

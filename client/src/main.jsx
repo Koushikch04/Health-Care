@@ -1,13 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { Provider } from "react-redux";
+import store from "./store/index.js";
+
 import App from "./App.jsx";
 import "./index.css";
-import AlertProvider from "./store/context/AlertProvider.jsx";
+import AlertsContainer from "./components/UI/Notification/AlertsContainer/AlertsContainer.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <AlertProvider>
-      <App />
-    </AlertProvider>
-  </React.StrictMode>
+  <Provider store={store}>
+    <AlertsContainer position="top-right" />
+    <App />
+  </Provider>
 );

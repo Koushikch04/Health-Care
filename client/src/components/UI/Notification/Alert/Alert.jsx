@@ -18,7 +18,9 @@ const iconMap = {
 };
 
 const Alert = ({ id, title = "Success", type = "success", message }) => {
-  const alert = useAlert();
+  console.log(id, title, type, message);
+
+  const { removeAlert } = useAlert();
   const timerID = useRef(null);
   const progressRef = useRef(null);
 
@@ -40,7 +42,7 @@ const Alert = ({ id, title = "Success", type = "success", message }) => {
   };
 
   const handleDismiss = () => {
-    alert.remove(id);
+    removeAlert(id);
   };
 
   useEffect(() => {
@@ -66,7 +68,7 @@ const Alert = ({ id, title = "Success", type = "success", message }) => {
       <i
         className="alert-close"
         onClick={() => {
-          alert.remove(id);
+          removeAlert(id);
         }}
       >
         <CloseIcon />

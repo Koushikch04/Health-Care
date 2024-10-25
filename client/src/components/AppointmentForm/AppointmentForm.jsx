@@ -24,7 +24,9 @@ const AppointmentForm = ({
   });
 
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
-  const alert = useAlert();
+  const [isDateSelected, setIsDateSelected] = useState(false);
+
+  const { alert } = useAlert();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,10 +34,29 @@ const AppointmentForm = ({
       ...formData,
       [name]: value,
     });
+
+    if (name === "time" && !isDateSelected) {
+      return;
+    }
+    if (name === "date") {
+      setIsDateSelected(!!value);
+    }
+  };
+
+  const handleTimeFocus = () => {
+    if (!isDateSelected) {
+      alert.info({
+        message: "Please select a date before choosing a time.",
+        title: "Info",
+      });
+    }
   };
 
   const fetchAvailableTimeSlots = async (selectedDate) => {
-    if (!selectedDate) return;
+    if (!selectedDate) {
+      return;
+    }
+    console.log(token);
 
     try {
       const response = await fetch(
@@ -44,7 +65,7 @@ const AppointmentForm = ({
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Include your actual token
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -56,7 +77,11 @@ const AppointmentForm = ({
       const slots = await response.json();
       setAvailableTimeSlots(slots);
     } catch (error) {
-      alert.error(`Error fetching time slots: ${error.message}`);
+      console.log("error" + error.message);
+      alert.error({
+        message: `Error fetching time slots: ${error.message}`,
+        title: "Error",
+      });
     }
   };
 
@@ -79,17 +104,24 @@ const AppointmentForm = ({
       }
 
       const data = await response.json();
-      alert.success("Appointment booked successfully!");
+      alert.success({
+        message: "Appointment booked successfully!",
+        title: "Successful Booking",
+      });
       onSubmit();
     } catch (error) {
-      alert.error(`Failed to book appointment: ${error.message}`);
+      alert.error({
+        message: `Failed to book appointment: ${error.message}`,
+        title: "Failed Booking",
+      });
     }
   };
 
   useEffect(() => {
-    // Fetch available time slots whenever the date changes
-    fetchAvailableTimeSlots(formData.date);
-  }, [formData.date]); // Trigger when the date changes
+    if (isDateSelected && formData.date) {
+      fetchAvailableTimeSlots(formData.date);
+    }
+  }, [isDateSelected, formData.date]);
 
   return (
     <div className={styles.appointment_form}>
@@ -140,6 +172,7 @@ const AppointmentForm = ({
               id="time"
               name="time"
               value={formData.time}
+              onFocus={handleTimeFocus}
               onChange={handleInputChange}
               className={styles.input}
               required

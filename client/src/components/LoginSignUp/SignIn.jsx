@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
 import FormPage from "./FormPage";
 import styles from "./styles/SignUp.module.css";
-import { baseURL } from "../../api/api";
 import useInput from "../../hooks/useInput";
+import { loginUser } from "../../store/auth/auth-actions";
 
 const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");
+  const dispatch = useDispatch();
 
   const {
     value: email,
@@ -31,25 +34,7 @@ const SignIn = () => {
       return;
     }
 
-    try {
-      const response = await fetch(`${baseURL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setErrorMessage(errorData.msg || "Login failed");
-        return;
-      }
-
-      const data = await response.json();
-      alert("Sign-In Successful");
-      localStorage.setItem("token", data.token);
-    } catch (error) {
-      setErrorMessage("An unexpected error occurred");
-    }
+    dispatch(loginUser(email, password));
   };
 
   return (
