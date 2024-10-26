@@ -1,8 +1,9 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+
 import routes from "./routes";
-import ProtectedRoute from "./ProtectedRoute.jsx"; // Import the ProtectedRoute component
+import ProtectedRoute from "./ProtectedRoute.jsx";
 
 function MainRoutes() {
   const userLoggedIn = useSelector((state) => state.auth.userLoggedIn);
@@ -12,7 +13,7 @@ function MainRoutes() {
       {routes.map((route, index) => {
         if (
           userLoggedIn &&
-          (route.path === "/login" || route.path === "/signup")
+          (route.path === "/auth/login" || route.path === "/auth/signup")
         ) {
           return (
             <Route
@@ -23,7 +24,6 @@ function MainRoutes() {
           );
         }
 
-        // Handle protected routes
         const element = route.requiresAuth ? (
           <ProtectedRoute element={route.element} userLoggedIn={userLoggedIn} />
         ) : (

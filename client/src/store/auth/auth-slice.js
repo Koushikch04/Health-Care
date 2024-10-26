@@ -62,12 +62,12 @@ const authSlice = createSlice({
           state.userInfo = JSON.parse(userInfo);
         } else {
           // Token expired, clean up
-          // state.userLoggedIn = false;
-          // state.userToken = null;
-          // localStorage.removeItem("token");
-          // localStorage.removeItem("lastLoggedIn");
-          // localStorage.removeItem("expirationTime");
-          // localStorage.removeItem("userInfo");
+          state.userLoggedIn = false;
+          state.userToken = null;
+          localStorage.removeItem("token");
+          localStorage.removeItem("lastLoggedIn");
+          localStorage.removeItem("expirationTime");
+          localStorage.removeItem("userInfo");
         }
       } else {
         // state.userLoggedIn = false;

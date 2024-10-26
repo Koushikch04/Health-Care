@@ -54,9 +54,9 @@ const Navbar = () => {
           onClick={toggleMenu}
         ></i>
         <div className={`${styles.logo} ${styles.navbar__logo}`}>
-          <a href="#">
-            Health<span>Care</span>
-          </a>
+          <Link to="/">
+            Health <span>Care</span>
+          </Link>
         </div>
         <div className={`${styles.menu} ${menuOpen ? `${styles.active}` : ""}`}>
           <div className={styles.logo_toggle}>
@@ -120,10 +120,10 @@ const Navbar = () => {
         </div>
         {!userLoggedIn && (
           <div className="loginSignUp">
-            <Link to="/login">
+            <Link to="/auth/login">
               <Button classType={"login"}>Login</Button>
             </Link>
-            <Link to="/signup" className={styles.signUpLink}>
+            <Link to="/auth/signup" className={styles.signUpLink}>
               Register
             </Link>
           </div>

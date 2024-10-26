@@ -1,11 +1,11 @@
 .profile_form {
-  margin-top: 6rem;
-}
-.profile_form {
+  margin-top: 4rem;
   background-color: #fff;
-  border-radius: 8px;
+  border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 1px 4px rgba(24, 28, 33, 0.012);
+  box-shadow: 0 4px 20px rgba(24, 28, 33, 0.1);
+  max-width: 600px;
+  width: 100%;
 }
 
 .card_body {
@@ -17,12 +17,18 @@
 .media {
   display: flex;
   align-items: center;
+  margin-bottom: 20px;
+}
+
+.media img {
+  margin-bottom: 1rem;
 }
 
 .ui_w_80 {
   width: 80px;
   height: 80px;
   border-radius: 50%;
+  object-fit: cover;
 }
 
 .profile_image {
@@ -34,39 +40,47 @@
   color: #26b4ff;
   border: 1px solid #26b4ff;
   background-color: transparent;
-  padding: 5px 10px;
+  padding: 8px 12px;
   border-radius: 4px;
   display: inline-block;
+  transition: background-color 0.3s;
+}
+
+.upload_btn:hover {
+  background-color: rgba(38, 180, 255, 0.1);
 }
 
 .upload_btn input {
-  display: none; /* Hide the input element */
+  display: none;
 }
 
 .btn {
   border: 1px solid rgba(24, 28, 33, 0.1);
-  background: rgba(0, 0, 0, 0);
+  background: transparent;
   color: #fff;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 4px;
   margin-left: 10px;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .btn_primary {
   background-color: var(--primary-color);
 }
 
+.btn_primary:hover {
+  background-color: #000;
+}
+
 .btn_default {
   color: var(--primary-color);
 }
 
-.btn_primary:hover {
-  background-color: #000;
+.btn_default:hover {
+  background-color: rgba(38, 180, 255, 0.1);
 }
-.btn-defaul_:hover {
-  background-color: #fff;
-}
+
 .text_light.small {
   font-size: 0.875rem;
   color: #babbbc;
@@ -83,10 +97,10 @@ hr {
 }
 
 .form_label {
-  /* font-weight: bold; */
   margin-bottom: 0.5rem;
   margin-left: 0.5rem;
   display: block;
+  font-weight: 500;
 }
 
 .form_control {
@@ -95,6 +109,7 @@ hr {
   padding: 10px;
   width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .form_control:focus {
@@ -114,7 +129,6 @@ hr {
 
 @media screen and (max-width: 1200px) {
   .profile_form {
-    justify-content: flex-start;
     margin-top: 2rem;
   }
 }
@@ -122,5 +136,16 @@ hr {
 @media screen and (max-width: 768px) {
   .profile_form {
     align-items: center;
+    padding: 15px;
+  }
+
+  .media {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile_image {
+    margin-left: 0;
+    margin-top: 10px;
   }
 }

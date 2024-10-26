@@ -1,10 +1,10 @@
 import React from "react";
 import Cards from "../Cards/Cards";
 import Table from "../Table/Table";
-import "./MainDash.css";
+import styles from "./MainDash.module.css";
 const MainDash = () => {
   return (
-    <div className="MainDash">
+    <div className={styles.MainDash}>
       <h1>Good Morning, Koushik</h1>
       <Cards />
       <Table />

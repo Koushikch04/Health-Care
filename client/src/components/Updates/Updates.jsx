@@ -1,11 +1,10 @@
 import React from "react";
 import styles from "./Updates.module.css";
-import { UpdatesData } from "../../Data/Data";
 
-const Updates = () => {
+const Updates = (props) => {
   return (
     <div className={styles.Updates}>
-      {UpdatesData.map((update) => {
+      {props.data.map((update) => {
         return (
           <div className={styles.update}>
             <img src={update.img} alt="profile" />

@@ -11,7 +11,7 @@ import { verifyToken } from "../middleware/authVerification.js";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 5,
   message: {
     status: "failure",
     msg: "Too many requests from this IP, please try again later.",

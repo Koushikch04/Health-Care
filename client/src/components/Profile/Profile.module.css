@@ -1,40 +1,28 @@
 .Profile {
-  /* padding: 0.5rem 3.5rem; */
   color: var(--black);
-  background: linear-gradient(
-    106.37deg,
-    /* var(--primary-color-light) 29.63%,
-    var(--primary-color-dark) 51.55%,
-    var(--primary-color-light) 90.85% */
-  );
+  /* background: linear-gradient(106.37deg);s */
+  background: linear-gradient(to bottom right, #f5f8ff, #e1ecf8);
+  color: var(--black);
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Inter", sans-serif;
 }
 
-.ProfileClass::before {
-  content: "";
-  position: absolute;
-  top: 6rem;
-  left: 13rem;
-  width: 2px;
-  height: 80%;
-  background-color: var(--text-light);
-  z-index: 1;
+.PageContent {
+  flex: 1;
+  margin: 0 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .ProfileClass {
-  display: grid;
-  height: 97%;
-  width: 97%;
-  background: var(--glass);
-  border-radius: 2rem;
-  gap: 16px;
-  grid-template-columns: 11rem auto 20rem;
-  overflow: hidden;
-  border: 2px solid var(--primary-color);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  gap: 10rem;
 }
 
 @media screen and (max-width: 1200px) {

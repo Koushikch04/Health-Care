@@ -5,11 +5,20 @@ import { UilSignOutAlt } from "@iconscout/react-unicons";
 import { SidebarData } from "../../Data/Data";
 import { UilBars } from "@iconscout/react-unicons";
 import { motion } from "framer-motion";
+import { useDispatch } from "react-redux";
+import { authActions } from "../../store/auth/auth-slice";
 
 const Sidebar = () => {
   const [selected, setSelected] = useState(0);
   const [expanded, setExpaned] = useState(true);
+
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const logoutHandler = () => {
+    dispatch(authActions.logout());
+  };
+
   const sidebarVariants = {
     true: {
       left: "0",
@@ -21,13 +30,13 @@ const Sidebar = () => {
 
   return (
     <>
-      <div
+      {/* <div
         className={classes.bars}
         style={expanded ? { left: "60%" } : { left: "5%" }}
         onClick={() => setExpaned(!expanded)}
       >
         <UilBars />
-      </div>
+      </div> */}
       <motion.div
         className={classes.sidebar}
         variants={sidebarVariants}
@@ -61,8 +70,8 @@ const Sidebar = () => {
               </div>
             );
           })}
-          <div className={classes.menuItem}>
-            <UilSignOutAlt /> <span>Logout</span>
+          <div className={classes.menuItem} onClick={logoutHandler}>
+            <UilSignOutAlt /> <span>Log out</span>
           </div>
         </div>
       </motion.div>

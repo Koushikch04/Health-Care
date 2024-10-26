@@ -1,13 +1,17 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+
 import styles from "./ProfileDetails.module.css";
+
 const ProfileDetails = () => {
+  const userInfo = useSelector((state) => state.auth.userInfo);
+
+  const { name, email, phone } = userInfo;
+
   const [profileImage, setProfileImage] = useState(
     "https://bootdey.com/img/Content/avatar/avatar1.png"
   );
-  const [username, setUsername] = useState("nmaxwell");
-  const [name, setName] = useState("Nelle Maxwell");
-  const [email, setEmail] = useState("nmaxwell@mail.com");
-  const [company, setCompany] = useState("Company Ltd.");
+
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -53,10 +57,8 @@ const ProfileDetails = () => {
 
   return (
     <div className={styles.profile_form}>
-      <div className={`${styles.tab_pane} ${styles.show}`} id="account-general">
-        <div
-          className={`${styles.card_body} ${styles.media} align-items-center`}
-        >
+      <div className={`${styles.tab_pane} ${styles.show}`}>
+        <div className={`${styles.card_body} ${styles.media}`}>
           <img src={profileImage} alt="Profile" className={styles.ui_w_80} />
           <div className={styles.profile_image}>
             <label className={styles.upload_btn}>
@@ -87,23 +89,23 @@ const ProfileDetails = () => {
 
         <div className={styles.card_body}>
           <div className={styles.form_inputs}>
-            <label className={styles.form_label}>Username</label>
+            <label className={styles.form_label}>First Name</label>
             <input
               type="text"
               className={`${styles.form_control} ${styles.mb_1}`}
-              name="username"
-              value={username}
+              name="firstName"
+              value={name.firstName}
               onChange={handleChange}
             />
           </div>
 
           <div className={styles.form_inputs}>
-            <label className={styles.form_label}>Name</label>
+            <label className={styles.form_label}>last Name</label>
             <input
               type="text"
               className={`${styles.form_control} ${styles.mb_1}`}
-              name="name"
-              value={name}
+              name="lastName"
+              value={name.lastName}
               onChange={handleChange}
             />
           </div>
@@ -115,7 +117,7 @@ const ProfileDetails = () => {
               className={`${styles.form_control} ${styles.mb_1}`}
               name="email"
               value={email}
-              onChange={handleChange} // Optional, if editable
+              onChange={handleChange}
               disabled
             />
           </div>
