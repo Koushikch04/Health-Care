@@ -29,6 +29,7 @@ const userSchema = new Schema({
   },
   dob: { type: Date, required: true },
   gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
+  profileImage: { type: String, required: false },
   appointments: {
     type: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
     default: [],

@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import Appointment from "./models/Appointment.js";
 import Speciality from "./models/Specialty.js";
@@ -15,6 +17,7 @@ import authRoutes from "./routes/auth.js";
 import doctorRoutes from "./routes/doctor.js";
 import appointmentRoutes from "./routes/appointment.js";
 import specialtyRoutes from "./routes/specialty.js";
+import profileRoutes from "./routes/profile.js";
 
 import { verifyToken } from "./middleware/authVerification.js";
 
@@ -27,6 +30,10 @@ const app = express();
 //   collection: "sessions",
 // });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
 app.use(
   cors({
@@ -54,6 +61,7 @@ app.use("/auth", authRoutes);
 app.use("/appointment", appointmentRoutes);
 app.use("/doctor", doctorRoutes);
 app.use("/specialty", specialtyRoutes);
+app.use("/profile", profileRoutes);
 app.get("/", verifyToken, (req, res) => {
   res.send("Sever Home Page");
 });

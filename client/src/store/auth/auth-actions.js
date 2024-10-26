@@ -1,7 +1,7 @@
 import { baseURL } from "../../api/api";
 import { authActions } from "./auth-slice";
 
-export const registerUser = (userData) => async (dispatch) => {
+export const registerUser = (userData, alert) => async (dispatch) => {
   try {
     const response = await fetch(`${baseURL}/auth/register/user`, {
       method: "POST",
@@ -13,13 +13,19 @@ export const registerUser = (userData) => async (dispatch) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error);
+      throw new Error(errorData.msg);
     }
 
     const data = await response.json();
-    // Dispatch any success actions if needed
+    alert.success({
+      message: "Registration Success, login to continue",
+      title: `Hello, ${data.person.name.firstName} `,
+    });
   } catch (error) {
-    // Dispatch failure action if needed
+    alert.error({
+      message: error.msg || "An unexpected error occurred",
+      title: "Registration failed",
+    });
   }
 };
 

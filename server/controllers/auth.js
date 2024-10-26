@@ -14,19 +14,19 @@ export const registerUser = async (req, res, next) => {
       gender,
     } = req.body;
 
-    if (!email) return res.status(400).json({ error: "Email is required." });
+    if (!email) return res.status(400).json({ msg: "Email is required." });
     if (!firstName || !lastName || !phone || !password || !dob || !gender) {
-      return res.status(400).json({ error: "All fields are required." });
+      return res.status(400).json({ msg: "All fields are required." });
     }
 
     const existingUser = await User.findOne({ email: email });
     if (existingUser) {
-      return res.status(409).json({ error: "Email already exists." });
+      return res.status(409).json({ msg: "Email already exists." });
     }
 
     const date = new Date(dob);
     if (isNaN(date.getTime()))
-      return res.status(400).json({ error: "Invalid Date of Birth." });
+      return res.status(400).json({ msg: "Invalid Date of Birth." });
 
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
@@ -38,20 +38,21 @@ export const registerUser = async (req, res, next) => {
       password: passwordHash,
       dob: date,
       gender,
+      profileImage,
     };
 
-    const user = new User(userData);
-    await user.save();
+    const person = new User(userData);
+    await person.save();
 
-    res.status(201).json({ message: "User registered successfully", user });
+    res.status(201).json({ msg: "User registered successfully", person });
   } catch (err) {
     console.log(err);
 
     if (err.code === 11000) {
-      return res.status(409).json({ error: "Email already exists." });
+      return res.status(409).json({ msg: "Email already exists." });
     }
 
-    res.status(500).json({ error: "An internal server error occurred." });
+    res.status(500).json({ msg: "An internal server error occurred." });
   }
 };
 

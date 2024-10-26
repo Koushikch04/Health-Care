@@ -1,17 +1,25 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
+import useAlert from "../hooks/useAlert";
 import styles from "./ProfileDetails.module.css";
+import { baseURL } from "../api/api";
+import { authActions } from "../store/auth/auth-slice";
 
 const ProfileDetails = () => {
   const userInfo = useSelector((state) => state.auth.userInfo);
+  const token = useSelector((state) => state.auth.userToken);
+  const { name, email, profileImage } = userInfo || {};
 
-  const { name, email, phone } = userInfo;
+  const dispatch = useDispatch();
+  const { alert } = useAlert();
+  const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
 
-  const [profileImage, setProfileImage] = useState(
-    "https://bootdey.com/img/Content/avatar/avatar1.png"
+  const [uploadedImage, setUploadedImage] = useState(
+    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png"
   );
-
+  const [firstName, setFirstName] = useState(name.firstName);
+  const [lastName, setLastName] = useState(name.lastName);
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -23,7 +31,16 @@ const ProfileDetails = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfileImage(reader.result);
+        const newImageDataUrl = reader.result;
+
+        if (profileLink === newImageDataUrl) {
+          alert(
+            "You've selected the same image. Please choose a different one."
+          );
+          return;
+        }
+
+        setUploadedImage(newImageDataUrl);
       };
       reader.readAsDataURL(file);
     }
@@ -31,35 +48,83 @@ const ProfileDetails = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    if (name in passwords) {
-      setPasswords({ ...passwords, [name]: value });
-    } else {
-      switch (name) {
-        case "username":
-          setUsername(value);
-          break;
-        case "name":
-          setName(value);
-          break;
-        default:
-          break;
-      }
+    switch (name) {
+      case "firstName":
+        setFirstName(value);
+        break;
+      case "lastName":
+        setLastName(value);
+        break;
+      case "currentPassword":
+      case "newPassword":
+      case "repeatNewPassword":
+        setPasswords({ ...passwords, [name]: value });
+        break;
+      default:
+        break;
     }
   };
 
-  const handleSaveChanges = () => {
-    console.log("Saved changes");
+  const handleSaveChanges = async () => {
+    const formData = new FormData();
+    formData.append("firstName", firstName);
+    formData.append("lastName", lastName);
+    formData.append("email", email);
+
+    // Append the selected image file
+    const fileInput = document.querySelector("input[type='file']");
+    if (fileInput && fileInput.files[0]) {
+      formData.append("profileImage", fileInput.files[0]);
+    }
+
+    const response = await fetch(`${baseURL}/profile/update`, {
+      method: "PUT",
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      alert.success({ message: data.msg, title: "Success" });
+      dispatch(
+        authActions.updateUserInfo({
+          name: {
+            firstName,
+            lastName,
+          },
+          profileImage: data.updatedProfileImage || profileImage,
+        })
+      );
+    } else {
+      const error = await response.json();
+      alert.error({ message: error.msg, title: "Error" });
+    }
   };
 
   const handleReset = () => {
-    setProfileImage("https://bootdey.com/img/Content/avatar/avatar1.png");
+    setUploadedImage(
+      profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png"
+    );
+    const fileInput = document.querySelector("input[type='file']");
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   return (
     <div className={styles.profile_form}>
       <div className={`${styles.tab_pane} ${styles.show}`}>
         <div className={`${styles.card_body} ${styles.media}`}>
-          <img src={profileImage} alt="Profile" className={styles.ui_w_80} />
+          <img
+            src={
+              uploadedImage ||
+              "https://bootdey.com/img/Content/avatar/avatar1.png"
+            }
+            alt="Profile"
+            className={styles.ui_w_80}
+          />
           <div className={styles.profile_image}>
             <label className={styles.upload_btn}>
               Upload new photo
@@ -94,18 +159,18 @@ const ProfileDetails = () => {
               type="text"
               className={`${styles.form_control} ${styles.mb_1}`}
               name="firstName"
-              value={name.firstName}
+              value={firstName}
               onChange={handleChange}
             />
           </div>
 
           <div className={styles.form_inputs}>
-            <label className={styles.form_label}>last Name</label>
+            <label className={styles.form_label}>Last Name</label>
             <input
               type="text"
               className={`${styles.form_control} ${styles.mb_1}`}
               name="lastName"
-              value={name.lastName}
+              value={lastName}
               onChange={handleChange}
             />
           </div>

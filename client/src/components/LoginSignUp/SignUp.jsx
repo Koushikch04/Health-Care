@@ -1,16 +1,21 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import ProgressBar from "./ProgressBar";
 import FormPage from "./FormPage";
 import styles from "./styles/SignUp.module.css";
 import useInput from "../../hooks/useInput"; // Import useInput hook for validation
 import { registerUser } from "../../store/auth/auth-actions";
+import useAlert from "../../hooks/useAlert";
 
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
+
   const dispatch = useDispatch();
+  const { alert } = useAlert();
   // First Name Validation
   const {
     value: firstName,
@@ -123,8 +128,12 @@ const SignUp = () => {
       email,
       password,
     };
-
-    dispatch(registerUser(userData));
+    try {
+      await dispatch(registerUser(userData, alert));
+      navigate("/auth/login");
+    } catch (error) {
+      setErrorMessage(error.msg);
+    }
   };
 
   const steps = ["Name", "Contact", "Birth", "Submit"];

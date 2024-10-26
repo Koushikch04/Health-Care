@@ -45,6 +45,13 @@ const authSlice = createSlice({
     // otpVerificationFailure(state, action) {
     //   state.otpSent = "failure";
     // },
+    updateUserInfo(state, action) {
+      console.log("Hello");
+      console.log(action.payload);
+
+      state.userInfo = { ...state.userInfo, ...action.payload };
+      localStorage.setItem("userInfo", JSON.stringify(state.userInfo));
+    },
     checkAuth(state, action) {
       const token = localStorage.getItem("token");
       const expirationTime = localStorage.getItem("expirationTime");
