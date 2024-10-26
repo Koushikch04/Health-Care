@@ -6,7 +6,6 @@ import ProtectedRoute from "./ProtectedRoute.jsx"; // Import the ProtectedRoute 
 
 function MainRoutes() {
   const userLoggedIn = useSelector((state) => state.auth.userLoggedIn);
-  console.log(userLoggedIn);
 
   return (
     <Routes>

@@ -13,7 +13,7 @@ const routes = [
   { path: "/", element: <LandingPage />, requiresAuth: false },
   { path: "/signup", element: <SignUp />, requiresAuth: false },
   { path: "/login", element: <SignIn />, requiresAuth: false },
-  { path: "/appointments", element: <FindDoctorSearch />, requiresAuth: true },
+  { path: "/appointments", element: <FindDoctorSearch />, requiresAuth: false },
   { path: "/reviews", element: <Review />, requiresAuth: true },
   {
     path: "/profile",

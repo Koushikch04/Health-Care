@@ -59,6 +59,10 @@
   margin: 15px 0 10px;
 }
 
+div.menu_link {
+  cursor: pointer;
+}
+
 .menu_link {
   display: flex;
   align-items: center;
