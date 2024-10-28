@@ -126,3 +126,28 @@ export const UpdatesData = [
   //   time: "2 hours ago",
   // },
 ];
+
+// Data.js
+export const AppointmentsData = [
+  {
+    _id: "1",
+    img: "https://bootdey.com/img/Content/avatar/avatar1.png",
+    doctor: { name: "Dr. Andrew Thomas" },
+    time: "10:00 AM",
+    timeAgo: "10 minutes ago",
+  },
+  {
+    _id: "2",
+    img: "https://bootdey.com/img/Content/avatar/avatar2.png",
+    doctor: { name: "Dr. James Bond" },
+    time: "11:30 AM",
+    timeAgo: "30 minutes ago",
+  },
+  {
+    _id: "3",
+    img: "https://bootdey.com/img/Content/avatar/avatar3.png",
+    doctor: { name: "Dr. Iron Man" },
+    time: "2:00 PM",
+    timeAgo: "2 hours ago",
+  },
+];

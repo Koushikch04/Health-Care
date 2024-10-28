@@ -9,6 +9,7 @@ const authSlice = createSlice({
     userInfo: null,
     userToken: null,
     expirationTime: null,
+    updates: [],
     // otpSent: "no",
     // userRole: null,
   },
@@ -28,6 +29,8 @@ const authSlice = createSlice({
       state.userInfo = null;
       state.userToken = null;
       state.expirationTime = null;
+      state.updates = [];
+      sessionStorage.removeItem("updates");
       localStorage.removeItem("token");
       localStorage.removeItem("lastLoggedIn");
       localStorage.removeItem("expirationTime");
@@ -51,6 +54,20 @@ const authSlice = createSlice({
 
       state.userInfo = { ...state.userInfo, ...action.payload };
       localStorage.setItem("userInfo", JSON.stringify(state.userInfo));
+    },
+    addUpdate(state, action) {
+      state.updates.push(action.payload);
+      sessionStorage.setItem("updates", JSON.stringify(state.updates));
+    },
+    loadUpdates(state) {
+      const storedUpdates = sessionStorage.getItem("updates");
+      if (storedUpdates) {
+        state.updates = JSON.parse(storedUpdates);
+      }
+    },
+    clearUpdates(state) {
+      state.updates = [];
+      sessionStorage.removeItem("updates");
     },
     checkAuth(state, action) {
       const token = localStorage.getItem("token");

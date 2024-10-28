@@ -3,6 +3,7 @@ import express from "express";
 import {
   cancelAppointment,
   createAppointment,
+  getAppointmentDetails,
   getAvailableTimeSlots,
   getUserAppointments,
 } from "../controllers/appointment.js";
@@ -17,6 +18,7 @@ router.get(
   verifyToken,
   getAvailableTimeSlots
 );
+router.get("/:appointmentId", verifyToken, getAppointmentDetails);
 router.delete("/:appointmentId", verifyToken, cancelAppointment);
 
 export default router;

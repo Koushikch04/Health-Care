@@ -25,24 +25,24 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
 
   return (
     <Modal onClose={onClose}>
-      <h2>Appointment Details</h2>
-      <p>
+      <h2 className={styles.h2}>Appointment Details</h2>
+      <p className={styles.p}>
         <strong>Date:</strong> {new Date(appointment.date).toLocaleDateString()}
       </p>
-      <p>
+      <p className={styles.p}>
         <strong>Time:</strong> {appointment.time}
       </p>
-      <p>
+      <p className={styles.p}>
         <strong>Doctor:</strong> {appointment.doctor.name}
       </p>
-      <p>
+      <p className={styles.p}>
         <strong>Patient:</strong> {appointment.patientName}
       </p>
-      <p>
+      <p className={styles.p}>
         <strong>Description:</strong>{" "}
         {appointment.reasonForVisit || "No description available."}
       </p>
-      <p>
+      <p className={styles.p}>
         <strong>Status:</strong> {appointment.status || "Not specified"}
       </p>
 

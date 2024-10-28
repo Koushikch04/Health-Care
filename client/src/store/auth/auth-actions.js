@@ -113,6 +113,28 @@ export const cancelAppointment = (appointmentId, alert) => {
         throw new Error(errorData.msg);
       }
 
+      const canceledAppointment = await fetch(
+        `${baseURL}/appointment/${appointmentId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      const appointmentData = await canceledAppointment.json();
+      const newUpdate = {
+        id: appointmentData._id,
+        img: appointmentData.patientImage || "defaultImage.jpg", // Use a default image if none exists
+        patient: appointmentData.patientName, // Assuming patientName is a property
+        doctor: appointmentData.doctor.name, // Doctor's name
+        type: "canceled", // Type of update
+        time: new Date().toISOString(), // Current time in ISO format
+      };
+
+      // Dispatch action to add the new update to the Redux store
+      dispatch(authActions.addUpdate(newUpdate));
+
       alert.success({
         message: "Appointment cancelled successfully.",
         title: "Cancellation Success",
@@ -120,6 +142,8 @@ export const cancelAppointment = (appointmentId, alert) => {
 
       return true;
     } catch (error) {
+      console.log(error);
+
       alert.error({
         message: error.msg || "Failed to cancel the appointment.",
         title: "Cancellation Failed",

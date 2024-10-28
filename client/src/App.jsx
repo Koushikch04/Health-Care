@@ -13,6 +13,7 @@ function App() {
 
   useEffect(() => {
     dispatch(authActions.checkAuth());
+    dispatch(authActions.loadUpdates());
   }, [dispatch]);
 
   const isProfileRoute = location.pathname.startsWith("/profile");

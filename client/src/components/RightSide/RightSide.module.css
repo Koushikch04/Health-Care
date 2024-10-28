@@ -17,6 +17,11 @@
   justify-content: space-evenly;
 }
 
+.RightSide h3 {
+  /* text-align: center; */
+  margin-right: 2rem;
+}
+
 @media screen and (max-width: 1200px) {
   .RightSide {
     justify-content: flex-start;

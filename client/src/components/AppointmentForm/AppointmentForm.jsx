@@ -3,7 +3,8 @@ import useAlert from "../../hooks/useAlert";
 import styles from "./AppointmentForm.module.css";
 import cardStyles from "../DoctorListPagination/DoctorCard.module.css";
 import { baseURL } from "../../api/api";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { authActions } from "../../store/auth/auth-slice";
 
 const AppointmentForm = ({
   doctorId,
@@ -16,6 +17,7 @@ const AppointmentForm = ({
   cost,
 }) => {
   const token = useSelector((state) => state.auth.userToken);
+  const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
     doctorId,
@@ -96,7 +98,7 @@ const AppointmentForm = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include your actual token
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -107,6 +109,20 @@ const AppointmentForm = ({
       }
 
       const data = await response.json();
+
+      const newUpdate = {
+        id: data._id,
+        img: image,
+        patient: formData.patientName,
+        doctor: name,
+        type: "booked",
+        time: data.createdAt,
+      };
+
+      console.log(newUpdate);
+
+      dispatch(authActions.addUpdate(newUpdate));
+
       alert.success({
         message: "Appointment booked successfully!",
         title: "Successful Booking",

@@ -144,3 +144,31 @@ export const cancelAppointment = async (req, res) => {
       .json({ message: "Error canceling appointment", error });
   }
 };
+
+export const getAppointmentDetails = async (req, res) => {
+  const { appointmentId } = req.params;
+
+  try {
+    const appointment = await Appointment.findById(appointmentId).populate(
+      "doctor",
+      "name experience rating"
+    );
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found." });
+    }
+
+    if (appointment.user.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to view this appointment." });
+    }
+
+    return res.status(200).json(appointment);
+  } catch (error) {
+    console.error(error.message);
+    return res
+      .status(500)
+      .json({ message: "Error retrieving appointment details", error });
+  }
+};
