@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-import "boxicons/css/boxicons.min.css";
 import Button from "../Button/Button";
 import Profile from "./Profile";
 
 import styles from "./Navbar.module.css";
+import "boxicons/css/boxicons.min.css";
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState(() => {

@@ -1,14 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 import styles from "./Profile.module.css";
 import { authActions } from "../../store/auth/auth-slice";
+import { baseURL } from "../../api/api";
 
 function Profile() {
   const [toggleMenu, setToggleMenu] = useState(false);
-  const userInfo = useSelector((state) => state.auth.userInfo);
+  const { name, profileImage } = useSelector((state) => state.auth.userInfo);
 
+  const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
+  const [uploadedImage, setUploadedImage] = useState(
+    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png"
+  );
+
+  const menuRef = useRef(null);
   const dispatch = useDispatch();
 
   const menuItems = [
@@ -21,11 +28,29 @@ function Profile() {
     dispatch(authActions.logout());
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setToggleMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("focusout", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("focusout", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className={styles.main}>
+    <div className={styles.main} ref={menuRef}>
       <img
         className={styles.avatar}
-        src="/Images/Navbar/avatar.png"
+        src={
+          uploadedImage || "https://bootdey.com/img/Content/avatar/avatar1.png"
+        }
         alt="User avatar"
         onClick={() => setToggleMenu((prev) => !prev)}
       />
@@ -33,11 +58,9 @@ function Profile() {
         <div className={`${styles.menu_wrap} ${toggleMenu ? styles.show : ""}`}>
           <div className={styles.menu}>
             <div className={styles.user_info}>
-              <img src="/Images/Navbar/avatar.png" alt="User avatar" />
+              <img src={uploadedImage} alt="User avatar" />
               <h2>
-                {userInfo
-                  ? `${userInfo.name.firstName} ${userInfo.name.lastName}`
-                  : "John Doe"}
+                {name ? `${name.firstName} ${name.lastName}` : "John Doe"}
               </h2>
             </div>
             <hr />
