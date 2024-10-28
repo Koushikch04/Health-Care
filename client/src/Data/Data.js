@@ -39,7 +39,7 @@ export const SidebarData = [
   {
     icon: CalendarMonth,
     heading: "Calender",
-    url: "",
+    url: "calendar",
   },
   {
     icon: MessageSharp,

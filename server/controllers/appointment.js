@@ -43,7 +43,7 @@ export const getUserAppointments = async (req, res) => {
 
     return res
       .status(500)
-      .json({ message: "Error retrieving appointments", error });
+      .json({ msg: "Error retrieving appointments", error });
   }
 };
 
@@ -112,5 +112,35 @@ export const getAvailableTimeSlots = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Error retrieving available time slots", error });
+  }
+};
+
+export const cancelAppointment = async (req, res) => {
+  const { appointmentId } = req.params;
+
+  try {
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found." });
+    }
+
+    if (appointment.user.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to cancel this appointment." });
+    }
+
+    appointment.status = "canceled";
+    await appointment.save();
+
+    return res
+      .status(200)
+      .json({ message: "Appointment canceled successfully.", appointment });
+  } catch (error) {
+    console.error(error.message);
+    return res
+      .status(500)
+      .json({ message: "Error canceling appointment", error });
   }
 };

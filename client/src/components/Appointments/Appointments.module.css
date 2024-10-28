@@ -1,0 +1,109 @@
+.appointmentsContainer {
+  padding: 70px;
+  max-width: 800px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+  /* background-color: #f9f9f9; */
+  border-radius: 8px;
+  /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.loading,
+.error {
+  text-align: center;
+  font-size: 18px;
+}
+
+.loading {
+  color: #555;
+}
+
+.error {
+  color: red;
+}
+
+.appointmentsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  border: 2px solid var(---primary-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.appointmentsTable th,
+.appointmentsTable td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.appointmentsTable th {
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.appointmentsTable th:hover {
+  background-color: var(--primary-color-dark);
+}
+
+.appointmentsTable tr:nth-child(even) {
+  background-color: var(--primary-color-light);
+}
+
+.appointmentsTable tr:hover {
+  background-color: #e9ecef;
+}
+
+button {
+  background-color: var(--text-light);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: var(--text-dark);
+}
+
+span.status {
+  padding: 8px;
+  border-radius: 8px;
+}
+
+/* scheduled", "completed", "canceled */
+span.status.scheduled {
+  background: #59bfff;
+  color: white;
+}
+
+span.status.canceled {
+  background: #ffadad8f;
+  color: red;
+}
+
+span.status.completed {
+  color: green;
+  background: rgb(145 254 159 / 47%);
+}
+
+@media (max-width: 600px) {
+  .appointmentsTable {
+    font-size: 14px;
+  }
+
+  button {
+    padding: 6px 10px;
+  }
+}

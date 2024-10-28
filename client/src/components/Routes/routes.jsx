@@ -11,6 +11,7 @@ import MainDash from "../MainDash/MainDash";
 import ProfileDetails from "../../Pages/ProfileDetails";
 import Appointments from "../Appointments/Appointments";
 import InstantConsultation from "../InstantConsultation/InstantConsultation";
+import AppointmentCalendar from "../AppointmentCalender/AppointmentCalendar";
 const routes = [
   { path: "/", element: <LandingPage />, requiresAuth: false },
   { path: "/auth/signup", element: <SignUp />, requiresAuth: false },
@@ -24,6 +25,7 @@ const routes = [
     children: [
       { path: "details", element: <ProfileDetails /> },
       { path: "appointments", element: <Appointments /> },
+      { path: "calendar", element: <AppointmentCalendar /> },
       { path: "", element: <MainDash /> },
     ],
   },

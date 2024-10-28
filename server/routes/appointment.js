@@ -1,6 +1,7 @@
 import express from "express";
 
 import {
+  cancelAppointment,
   createAppointment,
   getAvailableTimeSlots,
   getUserAppointments,
@@ -16,5 +17,6 @@ router.get(
   verifyToken,
   getAvailableTimeSlots
 );
+router.delete("/:appointmentId", verifyToken, cancelAppointment);
 
 export default router;

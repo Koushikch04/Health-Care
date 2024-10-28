@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const TOKEN_EXPIRATION_DURATION = 24184287;
+// const TOKEN_EXPIRATION_DURATION = 24184287;
 
 const authSlice = createSlice({
   name: "auth",

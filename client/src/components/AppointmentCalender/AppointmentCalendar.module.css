@@ -1,0 +1,135 @@
+.calendarContainer {
+  display: flex;
+  max-width: 1500px; /* Increase container width */
+  margin: 40px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.calendarSection {
+  width: 50%; /* Narrower width for calendar */
+  border-right: 1px solid #ddd;
+  padding-right: 20px;
+}
+
+.appointmentsSection {
+  width: 50%; /* Wider width for appointments */
+  padding-left: 20px;
+}
+
+h2 {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.viewModeButtons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.viewModeButtons button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #2980b9;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.viewModeButtons button:hover {
+  background-color: #1c5980;
+}
+
+.appointmentsList {
+  margin-top: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: #f1f1f1;
+  padding: 15px;
+  border-radius: 8px;
+  border-top: 2px solid #2980b9;
+}
+
+/* Custom scrollbar styling */
+.appointmentsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.appointmentsList::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-radius: 10px;
+}
+
+.appointmentsList::-webkit-scrollbar-thumb {
+  background-color: #2980b9;
+  border-radius: 10px;
+  border: 2px solid #e0e0e0;
+}
+
+.appointmentsList h3 {
+  font-size: 1.5rem;
+  color: #34495e;
+  margin: 15px 0;
+  text-align: center;
+}
+
+.appointmentItem {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: background-color 0.3s, transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.appointmentItem:hover {
+  background-color: #ecf6fd;
+  transform: translateY(-2px);
+}
+
+.appointmentItem strong {
+  color: #2c3e50;
+}
+
+.statusBadge {
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.scheduled {
+  background: #ffadad;
+  color: #d80000;
+}
+
+.canceled {
+  background: #83b6d6;
+  color: white;
+}
+.activeViewMode {
+  background-color: #005a9e;
+  color: white;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.completed {
+  color: green;
+  background: rgba(145, 254, 159, 0.5);
+}
+
+.noAppointments {
+  text-align: center;
+  color: #777;
+  font-style: italic;
+  margin-top: 10px;
+}

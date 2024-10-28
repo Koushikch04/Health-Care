@@ -77,10 +77,11 @@ export const loginUser = (userData, alert) => async (dispatch) => {
 
 export const logoutUser = () => async (dispatch) => {
   try {
-    // You could also call your API for logout if needed
-    localStorage.removeItem("token");
     dispatch(logout());
-    // alert("Logged out successfully");
+    alert.success({
+      message: "Logged out successfully",
+      title: "Authentication status",
+    });
   } catch (error) {
     console.error("Logout error:", error);
   }
@@ -89,10 +90,41 @@ export const logoutUser = () => async (dispatch) => {
 export const checkAuthStatus = () => (dispatch) => {
   const token = localStorage.getItem("token");
   if (token) {
-    // You might want to decode the token to get user info
     const user = jwt.decode(token);
     dispatch(checkAuth(user));
   } else {
     dispatch(logout());
   }
+};
+
+export const cancelAppointment = (appointmentId, alert) => {
+  return async (dispatch) => {
+    try {
+      const response = await fetch(`${baseURL}/appointment/${appointmentId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.msg);
+      }
+
+      alert.success({
+        message: "Appointment cancelled successfully.",
+        title: "Cancellation Success",
+      });
+
+      return true;
+    } catch (error) {
+      alert.error({
+        message: error.msg || "Failed to cancel the appointment.",
+        title: "Cancellation Failed",
+      });
+      return false;
+    }
+  };
 };

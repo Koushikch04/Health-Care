@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import useAlert from "../../hooks/useAlert";
 import styles from "./AppointmentForm.module.css";
 import cardStyles from "../DoctorListPagination/DoctorCard.module.css";
-import { baseURL, token } from "../../api/api";
+import { baseURL } from "../../api/api";
+import { useSelector } from "react-redux";
 
 const AppointmentForm = ({
   doctorId,
@@ -14,6 +15,8 @@ const AppointmentForm = ({
   onSubmit,
   cost,
 }) => {
+  const token = useSelector((state) => state.auth.userToken);
+
   const [formData, setFormData] = useState({
     doctorId,
     date: "",
