@@ -7,3 +7,6 @@ we are just responding with a success message at the backend
 
 4.Secure Storage: Ensure that any sensitive information (like JWTs) is stored securely on the client side (preferably in HttpOnly cookies rather than local storage).
 
+5.optimize performance. Use caching
+
+6. test all apis once.
