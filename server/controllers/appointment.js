@@ -97,6 +97,7 @@ export const getAvailableTimeSlots = async (req, res) => {
     const appointments = await Appointment.find({
       doctor: doctorId,
       date: new Date(date),
+      status: "scheduled",
     }).select("time");
 
     const bookedTimes = appointments.map((app) => app.time);
