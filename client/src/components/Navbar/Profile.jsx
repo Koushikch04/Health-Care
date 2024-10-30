@@ -19,7 +19,7 @@ function Profile() {
   const dispatch = useDispatch();
 
   const menuItems = [
-    { label: "Edit Profile", link: "/profile" },
+    { label: "Edit Profile", link: "/profile/details" },
     { label: "Appointments", link: "/appointments" },
     { label: "Logout", link: "#" },
   ];

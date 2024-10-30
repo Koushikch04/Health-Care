@@ -18,6 +18,7 @@ import doctorRoutes from "./routes/doctor.js";
 import appointmentRoutes from "./routes/appointment.js";
 import specialtyRoutes from "./routes/specialty.js";
 import profileRoutes from "./routes/profile.js";
+import findSpecialtyRoutes from "./routes/findSpecialty.js";
 
 import { verifyToken } from "./middleware/authVerification.js";
 
@@ -62,6 +63,8 @@ app.use("/appointment", appointmentRoutes);
 app.use("/doctor", doctorRoutes);
 app.use("/specialty", specialtyRoutes);
 app.use("/profile", profileRoutes);
+app.use("/health/specialty", findSpecialtyRoutes);
+
 app.get("/", verifyToken, (req, res) => {
   res.send("Sever Home Page");
 });

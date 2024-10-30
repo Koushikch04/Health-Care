@@ -21,11 +21,11 @@ import {
 
 // Sidebar Data
 export const SidebarData = [
-  {
-    icon: Dashboard,
-    heading: "Overview",
-    url: "/profile/",
-  },
+  // {
+  //   icon: Dashboard,
+  //   heading: "Overview",
+  //   url: "/profile/",
+  // },
   {
     icon: UilUsersAlt,
     heading: "Account",
