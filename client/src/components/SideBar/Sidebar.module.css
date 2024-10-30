@@ -8,7 +8,6 @@
   color: var(--nav-text-color);
 }
 
-/* logo */
 .bars {
   display: none;
 }
@@ -25,8 +24,13 @@
   padding-bottom: 2rem;
 }
 
-.logo > span > span {
-  color: var(--primary-color); /* Updated color */
+.logo a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo > a > span > span {
+  color: var(--primary-color);
 }
 
 .logo > img {
@@ -47,12 +51,13 @@
   align-items: center;
   gap: 1rem;
   height: 2.5rem;
+  padding-right: 10px;
   margin-left: 2rem;
   position: relative;
   transition: all 300ms ease;
   border-radius: 0.7rem;
   font-size: 14px;
-  color: var(--nav-text-color); /* Updated color */
+  color: var(--nav-text-color);
 }
 
 .menuItem:hover {
@@ -76,7 +81,7 @@
   content: "";
   width: 8px;
   height: 100%;
-  background: var(--primary-color); /* Updated color */
+  background: var(--primary-color);
   margin-right: calc(1rem - 8px);
 }
 
@@ -94,7 +99,7 @@
   .sidebar {
     position: fixed;
     z-index: 9;
-    background: var(--nav-side); /* Updated color */
+    background: var(--nav-side);
     width: 55%;
     padding-right: 1rem;
     height: 100%;
@@ -114,7 +119,7 @@
     position: fixed;
     top: 2rem;
     left: 60%;
-    background: var(--nav-side); /* Updated color */
+    background: var(--nav-side);
     padding: 10px;
     border-radius: 10px;
     z-index: 9;

@@ -3,9 +3,7 @@
   max-width: 800px;
   margin: auto;
   font-family: Arial, sans-serif;
-  /* background-color: #f9f9f9; */
   border-radius: 8px;
-  /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
 }
 
 h1 {
@@ -28,13 +26,22 @@ h1 {
   color: red;
 }
 
+.appointmentsTableContainer {
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .appointmentsTable {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-  border: 2px solid var(---primary-color);
-  border-radius: 8px;
-  overflow: hidden;
+}
+
+.appointmentsTable thead th {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 8px;
+  text-align: left;
 }
 
 .appointmentsTable th,
@@ -45,8 +52,6 @@ h1 {
 }
 
 .appointmentsTable th {
-  background-color: var(--primary-color);
-  color: white;
   cursor: pointer;
   transition: background-color 0.3s;
 }
@@ -55,12 +60,43 @@ h1 {
   background-color: var(--primary-color-dark);
 }
 
-.appointmentsTable tr:nth-child(even) {
+/* Scrollable tbody */
+.scrollableTbody {
+  display: block;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.scrollableTbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.appointmentsTable tbody tr:nth-child(even) {
   background-color: var(--primary-color-light);
 }
 
-.appointmentsTable tr:hover {
+.appointmentsTable tbody tr:hover {
   background-color: #e9ecef;
+}
+
+/* Scrollbar customization */
+.scrollableTbody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollableTbody::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.scrollableTbody::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.scrollableTbody::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color-dark);
 }
 
 button {
@@ -82,7 +118,6 @@ span.status {
   border-radius: 8px;
 }
 
-/* scheduled", "completed", "canceled */
 span.status.scheduled {
   background: #59bfff;
   color: white;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import classes from "./Sidebar.module.css";
 import { UilSignOutAlt } from "@iconscout/react-unicons";
 import { SidebarData } from "../../Data/Data";
@@ -43,9 +43,11 @@ const Sidebar = () => {
         animate={window.innerWidth <= 768 ? `${expanded}` : ""}
       >
         <div className={classes.logo}>
-          <span>
-            <span>Health</span>Care
-          </span>
+          <Link to={"/"}>
+            <span>
+              <span>Health</span>Care
+            </span>
+          </Link>
         </div>
 
         <div className={classes.menu}>

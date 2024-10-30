@@ -30,7 +30,7 @@ const Updates = (props) => {
               {/* <span> has an appointment at {appointment.time}.</span> */}
               <span>{`${appointment.patient}`}</span> has{" "}
               <span>{`${appointment.type}`}</span> appoinment with
-              <span>{` ${appointment.doctor} .`}</span>
+              <span>{` ${appointment.doctor}`}</span>
             </div>
             <span>{getTimeAgo(appointment.time)}</span>
           </div>

@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-
 import styles from "./Appointments.module.css";
 import { baseURL } from "../../api/api";
 import AppointmentDetails from "./AppointmentDetails";
 
-function Appointments(props) {
+function Appointments() {
   const token = useSelector((state) => state.auth.userToken);
-
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,7 +35,7 @@ function Appointments(props) {
       }
     };
     getAppointments();
-  }, [appointments]);
+  }, [token]);
 
   const sortedAppointments = [...appointments].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -73,6 +71,7 @@ function Appointments(props) {
       )
     );
   };
+
   const handleViewDetails = (appointment) => {
     setSelectedAppointment(appointment);
   };
@@ -88,48 +87,56 @@ function Appointments(props) {
     <div className={styles.appointmentsContainer}>
       <h1>Appointments</h1>
       {appointments.length > 0 ? (
-        <table className={styles.appointmentsTable}>
-          <thead>
-            <tr>
-              <th onClick={() => requestSort("date")}>
-                Date{getSortIndicator("date")}
-              </th>
-              <th onClick={() => requestSort("time")}>
-                Time{getSortIndicator("time")}
-              </th>
-              <th onClick={() => requestSort("doctor.name")}>
-                Doctor{getSortIndicator("doctor.name")}
-              </th>
-              <th onClick={() => requestSort("patientName")}>
-                Patient{getSortIndicator("patientName")}
-              </th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedAppointments.map((appointment) => (
-              <tr key={appointment._id}>
-                <td>{new Date(appointment.date).toLocaleDateString()}</td>
-                <td>{appointment.time}</td>
-                <td>{appointment.doctor.name}</td>
-                <td>{appointment.patientName}</td>
-                <td>
-                  <span
-                    className={`${styles.status} ${styles[appointment.status]}`}
-                  >
-                    {appointment.status}
-                  </span>
-                </td>
-                <td>
-                  <button onClick={() => handleViewDetails(appointment)}>
-                    View Details
-                  </button>
-                </td>
+        <div className={styles.appointmentsTableContainer}>
+          <table className={styles.appointmentsTable}>
+            <thead>
+              <tr>
+                <th onClick={() => requestSort("date")}>
+                  Date{getSortIndicator("date")}
+                </th>
+                <th onClick={() => requestSort("time")}>
+                  Time{getSortIndicator("time")}
+                </th>
+                <th onClick={() => requestSort("doctor.name")}>
+                  Doctor{getSortIndicator("doctor.name")}
+                </th>
+                <th onClick={() => requestSort("patientName")}>
+                  Patient{getSortIndicator("patientName")}
+                </th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+          </table>
+          <div className={styles.scrollableTbody}>
+            <table className={styles.appointmentsTable}>
+              <tbody>
+                {sortedAppointments.map((appointment) => (
+                  <tr key={appointment._id}>
+                    <td>{new Date(appointment.date).toLocaleDateString()}</td>
+                    <td>{appointment.time}</td>
+                    <td>{appointment.doctor.name}</td>
+                    <td>{appointment.patientName}</td>
+                    <td>
+                      <span
+                        className={`${styles.status} ${
+                          styles[appointment.status]
+                        }`}
+                      >
+                        {appointment.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button onClick={() => handleViewDetails(appointment)}>
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : (
         <p>No appointments found.</p>
       )}
