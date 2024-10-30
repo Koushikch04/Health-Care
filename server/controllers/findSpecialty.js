@@ -18,6 +18,7 @@ export const getBodyLocations = async (req, res) => {
       },
     });
     res.json(response.data);
+    console.log(response.data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -38,8 +39,11 @@ export const getBodySublocations = async (req, res) => {
         },
       }
     );
+    console.log(response.data);
     res.json(response.data);
   } catch (error) {
+    console.log(error.message);
+
     res.status(500).json({ error: error.message });
   }
 };
@@ -71,16 +75,18 @@ export const getSpecializations = async (req, res) => {
   const token = await getAuthToken();
 
   try {
+    console.log("Received symptoms:", symptoms);
     const symptomsArray = symptoms ? JSON.parse(symptoms) : [];
+    console.log("Symptoms array length:", symptomsArray.length);
 
     const response = await axios.get(
       `${PRIAID_API_URL}/diagnosis/specialisations`,
       {
         params: {
-          token: token,
-          symptoms: symptomsArray.length > 0 ? symptomsArray : undefined, // Only send if not empty
-          gender: gender || "male", // Use the provided gender or default to "male"
-          year_of_birth: yearOfBirth || 1981, // Use the provided year or default to 1981
+          token,
+          symptoms: symptomsArray.length > 0 ? symptomsArray : [], // Send the symptoms array directly
+          gender: gender || "male",
+          year_of_birth: yearOfBirth || 1981,
           language: "en-gb",
         },
       }
@@ -88,8 +94,8 @@ export const getSpecializations = async (req, res) => {
 
     res.json(response.data);
   } catch (error) {
-    // Improved error handling for better clarity
     const errorMessage = error.response?.data || error.message;
+    console.error("Error fetching specializations:", errorMessage);
     res.status(500).json({ error: errorMessage });
   }
 };
