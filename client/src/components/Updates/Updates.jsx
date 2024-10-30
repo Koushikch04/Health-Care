@@ -16,12 +16,9 @@ const getTimeAgo = (timeString) => {
 };
 
 const Updates = (props) => {
-  const updates = useSelector((state) => state.auth.updates);
-  console.log(updates);
-
   return (
     <div className={styles.Updates}>
-      {updates.map((appointment) => (
+      {props.updates.map((appointment) => (
         <div className={styles.update} key={appointment.id}>
           {/* <img src={appointment.img} alt="profile" /> */}
           <div className={styles.noti}>

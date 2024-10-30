@@ -38,7 +38,7 @@ export const registerUser = async (req, res, next) => {
       password: passwordHash,
       dob: date,
       gender,
-      profileImage,
+      // profileImage,
     };
 
     const person = new User(userData);

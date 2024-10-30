@@ -2,17 +2,18 @@
 import React from "react";
 import Updates from "../Updates/Updates";
 import styles from "./RightSide.module.css";
-import { AppointmentsData } from "../../Data/Data";
+import { useSelector } from "react-redux";
 
 const RightSide = () => {
+  const updates = useSelector((state) => state.auth.updates);
   return (
     <div className={styles.RightSide}>
-      {AppointmentsData.length === 0 ? (
-        <h1 style={{ textAlign: "center" }}>No updates available right now</h1>
+      {updates.length === 0 ? (
+        <h3 style={{ textAlign: "center" }}>No updates </h3>
       ) : (
         <div>
           <h3>Recent Updates</h3>
-          <Updates data={AppointmentsData} />
+          <Updates updates={updates} />
         </div>
       )}
     </div>

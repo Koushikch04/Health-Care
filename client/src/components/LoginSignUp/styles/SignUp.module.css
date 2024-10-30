@@ -96,6 +96,7 @@ form .page .field select {
   font-size: 16px;
   transition: border-color 0.3s;
   margin: 10px;
+  margin-bottom: 0;
 }
 
 form .page .field input:focus,
