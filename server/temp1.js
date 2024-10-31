@@ -56,6 +56,6 @@ async function getSymptoms() {
 
 // console.log(await getSymptoms());
 
-// console.log(await getAuthToken());
+console.log(await getAuthToken());
 
 export default getAuthToken;

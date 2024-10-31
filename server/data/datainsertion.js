@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
-import Specialty from "./models/Specialty.js";
-import Doctor from "./models/Doctor.js";
+import Specialty from "../models/Specialty.js";
+import Doctor from "../models/Doctor.js";
 
 dotenv.config();
 const MONGO_URL = process.env.MONGO_URL;
@@ -260,7 +260,7 @@ const addAdditionalDoctors = async () => {
 
 // Execute the addition of additional doctors
 const addAddionalDoctorsHelper = async () => {
-  await addAdditionalDoctors();
+  // await addAdditionalDoctors();
   mongoose.connection.close(); // Close the connection after adding
 };
 
