@@ -20,7 +20,7 @@ async function getAuthToken() {
     const response = await axios.post(uri, null, { headers });
     return response.data.Token; // The access token
   } catch (error) {
-    console.error("Error obtaining token:", error.response.data);
+    console.error("Error obtaining token:", error.response);
     throw error; // Handle error as needed
   }
 }
@@ -49,13 +49,13 @@ async function getSymptoms() {
     const response = await axios.get(symptomsUrl, { headers });
     return response.data;
   } catch (error) {
-    console.error("Error fetching symptoms:", error.response.data);
+    console.error("Error fetching symptoms:", error.response);
     throw error;
   }
 }
 
 // console.log(await getSymptoms());
 
-// console.log(await getSymptoms());
+// console.log(await getAuthToken());
 
 export default getAuthToken;

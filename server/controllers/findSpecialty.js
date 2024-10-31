@@ -76,26 +76,52 @@ export const getSpecializations = async (req, res) => {
 
   try {
     console.log("Received symptoms:", symptoms);
-    const symptomsArray = symptoms ? JSON.parse(symptoms) : [];
-    console.log("Symptoms array length:", symptomsArray.length);
+    // const symptomsArray = symptoms ? JSON.parse(symptoms) : [];
+    const symptomsArray = JSON.parse(symptoms);
+    // const symptomsArray = Array.isArray(symptoms) ? symptoms : [];
 
     const response = await axios.get(
       `${PRIAID_API_URL}/diagnosis/specialisations`,
       {
         params: {
           token,
-          symptoms: symptomsArray.length > 0 ? symptomsArray : [], // Send the symptoms array directly
+          symptoms: symptoms.length > 2 ? symptoms : ["29"],
           gender: gender || "male",
           year_of_birth: yearOfBirth || 1981,
           language: "en-gb",
         },
       }
     );
+    console.log(response.data);
 
     res.json(response.data);
   } catch (error) {
     const errorMessage = error.response?.data || error.message;
     console.error("Error fetching specializations:", errorMessage);
     res.status(500).json({ error: errorMessage });
+  }
+};
+
+export const getAllSpecialties = async (req, res) => {
+  console.log("got request");
+
+  const token = getAuthToken();
+  try {
+    const response = await fetch(
+      `${PRIAID_API_URL}/specialisations?token=${token}&language=en-gb`
+    );
+    // axios.get(`${PRIAID_API_URL}/specialisations`, {
+    //   params: {
+    //     token,
+    //     language: "en-gb",
+    //   },
+    // });
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error });
+
+    // const errorMessage = error.response?.data || error.message;
+    // console.error("Error fetching symptoms:", errorMessage);
   }
 };

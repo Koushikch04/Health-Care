@@ -1,4 +1,3 @@
-// ChatConsultation.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -12,179 +11,167 @@ const ChatConsultation = () => {
       text: "Hello! I'm here to help you. Would you like to continue this chat?",
     },
   ]);
-  const [gender, setGender] = useState("male");
-  const [yearOfBirth, setYearOfBirth] = useState(1980);
+  const [gender, setGender] = useState("");
+  const [yearOfBirth, setYearOfBirth] = useState("");
   const [bodyLocations, setBodyLocations] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [bodySublocations, setBodySublocations] = useState([]);
-  const [selectedSublocation, setSelectedSublocation] = useState("");
+  const [selectedSublocation, setSelectedSublocation] = useState(null);
   const [symptoms, setSymptoms] = useState([]);
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [specializations, setSpecializations] = useState([]);
   const [step, setStep] = useState(1);
-  console.log("component rendered", step);
 
   useEffect(() => {
-    const fetchBodyLocations = async () => {
-      try {
-        const response = await axios.get(
-          `${baseURL}/health/specialty/body-locations`
-        );
-        setBodyLocations(response.data);
-        // console.log(response.data);
-      } catch (error) {
-        console.error("Error fetching body locations", error);
-      }
-    };
     fetchBodyLocations();
   }, []);
 
-  useEffect(() => {
-    if (selectedLocation) {
-      const fetchBodySublocations = async () => {
-        try {
-          const response = await axios.get(
-            `${baseURL}/health/specialty/body-locations/${selectedLocation.ID}`
-          );
-          setBodySublocations(response.data);
-        } catch (error) {
-          console.error("Error fetching body sublocations", error);
-        }
-      };
-      fetchBodySublocations();
+  const fetchBodyLocations = async () => {
+    try {
+      const response = await axios.get(
+        `${baseURL}/health/specialty/body-locations`
+      );
+      setBodyLocations(response.data);
+    } catch (error) {
+      console.error("Error fetching body locations", error);
     }
-  }, [selectedLocation]);
+  };
 
-  useEffect(() => {
-    if (selectedSublocation) {
-      const fetchSymptoms = async () => {
-        try {
-          const response = await axios.get(
-            `${baseURL}/health/specialty/symptoms/${selectedSublocation.ID}/man`
-          );
-          setSymptoms(response.data);
-        } catch (error) {
-          console.error("Error fetching symptoms", error);
-        }
-      };
-      fetchSymptoms();
+  const fetchBodySublocations = async (locationId) => {
+    try {
+      const response = await axios.get(
+        `${baseURL}/health/specialty/body-locations/${locationId}`
+      );
+      setBodySublocations(response.data);
+    } catch (error) {
+      console.error("Error fetching body sublocations", error);
     }
-  }, [selectedSublocation]);
+  };
 
-  const handleSelection = async (input) => {
-    if (input.ID === "proceedToCase6") {
-      setStep(6);
-      console.log("finally");
+  const fetchSymptoms = async (sublocationId) => {
+    try {
+      const response = await axios.get(
+        `${baseURL}/health/specialty/symptoms/${sublocationId}/man`
+      );
+      setSymptoms(response.data);
+    } catch (error) {
+      console.error("Error fetching symptoms", error);
+    }
+  };
 
-      console.log(selectedSymptoms);
-      const symptomsString = JSON.stringify(selectedSymptoms);
-
+  const fetchSpecializations = async () => {
+    try {
       const response = await axios.get(
         `${baseURL}/health/specialty/specializations`,
         {
           params: {
-            symptoms: symptomsString,
-            gender: gender.Name,
+            symptoms: JSON.stringify(selectedSymptoms),
+            gender,
             yearOfBirth,
           },
         }
       );
       setSpecializations(response.data);
-      console.log(response.data);
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { sender: "bot", text: "Here are the recommended specializations." },
-      ]);
-      return;
+      addBotMessage("Here are the recommended specializations.");
+    } catch (error) {
+      console.error("Error fetching specializations", error);
     }
+  };
+
+  const addBotMessage = (text) => {
+    setMessages((prev) => [...prev, { sender: "bot", text }]);
+  };
+
+  const addUserMessage = (text) => {
+    setMessages((prev) => [...prev, { sender: "user", text }]);
+  };
+
+  const handleSelection = async (input) => {
+    addUserMessage(input.Name || input);
+
     switch (step) {
-      case 1: // Gender selection
-        setGender(input);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender: "user", text: input.Name },
-          { sender: "bot", text: "Enter your year of birth." },
-        ]);
+      case 1:
+        setGender(input.Name);
+        addBotMessage("Enter your year of birth.");
         setStep(2);
         break;
-      case 2: // Year of birth input
-        setYearOfBirth(parseInt(input, 10));
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender: "user", text: input },
-          { sender: "bot", text: "Select a body location from the options." },
-        ]);
+
+      case 2:
+        setYearOfBirth(input);
+        addBotMessage("Select a body location from the options.");
         setStep(3);
         break;
-      case 3: // Body location selection
+
+      case 3:
         setSelectedLocation(input);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender: "user", text: input.Name },
-          { sender: "bot", text: "Select a sublocation." },
-        ]);
+        await fetchBodySublocations(input.ID);
+        addBotMessage("Select a sublocation.");
         setStep(4);
         break;
-      case 4: // Sublocation selection
+
+      case 4:
         setSelectedSublocation(input);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender: "user", text: input.Name },
-          { sender: "bot", text: "Choose your symptoms." },
-        ]);
+        await fetchSymptoms(input.ID);
+        addBotMessage("Choose your symptoms.");
         setStep(5);
         break;
+
       case 5:
-        toggleSymptom(input.ID); // Now using ID to prevent duplicates
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender: "user", text: input.Name },
-        ]);
+        toggleSymptom(input.ID);
         break;
 
       case 6:
-        console.log("Hello");
-        console.log(gender);
-
-        const response = await axios.get("/api/health/specializations", {
-          params: {
-            symptoms: JSON.stringify(selectedSymptoms),
-            gender: gender.Name,
-            yearOfBirth,
-          },
-        });
-        setSpecializations(response.data);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender: "bot", text: "Here are the recommended specializations." },
-        ]);
+        await fetchSpecializations();
         break;
+
       default:
         break;
     }
   };
 
   const toggleSymptom = (symptomId) => {
-    setSelectedSymptoms((prevSymptoms) =>
-      prevSymptoms.includes(symptomId)
-        ? prevSymptoms.filter((id) => id !== symptomId)
-        : [...prevSymptoms, symptomId]
-    );
+    const isSelected = selectedSymptoms.includes(symptomId);
+    const newSymptoms = isSelected
+      ? selectedSymptoms.filter((id) => id !== symptomId)
+      : [...selectedSymptoms, symptomId];
+
+    setSelectedSymptoms(newSymptoms);
+
+    // Update messages based on selection
+    const symptomText = symptoms.find((s) => s.ID === symptomId).Name;
+    if (isSelected) {
+      addUserMessage(`Removed symptom: ${symptomText}`);
+    } else {
+      addUserMessage(`Selected symptom: ${symptomText}`);
+    }
   };
 
-  // Render buttons for selection
-  const renderButtons = (options) => {
-    return options.map((option) => (
-      <button
-        key={option.ID}
-        onClick={() => handleSelection(option)}
-        className={styles.optionButton}
-      >
-        {option.Name}
-      </button>
-    ));
-  };
+  const renderButtons = (options, onClickHandler) =>
+    options.map((option, index) => {
+      const isSelected = selectedSymptoms.includes(option.ID);
+      return (
+        <button
+          key={`${option.ID}-${index}`}
+          onClick={() => onClickHandler(option)}
+          className={`${styles.optionButton} ${
+            isSelected ? styles.selectedSymptom : ""
+          }`}
+        >
+          {option.Name}
+        </button>
+      );
+    });
+
+  // const renderButtons = (options, onClickHandler) =>
+  //   options.map((option, index) => (
+  //     <button
+  //       key={`${option.ID}-${index}`}
+  //       onClick={() => onClickHandler(option)}
+  //       className={styles.optionButton}
+  //     >
+  //       {option.Name}
+  //     </button>
+  //   ));
 
   return (
     <div className={styles.chatContainer}>
@@ -197,14 +184,11 @@ const ChatConsultation = () => {
         ))}
       </div>
       <div className={styles.chatOptions}>
-        {step === 1 && (
-          <>
-            {renderButtons([
-              { Name: "male", ID: "1" },
-              { Name: "female", ID: "2" },
-            ])}
-          </>
-        )}
+        {step === 1 &&
+          renderButtons(
+            [{ Name: "Male" }, { Name: "Female" }],
+            handleSelection
+          )}
         {step === 2 && (
           <input
             type="number"
@@ -214,19 +198,23 @@ const ChatConsultation = () => {
             }
           />
         )}
-        {step === 3 && <>{renderButtons(bodyLocations.map((loc) => loc))}</>}
-        {step === 4 && <>{renderButtons(bodySublocations.map((sub) => sub))}</>}
+        {step === 3 && renderButtons(bodyLocations, handleSelection)}
+        {step === 4 && renderButtons(bodySublocations, handleSelection)}
         {step === 5 && (
           <>
-            {renderButtons(symptoms.map((symptom) => symptom))}
+            {renderButtons(symptoms, handleSelection)}
             <button
-              onClick={() => handleSelection({ ID: "proceedToCase6" })}
+              onClick={() => {
+                setStep(6);
+                fetchSpecializations();
+              }}
               className={styles.proceedButton}
             >
               Proceed
             </button>
           </>
         )}
+        {step === 6 && renderButtons(specializations, () => {})}
       </div>
     </div>
   );

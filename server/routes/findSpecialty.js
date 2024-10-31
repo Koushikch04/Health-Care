@@ -4,6 +4,7 @@ import {
   getBodyLocations,
   getSymptoms,
   getSpecializations,
+  getAllSpecialties,
 } from "../controllers/findSpecialty.js";
 
 const router = express.Router();
@@ -19,5 +20,7 @@ router.get("/symptoms/:locationId/:selectorStatus", getSymptoms);
 
 // Route to get specializations based on symptoms, gender, and birth year
 router.get("/specializations", getSpecializations);
+
+router.get("/all-specializations", getAllSpecialties);
 
 export default router;

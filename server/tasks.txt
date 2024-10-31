@@ -12,26 +12,25 @@ we are just responding with a success message at the backend
 6. test all apis once.
 
 Pain Management
-
 Includes Anesthesia and Acupuncture.
+
 Respiratory Health
-
 Combines Pulmonology and Infectiology.
+
 Digestive Health
-
 Merges Gastroenterology and Allergology (for food allergies).
+
 Elderly Care
-
 Combines Geriatric Medicine and Internal Medicine.
+
 Mental Health
-
 Includes Psychiatry and Child Psychiatry.
+
 Cancer Care
-
 Merges Oncology and Hematology.
+
 Urological Health
-
 Includes Urology and Nephrology.
-Sports Health
 
+Sports Health
 Combines Sports Medicine and Orthopedics.
