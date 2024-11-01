@@ -11,7 +11,7 @@ import { BrowserRouter } from "react-router-dom";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Provider store={store}>
-      <AlertsContainer position="top-right" />
+      <AlertsContainer position="top-left" />
       <App />
     </Provider>
   </BrowserRouter>

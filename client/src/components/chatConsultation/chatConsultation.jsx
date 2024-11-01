@@ -3,8 +3,11 @@ import axios from "axios";
 
 import { baseURL } from "../../api/api.js";
 import styles from "./ChatConsultation.module.css";
+import { useNavigate } from "react-router-dom";
 
 const ChatConsultation = () => {
+  const navigate = useNavigate();
+
   const [messages, setMessages] = useState([
     {
       sender: "bot",
@@ -46,6 +49,10 @@ const ChatConsultation = () => {
     } catch (error) {
       console.error("Error fetching body sublocations", error);
     }
+  };
+
+  const handleSpecializationSelect = (specialization) => {
+    navigate(`/appointments?specialty=${specialization.doctor}`);
   };
 
   const fetchSymptoms = async (sublocationId) => {
@@ -149,10 +156,16 @@ const ChatConsultation = () => {
   const renderButtons = (options, onClickHandler) =>
     options.map((option, index) => {
       const isSelected = selectedSymptoms.includes(option.ID);
+      if (step == 6) console.log(option);
+
       return (
         <button
           key={`${option.ID}-${index}`}
-          onClick={() => onClickHandler(option)}
+          onClick={() =>
+            step === 6
+              ? handleSpecializationSelect(option)
+              : onClickHandler(option)
+          }
           className={`${styles.optionButton} ${
             isSelected ? styles.selectedSymptom : ""
           }`}

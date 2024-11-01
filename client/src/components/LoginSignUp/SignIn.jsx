@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 
 import FormPage from "./FormPage";
 import useInput from "../../hooks/useInput";
-import { loginUser } from "../../store/auth/auth-actions";
+import { loginUser, loginUserAsDoctor } from "../../store/auth/auth-actions";
 import useAlert from "../../hooks/useAlert";
 
 import styles from "./styles/SignUp.module.css";
@@ -37,16 +37,20 @@ const SignIn = () => {
       return;
     }
 
-    dispatch(loginUser({ email, password }, alert));
+    if (email.endsWith("@healthcare.com")) {
+      console.log("doctor");
+      dispatch(loginUserAsDoctor({ email, password }, alert));
+    } else {
+      console.log("user");
+      dispatch(loginUser({ email, password }, alert));
+    }
   };
 
   return (
     <div className={styles.body}>
       <div className={styles.container}>
         <header>Login</header>
-        {errorMessage && (
-          <div className={styles.error}>{errorMessage}</div>
-        )}{" "}
+        {errorMessage && <div className={styles.error}>{errorMessage}</div>}
         <div className={styles.form_outer}>
           <form onSubmit={handleSubmit}>
             <FormPage isVisible={true}>

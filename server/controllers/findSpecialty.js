@@ -1,6 +1,8 @@
 import axios from "axios";
 import dotenv from "dotenv";
+
 import getAuthToken from "../temp1.js";
+import { specializationMapping } from "../data/specilizationMapping.js";
 
 dotenv.config();
 
@@ -85,7 +87,7 @@ export const getSpecializations = async (req, res) => {
       {
         params: {
           token,
-          symptoms: symptoms.length > 2 ? symptoms : ["29"],
+          symptoms: symptoms.length > 0 ? symptoms : ["29"],
           gender: gender || "male",
           year_of_birth: yearOfBirth || 1981,
           language: "en-gb",
@@ -94,7 +96,13 @@ export const getSpecializations = async (req, res) => {
     );
     console.log(response.data);
 
-    res.json(response.data);
+    const mappedSpecializations = response.data.map((spec) => ({
+      ...spec,
+      doctor: specializationMapping[spec.Name] || spec.Name, // Map to local name or use original
+    }));
+    console.log(mappedSpecializations);
+
+    res.json(mappedSpecializations);
   } catch (error) {
     const errorMessage = error.response?.data || error.message;
     console.error("Error fetching specializations:", errorMessage);

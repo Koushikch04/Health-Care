@@ -6,7 +6,7 @@ import routes from "./routes";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 
 function MainRoutes() {
-  const userLoggedIn = useSelector((state) => state.auth.userLoggedIn);
+  const { userLoggedIn, role } = useSelector((state) => state.auth);
 
   return (
     <Routes>
@@ -24,6 +24,18 @@ function MainRoutes() {
           );
         }
 
+        // Role-based route access
+        if (route.role && route.role !== role) {
+          return (
+            <Route
+              key={index}
+              path={route.path}
+              element={<Navigate to="/unauthorized" />} // Or any other restricted access page
+            />
+          );
+        }
+
+        // Conditionally wrap with ProtectedRoute if auth is required
         const element = route.requiresAuth ? (
           <ProtectedRoute element={route.element} userLoggedIn={userLoggedIn} />
         ) : (

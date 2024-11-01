@@ -1,7 +1,40 @@
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
 import Appointment from "../models/Appointment.js";
 import Doctor from "../models/Doctor.js";
 import Specialty from "../models/Specialty.js";
 
+//doctor login
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    let person;
+
+    person = await Doctor.findOne({ email });
+    if (!person) return res.status(400).json({ msg: "User does not exist" });
+    const matched = bcrypt.compareSync(password, person.password);
+    if (!matched) return res.status(401).json({ msg: "Invalid Credentials" });
+    person.password = "";
+    const token = jwt.sign({ id: person._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    person.role = "doctor";
+
+    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+
+    return res.status(200).json({
+      token,
+      person,
+      role: "doctor",
+      expiresAt,
+    });
+  } catch (err) {
+    console.log("login error:", err);
+  }
+};
+
+//Get all doctors
 export const getDoctors = async (req, res) => {
   try {
     const doctors = await Doctor.find().populate("specialty");

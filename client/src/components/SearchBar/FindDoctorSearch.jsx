@@ -128,6 +128,18 @@ const FindDoctorSearch = () => {
         const data = await response.json();
         setSpecialties(data);
         setSearchData(data);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const specialtyName = urlParams.get("specialty");
+        if (specialtyName) {
+          const selectedSpecialty = data.find(
+            (specialty) =>
+              specialty.name.toLowerCase() === specialtyName.toLowerCase()
+          );
+          if (selectedSpecialty) {
+            handleSpecialtySelect(selectedSpecialty);
+          }
+        }
       } catch (error) {
         console.error("Error fetching specialties:", error);
       }

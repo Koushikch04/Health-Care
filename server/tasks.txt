@@ -34,3 +34,6 @@ Includes Urology and Nephrology.
 
 Sports Health
 Combines Sports Medicine and Orthopedics.
+
+
+reduce redundancy by combining auth of both doctor and user

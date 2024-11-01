@@ -78,7 +78,12 @@ export const login = async (req, res, next) => {
 
     const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
 
-    return res.status(200).json({ token, person, expiresAt });
+    return res.status(200).json({
+      token,
+      person,
+      role: "user",
+      expiresAt,
+    });
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ msg: "An internal server error occurred." });
@@ -86,10 +91,5 @@ export const login = async (req, res, next) => {
 };
 
 export const logout = (req, res) => {
-  // req.session.destroy((err) => {
-  //   if (err) {
-  //     return res.status(500).json({ error: "Could not log out." });
-  //   }
-  // });
   res.status(200).json({ message: "Logged out successfully." });
 };

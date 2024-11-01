@@ -5,6 +5,27 @@ const Schema = mongoose.Schema;
 const doctorSchema = new Schema(
   {
     name: { type: String, required: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      default: "",
+    },
+    phone: {
+      type: String,
+      required: true,
+      default: "",
+    },
+    gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
+    password: {
+      type: String,
+      required: true,
+      min: 8,
+    },
+    biography: {
+      type: String,
+      default: "",
+    },
     experience: { type: Number, required: true },
     rating: { type: Number, default: 0 },
     profile: { type: String },

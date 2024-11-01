@@ -75,6 +75,49 @@ export const loginUser = (userData, alert) => async (dispatch) => {
   }
 };
 
+export const loginUserAsDoctor = (userData, alert) => async (dispatch) => {
+  try {
+    const response = await fetch(`${baseURL}/doctor/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: userData.email,
+        password: userData.password,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      alert.error({
+        message: errorData.msg || "Login failed",
+        title: "Login failed",
+      });
+      return;
+    }
+
+    const data = await response.json();
+    localStorage.setItem("token", data.token);
+
+    alert.success({
+      message: `Hello, Dr. ${data.person.name.firstName} `,
+      title: "Login Success",
+    });
+
+    dispatch(
+      authActions.login({
+        person: data.person,
+        token: data.token,
+        expiresAt: data.expiresAt,
+      })
+    );
+  } catch (error) {
+    alert.error({
+      message: error.msg || "An unexpected error occurred",
+      title: "Login failed",
+    });
+  }
+};
+
 export const logoutUser = () => async (dispatch) => {
   try {
     dispatch(logout());
