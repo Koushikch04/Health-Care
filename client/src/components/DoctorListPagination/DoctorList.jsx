@@ -11,7 +11,7 @@ const DoctorList = ({ doctorData }) => {
             key={index}
             doctorId={doctor.id}
             image={doctor.image}
-            name={doctor.name}
+            name={doctor.name.firstName + " " + doctor.name.lastName}
             experience={doctor.experience}
             rating={doctor.rating}
             profile={doctor.profile}

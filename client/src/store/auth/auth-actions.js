@@ -168,14 +168,15 @@ export const cancelAppointment = (appointmentId, alert) => {
       const appointmentData = await canceledAppointment.json();
       const newUpdate = {
         id: appointmentData._id,
-        img: appointmentData.patientImage || "defaultImage.jpg", // Use a default image if none exists
-        patient: appointmentData.patientName, // Assuming patientName is a property
-        doctor: appointmentData.doctor.name, // Doctor's name
-        type: "canceled", // Type of update
-        time: new Date().toISOString(), // Current time in ISO format
+        img: appointmentData.patientImage || "defaultImage.jpg",
+        patient: appointmentData.patientName,
+        doctor:
+          appointmentData.doctor.name.firstName +
+          appointmentData.doctor.name.lastName,
+        type: "canceled",
+        time: new Date().toISOString(),
       };
 
-      // Dispatch action to add the new update to the Redux store
       dispatch(authActions.addUpdate(newUpdate));
 
       alert.success({

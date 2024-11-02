@@ -30,15 +30,17 @@ async function migrateDoctors() {
           // { phone: { $exists: false } },
           // { profilePicture: { $exists: false } },
           // { biography: { $exists: false } },
-          { gender: { $exists: false } },
-          { password: { $exists: false } },
+          // { gender: { $exists: false } },
+          // { password: { $exists: false } },
+          // { name: { $exists: false } },
         ],
       },
       {
         $set: {
-          gender: "Male",
-          password: "",
-          biography: "To be filled",
+          name: {
+            firstName: "David",
+            lastName: "Wilson",
+          },
         },
       }
     );

@@ -45,4 +45,4 @@ async function updatePasswords() {
 }
 
 // Run the update function
-updatePasswords();
+// updatePasswords();

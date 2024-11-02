@@ -115,7 +115,11 @@ function Appointments() {
                   <tr key={appointment._id}>
                     <td>{new Date(appointment.date).toLocaleDateString()}</td>
                     <td>{appointment.time}</td>
-                    <td>{appointment.doctor.name}</td>
+                    <td>
+                      {appointment.doctor.name.firstName +
+                        " " +
+                        appointment.doctor.name.lastName}
+                    </td>
                     <td>{appointment.patientName}</td>
                     <td>
                       <span

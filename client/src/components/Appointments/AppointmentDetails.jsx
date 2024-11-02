@@ -33,7 +33,10 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
         <strong>Time:</strong> {appointment.time}
       </p>
       <p className={styles.p}>
-        <strong>Doctor:</strong> {appointment.doctor.name}
+        <strong>Doctor:</strong>{" "}
+        {appointment.doctor.name.firstName +
+          " " +
+          appointment.doctor.name.lastName}
       </p>
       <p className={styles.p}>
         <strong>Patient:</strong> {appointment.patientName}

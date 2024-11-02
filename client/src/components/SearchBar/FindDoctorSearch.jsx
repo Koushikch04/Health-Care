@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
 import CloseIcon from "@mui/icons-material/Close";
+
 import styles from "./FindDoctorSearch.module.css";
 import SearchBarResults from "./SearchBarResults";
 import AvailableDoctors from "../DoctorListPagination/AvailableDoctors";

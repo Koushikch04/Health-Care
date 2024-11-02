@@ -2,19 +2,24 @@ import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
 
+const nameSchema = new Schema({
+  firstName: { type: String, required: true, min: 2, max: 50 },
+  lastName: { type: String, required: false, min: 2, max: 50 },
+});
+
 const doctorSchema = new Schema(
   {
-    name: { type: String, required: true },
+    name: nameSchema,
     email: {
       type: String,
       required: true,
       unique: true,
-      default: "",
+      maxlength: 50,
+      match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     },
     phone: {
-      type: String,
+      type: Number,
       required: true,
-      default: "",
     },
     gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
     password: {
