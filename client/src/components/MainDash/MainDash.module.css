@@ -9,6 +9,11 @@
   margin-top: 1rem;
 }
 
+.tables1 {
+  display: flex;
+  gap: 1rem;
+}
+
 @media screen and (max-width: 1200px) {
   .MainDash {
     justify-content: flex-start;

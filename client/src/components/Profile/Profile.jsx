@@ -3,8 +3,10 @@ import styles from "./Profile.module.css";
 import Sidebar from "../SideBar/Sidebar";
 import RightSide from "../RightSide/RightSide";
 import { Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 function Profile() {
+  const userRole = useSelector((state) => state.auth.userRole);
   return (
     <div className={styles.Profile}>
       <div className={styles.ProfileClass}>
@@ -12,7 +14,7 @@ function Profile() {
         <div className={styles.PageContent}>
           <Outlet />
         </div>
-        <RightSide />
+        {userRole == "user" && <RightSide />}
       </div>
     </div>
   );

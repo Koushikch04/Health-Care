@@ -11,7 +11,7 @@ const Card = (props) => {
   const [expanded, setExpanded] = useState(false);
 
   return expanded ? (
-    <ExpandedCard param={props} setExpanded={() => setExpanded(false)} />
+    <ExpandedCardTest param={props} setExpanded={() => setExpanded(false)} />
   ) : (
     <CompactCard param={props} setExpanded={() => setExpanded(true)} />
   );
@@ -116,6 +116,101 @@ function ExpandedCard({ param, setExpanded }) {
         <Chart options={data.options} series={param.series} type="area" />
       </div>
       <span>Last 24 hours</span>
+    </motion.div>
+  );
+}
+
+function ExpandedCardTest({ param, setExpanded }) {
+  // Add state to track selected range
+  const [range, setRange] = useState("Monthly");
+
+  // Define monthly and yearly mock data
+  const monthlyDates = [
+    "2024-10-01",
+    "2024-10-08",
+    "2024-10-15",
+    "2024-10-22",
+    "2024-10-29",
+  ];
+  const yearlyDates = [
+    "2023-11-01",
+    "2024-02-01",
+    "2024-05-01",
+    "2024-08-01",
+    "2024-11-01",
+  ];
+
+  const monthlyData = [{ name: "Appointments", data: [30, 40, 35, 50, 49] }];
+  const yearlyData = [
+    { name: "Appointments", data: [300, 400, 350, 500, 490] },
+  ];
+
+  // Dynamic data based on selected range
+  const data = {
+    options: {
+      chart: {
+        type: "area",
+        height: "auto",
+      },
+      dropShadow: {
+        enabled: false,
+        top: 0,
+        left: 0,
+        blur: 3,
+        color: "#000",
+        opacity: 0.35,
+      },
+      fill: {
+        colors: ["#fff"],
+        type: "gradient",
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      stroke: {
+        curve: "smooth",
+        colors: ["white"],
+      },
+      tooltip: {
+        x: {
+          format: "dd/MM/yy HH:mm",
+        },
+      },
+      grid: {
+        show: true,
+      },
+      xaxis: {
+        type: "datetime",
+        categories: range === "Yearly" ? yearlyDates : monthlyDates,
+      },
+    },
+    series: range === "Yearly" ? yearlyData : monthlyData,
+  };
+
+  return (
+    <motion.div
+      className="ExpandedCard"
+      style={{
+        background: param.color.backGround,
+        boxShadow: param.color.boxShadow,
+      }}
+      layout
+    >
+      <div style={{ alignSelf: "flex-end", cursor: "pointer", color: "white" }}>
+        <UilTimes onClick={() => setExpanded(false)} />
+      </div>
+      <span>{param.title}</span>
+
+      {/* Dropdown to select Monthly or Yearly data */}
+      <select onChange={(e) => setRange(e.target.value)} value={range}>
+        <option value="Monthly">Past Month</option>
+        <option value="Yearly">Past Year</option>
+      </select>
+
+      <div className="chartContainer">
+        <Chart options={data.options} series={data.series} type="area" />
+      </div>
+      <span>{range === "Monthly" ? "Last Month" : "Last Year"}</span>
     </motion.div>
   );
 }

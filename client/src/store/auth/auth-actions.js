@@ -58,11 +58,14 @@ export const loginUser = (userData, alert) => async (dispatch) => {
       message: `Hello, ${data.person.name.firstName} `,
       title: "Login Success",
     });
+    console.log("logged in as", data.role);
+
     dispatch(
       authActions.login({
         person: data.person,
         token: data.token,
         expiresAt: data.expiresAt,
+        role: data.role,
       })
     );
     // dispatch(loginSuccess(data.token));
@@ -99,15 +102,18 @@ export const loginUserAsDoctor = (userData, alert) => async (dispatch) => {
     localStorage.setItem("token", data.token);
 
     alert.success({
-      message: `Hello, Dr. ${data.person.name.firstName} `,
+      message: `Hello, ${data.person.name.firstName} `,
       title: "Login Success",
     });
+
+    console.log("logged in as", data.role);
 
     dispatch(
       authActions.login({
         person: data.person,
         token: data.token,
         expiresAt: data.expiresAt,
+        role: data.role,
       })
     );
   } catch (error) {

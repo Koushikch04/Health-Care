@@ -1,0 +1,14 @@
+.chartContainer {
+  margin: 20px 0;
+  padding: 10px; /* Add some padding around the container */
+  background-color: #f9f9f9; /* Light background for contrast */
+  border: 1px solid #ddd; /* Light border for definition */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.chartTitle {
+  margin-bottom: 15px; /* Space between title and chart */
+  font-size: 1.5rem; /* Larger font size for the title */
+  color: #333; /* Dark color for the title */
+}

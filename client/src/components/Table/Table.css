@@ -15,7 +15,7 @@ th {
   border-radius: 0.7rem !important;
 }
 .status {
-  padding: 8px;
+  padding: 4px;
   border-radius: 9px;
 }
 
@@ -30,9 +30,8 @@ th {
   }
 }
 
-
 @media screen and (max-width: 768px) {
-  .Table{
+  .Table {
     position: relative;
     display: flex;
     flex-direction: column;

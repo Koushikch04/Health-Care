@@ -6,11 +6,12 @@ import routes from "./routes";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 
 function MainRoutes() {
-  const { userLoggedIn, role } = useSelector((state) => state.auth);
+  const { userLoggedIn, userRole: role } = useSelector((state) => state.auth);
 
   return (
     <Routes>
       {routes.map((route, index) => {
+        // Redirect logged-in users from auth routes to the home page
         if (
           userLoggedIn &&
           (route.path === "/auth/login" || route.path === "/auth/signup")
@@ -24,20 +25,25 @@ function MainRoutes() {
           );
         }
 
-        // Role-based route access
+        // Check top-level route's role requirement
         if (route.role && route.role !== role) {
           return (
             <Route
               key={index}
               path={route.path}
-              element={<Navigate to="/unauthorized" />} // Or any other restricted access page
+              element={<Navigate to="/profile/details" />}
             />
           );
         }
 
-        // Conditionally wrap with ProtectedRoute if auth is required
+        // Determine if route needs authentication
         const element = route.requiresAuth ? (
-          <ProtectedRoute element={route.element} userLoggedIn={userLoggedIn} />
+          <ProtectedRoute
+            element={route.element}
+            userLoggedIn={userLoggedIn}
+            userRole={role}
+            requiredRole={route.role}
+          />
         ) : (
           route.element
         );
@@ -46,14 +52,29 @@ function MainRoutes() {
           <Route key={index} path={route.path} element={element}>
             {route.children &&
               route.children.map((child, childIndex) => {
+                // Check child route's role requirement
+                if (child.role && child.role !== role) {
+                  return (
+                    <Route
+                      key={childIndex}
+                      path={child.path}
+                      element={<Navigate to="/profile/details" />}
+                    />
+                  );
+                }
+
+                // Child element with auth and role check
                 const childElement = child.requiresAuth ? (
                   <ProtectedRoute
                     element={child.element}
                     userLoggedIn={userLoggedIn}
+                    userRole={role}
+                    requiredRole={child.role}
                   />
                 ) : (
                   child.element
                 );
+
                 return (
                   <Route
                     key={childIndex}
