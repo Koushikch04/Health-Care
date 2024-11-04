@@ -5,6 +5,7 @@ import {
   createAppointment,
   getAppointmentDetails,
   getAvailableTimeSlots,
+  getDoctorAppointments,
   getUserAppointments,
 } from "../controllers/appointment.js";
 import { verifyToken } from "../middleware/authVerification.js";
@@ -20,5 +21,5 @@ router.get(
 );
 router.get("/:appointmentId", verifyToken, getAppointmentDetails);
 router.delete("/:appointmentId", verifyToken, cancelAppointment);
-
+router.get("/doctor/:doctorId", getDoctorAppointments);
 export default router;

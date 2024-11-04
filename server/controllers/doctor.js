@@ -7,8 +7,6 @@ import Specialty from "../models/Specialty.js";
 
 //doctor login
 export const login = async (req, res) => {
-  console.log("Hello");
-
   try {
     const { email, password } = req.body;
     let person;

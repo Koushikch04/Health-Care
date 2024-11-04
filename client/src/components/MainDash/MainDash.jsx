@@ -5,6 +5,7 @@ import styles from "./MainDash.module.css";
 import { useSelector } from "react-redux";
 import BarChart from "../../Charts/BarChartComponent";
 import BarChartComponent from "../../Charts/BarChartComponent";
+import DoctorDashboard from "../../Charts/DoctorDashboard";
 
 const MainDash = () => {
   const userInfo = useSelector((state) => state.auth.userInfo);
@@ -103,7 +104,7 @@ const MainDash = () => {
       <h1>Good Morning, {name}</h1>
       <Cards />
       <div className={styles.tables1}>
-        <BarChartComponent
+        {/* <BarChartComponent
           title="Patient Incoming History"
           data={patientIncomingData}
           labels={patientIncomingLabels}
@@ -112,7 +113,8 @@ const MainDash = () => {
           title="Rebooking Rate"
           data={rebookingRatesData}
           labels={rebookingLabels}
-        />
+        /> */}
+        <DoctorDashboard />
       </div>
       <div className={styles.tables1}>
         <DynamicTable
