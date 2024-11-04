@@ -88,15 +88,20 @@ export const createDoctor = async (req, res) => {
   }
 };
 
-// In your appointment controller
-export const getDoctorAppointmentsForDate = async (req, res) => {
-  const { doctorId, date } = req.params;
+export const getDoctorAppointments = async (req, res) => {
+  const { date } = req.query;
+  console.log(req.user.id);
 
   try {
-    const appointments = await Appointment.find({
-      doctor: doctorId,
-      date: new Date(date),
-    }).select("time");
+    const query = { doctor: req.user.id };
+
+    if (date) {
+      query.date = new Date(date);
+    }
+
+    const appointments = await Appointment.find(query);
+
+    console.log(appointments);
 
     return res.status(200).json(appointments);
   } catch (error) {
@@ -136,5 +141,69 @@ export const deleteDoctor = async (req, res) => {
     res.status(200).json({ message: "Doctor deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting doctor", error });
+  }
+};
+
+export const getDoctorAppointmentStatistics = async (req, res) => {
+  const doctorId = req.query.doctorId;
+
+  if (!doctorId) {
+    return res.status(400).json({
+      success: false,
+      message: "Doctor ID is required",
+    });
+  }
+
+  try {
+    const doctor = await Doctor.findById(doctorId);
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    const totalAppointments = await Appointment.countDocuments({
+      doctor: doctorId,
+    });
+    const pendingAppointments = await Appointment.countDocuments({
+      doctor: doctorId,
+      status: "scheduled",
+    });
+    const completedAppointments = await Appointment.countDocuments({
+      doctor: doctorId,
+      status: "completed",
+    });
+
+    const revenue = completedAppointments * doctor.cost;
+
+    // const revenue =
+
+    const statistics = {
+      totalAppointments,
+      pendingAppointments,
+      completedAppointments,
+      revenue,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: statistics,
+    });
+  } catch (error) {
+    console.error("Error fetching appointment statistics for doctor:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid Doctor ID",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      msg: "Server error",
+    });
   }
 };

@@ -1,5 +1,5 @@
 import React from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import Modal from "../UI/Modal/Modal"; // Adjust the path as necessary
 import { cancelAppointment } from "../../store/auth/auth-actions";
@@ -7,12 +7,15 @@ import styles from "./AppointmentDetails.module.css"; // Import the new styles
 import useAlert from "../../hooks/useAlert";
 
 const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
+  const role = useSelector((state) => state.auth.userRole);
   const dispatch = useDispatch();
   const { alert } = useAlert();
 
   const handleCancel = async () => {
     try {
-      const success = await dispatch(cancelAppointment(appointment._id, alert));
+      const success = await dispatch(
+        cancelAppointment(appointment._id, alert, role)
+      );
       if (success) {
         onCancel(appointment._id);
       }
@@ -32,12 +35,14 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
       <p className={styles.p}>
         <strong>Time:</strong> {appointment.time}
       </p>
-      <p className={styles.p}>
-        <strong>Doctor:</strong>{" "}
-        {appointment.doctor.name.firstName +
-          " " +
-          appointment.doctor.name.lastName}
-      </p>
+      {role == "user" && (
+        <p className={styles.p}>
+          <strong>Doctor:</strong>
+          {appointment.doctor.name.firstName +
+            " " +
+            appointment.doctor.name.lastName}
+        </p>
+      )}
       <p className={styles.p}>
         <strong>Patient:</strong> {appointment.patientName}
       </p>
@@ -50,9 +55,11 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
       </p>
 
       <div className={styles.actions}>
-        <button className={styles.cancelButton} onClick={handleCancel}>
-          Cancel Appointment
-        </button>
+        {appointment.status != "canceled" && (
+          <button className={styles.cancelButton} onClick={handleCancel}>
+            Cancel Appointment
+          </button>
+        )}
       </div>
     </Modal>
   );

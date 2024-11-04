@@ -146,16 +146,19 @@ export const checkAuthStatus = () => (dispatch) => {
   }
 };
 
-export const cancelAppointment = (appointmentId, alert) => {
+export const cancelAppointment = (appointmentId, alert, role = "user") => {
   return async (dispatch) => {
     try {
-      const response = await fetch(`${baseURL}/appointment/${appointmentId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        `${baseURL}/appointment/${appointmentId}?role=${role}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -183,7 +186,7 @@ export const cancelAppointment = (appointmentId, alert) => {
         time: new Date().toISOString(),
       };
 
-      dispatch(authActions.addUpdate(newUpdate));
+      // dispatch(authActions.addUpdate(newUpdate));
 
       alert.success({
         message: "Appointment cancelled successfully.",

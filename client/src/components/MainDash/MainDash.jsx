@@ -1,15 +1,46 @@
-import React from "react";
+import React, { useEffect } from "react";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+
 import Cards from "../Cards/Cards";
+import Statistics from "../../Statistics/Statistics.jsx";
 import DynamicTable from "../Table/Table"; // Update the import
 import styles from "./MainDash.module.css";
 import { useSelector } from "react-redux";
 import BarChart from "../../Charts/BarChartComponent";
 import BarChartComponent from "../../Charts/BarChartComponent";
 import DoctorDashboard from "../../Charts/DoctorDashboard";
+import { baseURL } from "../../api/api";
 
 const MainDash = () => {
-  const userInfo = useSelector((state) => state.auth.userInfo);
+  const { userInfo } = useSelector((state) => state.auth);
+  const doctorId = userInfo._id;
   const name = userInfo.name.firstName + " " + userInfo.name.lastName;
+
+  const today = new Date();
+  const options = { year: "numeric", month: "long", day: "numeric" };
+  const formattedDate = today.toLocaleDateString(undefined, options);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // setLoading(true);
+        const today = new Date();
+        const todayDate = today.toISOString().split("T")[0];
+        const response = await fetch(
+          `${baseURL}/doctor/${doctorId}/date/${todayDate}`
+        );
+        const result = await response.json();
+        // setData(result);
+        console.log(result);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        // setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [doctorId]);
 
   // Example data for different tables
   const patientIncomingHistoryRows = [
@@ -57,10 +88,46 @@ const MainDash = () => {
       date: "4 Nov 2024",
       status: "Scheduled",
     },
+    {
+      name: "Bruce Wayne",
+      tracking_id: "A1004",
+      date: "4 Nov 2024",
+      status: "Scheduled",
+    },
+    {
+      name: "Bruce Wayne",
+      tracking_id: "A1004",
+      date: "4 Nov 2024",
+      status: "Scheduled",
+    },
+    {
+      name: "Bruce Wayne",
+      tracking_id: "A1004",
+      date: "4 Nov 2024",
+      status: "Scheduled",
+    },
     // Add more rows as needed
   ];
 
   const recentAppointmentsRows = [
+    {
+      name: "Peter Parker",
+      tracking_id: "A1005",
+      date: "1 Nov 2024",
+      status: "Completed",
+    },
+    {
+      name: "Peter Parker",
+      tracking_id: "A1005",
+      date: "1 Nov 2024",
+      status: "Completed",
+    },
+    {
+      name: "Peter Parker",
+      tracking_id: "A1005",
+      date: "1 Nov 2024",
+      status: "Completed",
+    },
     {
       name: "Peter Parker",
       tracking_id: "A1005",
@@ -101,8 +168,17 @@ const MainDash = () => {
 
   return (
     <div className={styles.MainDash}>
-      <h1>Good Morning, {name}</h1>
-      <Cards />
+      <div className={styles.header}>
+        <h1>Good Morning, {name}</h1>
+        <div className={styles.date}>
+          <CalendarTodayIcon style={{ marginRight: "8px" }} />
+          {formattedDate}
+        </div>
+      </div>
+      {/* <h3>Have a nice day.</h3> */}
+      <Statistics />
+      {/* <Cards /> */}
+
       <div className={styles.tables1}>
         {/* <BarChartComponent
           title="Patient Incoming History"
@@ -114,7 +190,7 @@ const MainDash = () => {
           data={rebookingRatesData}
           labels={rebookingLabels}
         /> */}
-        <DoctorDashboard />
+        {/* <DoctorDashboard /> */}
       </div>
       <div className={styles.tables1}>
         <DynamicTable

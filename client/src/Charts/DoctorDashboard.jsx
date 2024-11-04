@@ -93,43 +93,10 @@ const DoctorDashboard = ({ doctorId }) => {
           </select>
         </div>
 
-        {expanded ? (
-          <>
-            <div className={styles.chartHeader}>
-              <h3>Scheduled Appointments</h3>
-              <button
-                className={styles.collapseButton}
-                onClick={() => setExpanded(false)}
-              >
-                <UilTimes /> {/* Close icon */}
-              </button>
-            </div>
-            <BarChart
-              dataset={chartData.dataset[0]?.data || []}
-              xAxis={[
-                {
-                  scaleType: "band",
-                  dataKey: "label",
-                  tickLabelStyle: {
-                    angle: 0,
-                    textAnchor: "middle",
-                  },
-                },
-              ]}
-              series={[
-                { dataKey: "scheduled", label: "Scheduled", color: "#2563eb" },
-                { dataKey: "canceled", label: "Canceled", color: "#dc2626" },
-                { dataKey: "completed", label: "Completed", color: "#16a34a" },
-              ]}
-              {...chartSettings}
-            />
-          </>
-        ) : (
-          <div className={styles.compactContent}>
-            <h3>Scheduled Appointments</h3>
-            <p>Total Scheduled: {data.summary.total}</p>
-          </div>
-        )}
+        <div className={styles.compactContent}>
+          <h3>Scheduled Appointments</h3>
+          <p>Total Scheduled: {data.summary.total}</p>
+        </div>
       </div>
 
       {expanded && (

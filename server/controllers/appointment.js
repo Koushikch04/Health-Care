@@ -120,16 +120,20 @@ export const getAvailableTimeSlots = async (req, res) => {
 };
 
 export const cancelAppointment = async (req, res) => {
-  const { appointmentId } = req.params;
+  const { appointmentId, role } = req.params;
 
   try {
     const appointment = await Appointment.findById(appointmentId);
+    console.log(appointment);
 
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found." });
     }
 
-    if (appointment.user.toString() !== req.user.id) {
+    if (
+      (role === "user" && appointment.user.toString() !== req.user.id) ||
+      (role === "doctor" && appointment.doctor.toString !== req.user.id)
+    ) {
       return res
         .status(403)
         .json({ message: "Not authorized to cancel this appointment." });
