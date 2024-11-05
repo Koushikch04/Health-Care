@@ -3,11 +3,11 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  color: #4a90e2;
-  font-size: 48px;
+  /* color: #4a90e2; */
+  /* font-size: 48px; */
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s;
-  margin-bottom: 20px; /* Space between header and date */
+  margin-bottom: 20px;
 }
 
 .header .date {
@@ -37,7 +37,8 @@
 }
 
 .MainDash h1 {
-  margin-top: 1rem;
+  /* margin-top: 1rem; */
+  margin-bottom: 0px;
 }
 
 .tables1 {

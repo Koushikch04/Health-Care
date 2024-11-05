@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styles from "./Appointments.module.css";
 import { baseURL } from "../../api/api";
-import AppointmentDetails from "./AppointmentDetails";
+import DoctorAppointmentDetails from "./DoctorAppointmentDetails.jsx";
 
-function Appointments() {
+function DoctorAppointments() {
   const token = useSelector((state) => state.auth.userToken);
+  const role = useSelector((state) => state.auth.userRole);
+
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,11 +17,15 @@ function Appointments() {
   });
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
+  let url = `${baseURL}/doctor/appointment`;
+
+  console.log(url);
+
   useEffect(() => {
     const getAppointments = async () => {
       if (!token) return;
       try {
-        const data = await fetch(`${baseURL}/appointment`, {
+        const data = await fetch(url, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -97,9 +103,11 @@ function Appointments() {
                 <th onClick={() => requestSort("time")}>
                   Time{getSortIndicator("time")}
                 </th>
-                <th onClick={() => requestSort("doctor.name")}>
-                  Doctor{getSortIndicator("doctor.name")}
-                </th>
+                {role == "user" && (
+                  <th onClick={() => requestSort("doctor.name")}>
+                    Doctor{getSortIndicator("doctor.name")}
+                  </th>
+                )}
                 <th onClick={() => requestSort("patientName")}>
                   Patient{getSortIndicator("patientName")}
                 </th>
@@ -115,11 +123,13 @@ function Appointments() {
                   <tr key={appointment._id}>
                     <td>{new Date(appointment.date).toLocaleDateString()}</td>
                     <td>{appointment.time}</td>
-                    <td>
-                      {appointment.doctor.name.firstName +
-                        " " +
-                        appointment.doctor.name.lastName}
-                    </td>
+                    {role == "user" && (
+                      <td>
+                        {appointment.doctor.name.firstName +
+                          " " +
+                          appointment.doctor.name.lastName}
+                      </td>
+                    )}
                     <td>{appointment.patientName}</td>
                     <td>
                       <span
@@ -146,7 +156,7 @@ function Appointments() {
       )}
 
       {selectedAppointment && (
-        <AppointmentDetails
+        <DoctorAppointmentDetails
           appointment={selectedAppointment}
           onClose={closeDetailsModal}
           onCancel={handleCancelAppointment}
@@ -156,4 +166,4 @@ function Appointments() {
   );
 }
 
-export default Appointments;
+export default DoctorAppointments;

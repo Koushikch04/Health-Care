@@ -6,8 +6,9 @@ import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { useSelector } from "react-redux";
 import { baseURL } from "../../api/api";
-import styles from "./AppointmentCalendar.module.css";
+import styles from "./DoctorAppointmentCalendar.module.css";
 import { useEffect, useState } from "react";
+import DoctorAppointmentDetails from "../Appointments/DoctorAppointmentDetails";
 
 const initialValue = dayjs();
 
@@ -40,18 +41,19 @@ function ServerDay(props) {
   );
 }
 
-const AppointmentCalendar = () => {
+const DoctorAppointmentCalendar = () => {
   const token = useSelector((state) => state.auth.userToken);
   const [viewMode, setViewMode] = useState("day");
   const [highlightedDays, setHighlightedDays] = useState([]);
   const [allAppointments, setAllAppointments] = useState([]);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedDate, setSelectedDate] = useState(initialValue);
 
   const fetchAllAppointments = async () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`${baseURL}/appointment`, {
+      const response = await fetch(`${baseURL}/doctor/appointment`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +66,6 @@ const AppointmentCalendar = () => {
       }
 
       const data = await response.json();
-      console.log(data);
 
       setAllAppointments(data);
       updateHighlightedDays(data); // Initial highlight setup
@@ -135,6 +136,24 @@ const AppointmentCalendar = () => {
     setViewMode(mode);
   };
 
+  const handleViewDetails = (appointment) => {
+    setSelectedAppointment(appointment);
+  };
+
+  const closeDetailsModal = () => {
+    setSelectedAppointment(null);
+  };
+
+  const handleCancelAppointment = (id) => {
+    setAllAppointments((prevAppointments) =>
+      prevAppointments.map((appointment) =>
+        appointment._id === id
+          ? { ...appointment, status: "canceled" }
+          : appointment
+      )
+    );
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className={styles.calendarContainer}>
@@ -187,12 +206,13 @@ const AppointmentCalendar = () => {
                     }`}
                   >
                     <strong>Time:</strong> {appointment.time} <br />
-                    <strong>Doctor:</strong>{" "}
-                    {appointment.doctor.name.firstName +
-                      " " +
-                      appointment.doctor.name.lastName}{" "}
-                    <br />
                     <strong>Status:</strong> <span>{appointment.status}</span>
+                    <button
+                      className={styles.button}
+                      onClick={() => handleViewDetails(appointment)}
+                    >
+                      view details
+                    </button>
                   </div>
                 ))
               ) : (
@@ -203,9 +223,16 @@ const AppointmentCalendar = () => {
             </div>
           </div>
         </div>
+        {selectedAppointment && (
+          <DoctorAppointmentDetails
+            appointment={selectedAppointment}
+            onClose={closeDetailsModal}
+            onCancel={handleCancelAppointment}
+          />
+        )}
       </div>
     </LocalizationProvider>
   );
 };
 
-export default AppointmentCalendar;
+export default DoctorAppointmentCalendar;

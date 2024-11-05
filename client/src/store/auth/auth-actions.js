@@ -175,18 +175,20 @@ export const cancelAppointment = (appointmentId, alert, role = "user") => {
         }
       );
       const appointmentData = await canceledAppointment.json();
-      const newUpdate = {
-        id: appointmentData._id,
-        img: appointmentData.patientImage || "defaultImage.jpg",
-        patient: appointmentData.patientName,
-        doctor:
-          appointmentData.doctor.name.firstName +
-          appointmentData.doctor.name.lastName,
-        type: "canceled",
-        time: new Date().toISOString(),
-      };
+      if (role == "user") {
+        const newUpdate = {
+          id: appointmentData._id,
+          img: appointmentData.patientImage || "defaultImage.jpg",
+          patient: appointmentData.patientName,
+          doctor:
+            appointmentData.doctor.name.firstName +
+            appointmentData.doctor.name.lastName,
+          type: "canceled",
+          time: new Date().toISOString(),
+        };
 
-      // dispatch(authActions.addUpdate(newUpdate));
+        dispatch(authActions.addUpdate(newUpdate));
+      }
 
       alert.success({
         message: "Appointment cancelled successfully.",

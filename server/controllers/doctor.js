@@ -178,8 +178,6 @@ export const getDoctorAppointmentStatistics = async (req, res) => {
 
     const revenue = completedAppointments * doctor.cost;
 
-    // const revenue =
-
     const statistics = {
       totalAppointments,
       pendingAppointments,

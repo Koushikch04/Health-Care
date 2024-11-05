@@ -43,7 +43,8 @@ const transformDataToCards = (responseData) => {
         backGround: "linear-gradient(180deg, #FFC75F 0%, #FFDD99 100%)",
         boxShadow: "0px 10px 20px 0px #f5d67a",
       },
-      barValue: (pendingAppointments / totalAppointments) * 100 || 0,
+      barValue:
+        Math.floor((pendingAppointments / totalAppointments) * 100) || 0,
       value: pendingAppointments.toString(),
       png: AccessTimeIcon, // Icon for pending appointments
       series: [{ name: "Pending Appointments", data: [pendingAppointments] }],
@@ -54,7 +55,8 @@ const transformDataToCards = (responseData) => {
         backGround: "linear-gradient(180deg, #42a5f5 0%, #1e88e5 100%)",
         boxShadow: "0px 10px 20px 0px #9ecfff",
       },
-      barValue: (completedAppointments / totalAppointments) * 100 || 0,
+      barValue:
+        Math.floor((completedAppointments / totalAppointments) * 100) || 0,
       value: completedAppointments.toString(),
       png: CheckCircleIcon, // Icon for completed appointments
       series: [
@@ -67,9 +69,9 @@ const transformDataToCards = (responseData) => {
         backGround: "linear-gradient(180deg, #FF919D 0%, #FC929D 100%)",
         boxShadow: "0px 10px 20px 0px #FDC0C7",
       },
-      barValue: (revenue / expectedMaxRevenue) * 100 || 0,
+      barValue: Math.floor((revenue / expectedMaxRevenue) * 100) || 0,
       value: `$${revenue.toLocaleString()}`,
-      png: AttachMoneyIcon, // Icon for revenue
+      png: AttachMoneyIcon,
       series: [{ name: "Revenue", data: [revenue] }],
     },
   ];

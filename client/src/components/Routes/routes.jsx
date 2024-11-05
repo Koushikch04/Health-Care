@@ -1,6 +1,3 @@
-// routes.js
-import React from "react";
-
 import LandingPage from "../LandingPage/LandingPage";
 import SignUp from "../LoginSignUp/SignUp";
 import SignIn from "../LoginSignUp/SignIn";
@@ -12,6 +9,8 @@ import ProfileDetails from "../../Pages/ProfileDetails";
 import Appointments from "../Appointments/Appointments";
 import AppointmentCalendar from "../AppointmentCalender/AppointmentCalendar";
 import ChatConsultation from "../chatConsultation/chatConsultation";
+import DoctorAppointments from "../Appointments/DoctorAppointments";
+import DoctorAppointmentCalendar from "../AppointmentCalender/DoctorAppointmentCalendar";
 
 const routes = [
   { path: "/", element: <LandingPage />, requiresAuth: false, role: "user" },
@@ -35,13 +34,24 @@ const routes = [
     element: <Profile />,
     requiresAuth: true,
     children: [
-      { path: "details", element: <ProfileDetails /> },
-      { path: "appointments", element: <Appointments /> },
-      { path: "calendar", element: <AppointmentCalendar /> },
+      { path: "details", element: <ProfileDetails />, role: "user" },
+      { path: "appointments", element: <Appointments />, role: "user" },
+      { path: "calendar", element: <AppointmentCalendar />, role: "user" },
+      {
+        path: "/profile/doctor/calendar",
+        element: <DoctorAppointmentCalendar />,
+        role: "doctor",
+      },
       {
         path: "/profile/dashboard",
         element: <MainDash />,
-        requiresAuth: true,
+        // requiresAuth: true,
+        role: "doctor",
+      },
+      {
+        path: "/profile/doctor/appointments",
+        element: <DoctorAppointments />,
+        // requiresAuth: true,
         role: "doctor",
       },
 

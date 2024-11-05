@@ -5,7 +5,7 @@ import { UilSignOutAlt } from "@iconscout/react-unicons";
 import { SidebarData } from "../../Data/Data";
 import { UilBars } from "@iconscout/react-unicons";
 import { motion } from "framer-motion";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { authActions } from "../../store/auth/auth-slice";
 
 const Sidebar = () => {
@@ -14,6 +14,8 @@ const Sidebar = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const { userRole: role } = useSelector((state) => state.auth);
 
   const logoutHandler = () => {
     dispatch(authActions.logout());
@@ -51,8 +53,8 @@ const Sidebar = () => {
         </div>
 
         <div className={classes.menu}>
-          {SidebarData.map((item, index) => {
-            return (
+          {SidebarData.filter((item) => !item.role || item.role === role).map(
+            (item, index) => (
               <div
                 className={
                   selected === index
@@ -70,8 +72,8 @@ const Sidebar = () => {
                 <item.icon />
                 <span>{item.heading}</span>
               </div>
-            );
-          })}
+            )
+          )}
           <div className={classes.menuItem} onClick={logoutHandler}>
             <UilSignOutAlt /> <span>Log out</span>
           </div>

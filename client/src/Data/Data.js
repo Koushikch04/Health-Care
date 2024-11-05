@@ -38,11 +38,25 @@ export const SidebarData = [
     icon: UilClipboardAlt,
     heading: "Appointments",
     url: "appointments",
+    role: "user",
+  },
+  {
+    icon: UilClipboardAlt,
+    heading: "Appointments",
+    url: "/profile/doctor/appointments",
+    role: "doctor",
   },
   {
     icon: CalendarMonth,
     heading: "Calender",
     url: "calendar",
+    role: "user",
+  },
+  {
+    icon: CalendarMonth,
+    heading: "Calender",
+    url: "/profile/doctor/calendar",
+    role: "doctor",
   },
   {
     icon: MessageSharp,

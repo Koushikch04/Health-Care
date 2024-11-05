@@ -45,18 +45,21 @@ const DynamicTable = ({ title, headers, rows }) => {
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
               >
                 <TableCell component="th" scope="row">
-                  <span className="status">{row.name}</span>
+                  <span className="status">{row.patientName}</span>
                 </TableCell>
-                <TableCell align="left">{row.trackingId}</TableCell>
-                <TableCell align="left">{row.date}</TableCell>
+                <TableCell align="left">
+                  {new Date(row.date).toLocaleDateString("en-US")}{" "}
+                </TableCell>
+                <TableCell align="left">{row.time}</TableCell>
+                <TableCell align="left">{row.reasonForVisit}</TableCell>
                 <TableCell align="left">
                   <span className="status" style={makeStyle(row.status)}>
                     {row.status}
                   </span>
                 </TableCell>
-                <TableCell align="left" className="Details">
+                {/* <TableCell align="left" className="Details">
                   Details
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>
