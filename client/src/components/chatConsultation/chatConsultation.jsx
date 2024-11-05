@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 import { baseURL } from "../../api/api.js";
-import styles from "./ChatConsultation.module.css";
+import styles from "./chatConsultation.module.css";
 import { useNavigate } from "react-router-dom";
 
 const ChatConsultation = () => {
