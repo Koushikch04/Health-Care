@@ -29,7 +29,12 @@ const appointmentSchema = new Schema(
       enum: ["scheduled", "completed", "canceled"],
       default: "scheduled",
     },
+    reviewed: {
+      type: Boolean,
+      default: false,
+    },
   },
+
   { timestamps: true }
 );
 

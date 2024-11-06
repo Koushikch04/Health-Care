@@ -1,21 +1,72 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import styles from "./Card.module.css";
+import { baseURL } from "../../api/api";
+import { useSelector } from "react-redux";
 
-const Card = ({ user, openReviewModal }) => {
+const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
+  const [review, setReview] = useState(null);
+  const token = useSelector((state) => state.auth.userToken);
+
+  const doctorName = `${appointment.doctor.name.firstName} ${appointment.doctor.name.lastName}`;
+  const specialty = appointment.doctor.specialty.name;
+  const patientName = appointment.patientName;
+  const isReviewed = appointment.reviewed;
+
+  useEffect(() => {
+    const fetchReview = async () => {
+      if (isReviewed) {
+        try {
+          const response = await fetch(`${baseURL}/review/${appointment._id}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const reviewData = await response.json();
+
+          if (reviewData) {
+            setReview(reviewData);
+          }
+        } catch (error) {
+          console.error("Failed to fetch review:", error);
+        }
+      }
+    };
+
+    fetchReview();
+  }, [appointment._id, isReviewed, token]);
+
+  const handleReviewSubmission = (newReview) => {
+    // Update review in parent component
+    updateAppointmentReview(appointment._id, newReview);
+    setReview(newReview);
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
-        <h3 className={styles.cardTitle}>{user.name}</h3>
-        <p className={styles.cardSpeciality}>{user.speciality}</p>
+        <h3 className={styles.cardTitle}>{doctorName}</h3>
+        <p className={styles.cardSpeciality}>{specialty}</p>
       </div>
       <div className={styles.cardBody}>
-        {user.review && (
+        <p>
+          <strong>Patient:</strong> {patientName}
+        </p>
+        {isReviewed ? (
           <p>
-            <strong>Review:</strong> {user.review}
+            <strong>Review:</strong>
+            {review ? review.comment : "Loading..."}
           </p>
-        )}
-        {!user.review && (
-          <button onClick={() => openReviewModal(user.id)}>Give Review</button>
+        ) : (
+          <button
+            onClick={() =>
+              openReviewModal(appointment._id, handleReviewSubmission)
+            }
+          >
+            Give Review
+          </button>
         )}
       </div>
     </div>

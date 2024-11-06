@@ -5,6 +5,8 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import scheduleJobs from "./cron/cronJobs.js";
+
 import Appointment from "./models/Appointment.js";
 import Speciality from "./models/Specialty.js";
 import Review from "./models/Review.js";
@@ -19,6 +21,7 @@ import appointmentRoutes from "./routes/appointment.js";
 import specialtyRoutes from "./routes/specialty.js";
 import profileRoutes from "./routes/profile.js";
 import findSpecialtyRoutes from "./routes/findSpecialty.js";
+import reviewRoutes from "./routes/Review.js";
 
 import { verifyToken } from "./middleware/authVerification.js";
 
@@ -64,6 +67,7 @@ app.use("/doctor", doctorRoutes);
 app.use("/specialty", specialtyRoutes);
 app.use("/profile", profileRoutes);
 app.use("/health/specialty", findSpecialtyRoutes);
+app.use("/review/", reviewRoutes);
 
 app.get("/", verifyToken, (req, res) => {
   res.send("Sever Home Page");
@@ -76,5 +80,6 @@ mongoose
     console.log("Database connected");
     app.listen(PORT);
     console.log("Server started successfully");
+    scheduleJobs();
   })
   .catch((err) => console.log(err));

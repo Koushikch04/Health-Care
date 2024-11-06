@@ -34,11 +34,34 @@ export const createAppointment = async (req, res) => {
 };
 
 export const getUserAppointments = async (req, res) => {
+  const { status } = req.query;
+  const validStatuses = ["scheduled", "completed", "canceled"];
   try {
-    // console.log(req.userId);
-    const appointments = await Appointment.find({ user: req.user.id })
-      .populate("doctor", "name experience rating")
+    let query = { user: req.user.id };
+    if (status) {
+      if (!validStatuses.includes(status)) {
+        return res
+          .status(400)
+          .json({
+            msg: `Invalid status filter. Allowed values are: ${validStatuses.join(
+              ", "
+            )}`,
+          });
+      }
+      query.status = status;
+    }
+    const appointments = await Appointment.find(query)
+      .populate({
+        path: "doctor",
+        select: "name experience rating specialty",
+        populate: {
+          path: "specialty",
+          model: "Specialty",
+          select: "name",
+        },
+      })
       .sort({ createdAt: -1 });
+    console.log(appointments);
 
     return res.status(200).json(appointments);
   } catch (error) {

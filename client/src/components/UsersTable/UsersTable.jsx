@@ -1,78 +1,131 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Card from "./Card";
 import SearchBar from "./SearchBar";
 import Filters from "./Filters";
 import Pagination from "../DoctorListPagination/Pagination";
 import Modal from "../UI/Modal/Modal";
 import styles from "./UsersTable.module.css";
-
-const dummyData = [
-  { id: 1, name: "John Doe", speciality: "Cardiologist", review: "Excellent" },
-  { id: 2, name: "Jane Smith", speciality: "Neurologist", review: "" },
-  {
-    id: 3,
-    name: "Alice Johnson",
-    speciality: "Pediatrician",
-    review: "Very Good",
-  },
-  { id: 4, name: "Bob Brown", speciality: "Orthopedic", review: "Good" },
-  { id: 5, name: "Charlie Davis", speciality: "Dermatologist", review: "" },
-  {
-    id: 6,
-    name: "Diana Moore",
-    speciality: "Gynecologist",
-    review: "Satisfactory",
-  },
-  // { id: 7, name: "Emily Clark", speciality: "Oncologist", review: "Excellent" },
-  // { id: 8, name: "Frank Wilson", speciality: "Urologist", review: "" },
-];
+import { useSelector } from "react-redux";
+import { baseURL } from "../../api/api";
 
 const UsersTable = () => {
-  const [users, setUsers] = useState(dummyData);
+  const [appointments, setAppointments] = useState([]);
   const [searchValue, setSearchValue] = useState("");
-  const [filters, setFilters] = useState({ speciality: "", review: "" });
+  const [filters, setFilters] = useState({ specialty: "", review: "" });
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 4;
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  const { userInfo, userToken: token } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await fetch(
+          `${baseURL}/appointment?status=completed`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const appointmentData = await response.json();
+        setAppointments(appointmentData);
+      } catch (error) {
+        console.error("Failed to fetch appointments:", error);
+      }
+    };
+    fetchAppointments();
+  }, [userInfo, token]);
 
   const searchTable = (newSearchValue) => {
     setSearchValue(newSearchValue);
     setCurrentPage(1);
   };
 
-  const filteredUsers = users
-    .filter((user) =>
-      user.name.toLowerCase().includes(searchValue.toLowerCase())
+  const filteredAppointments = appointments
+    .filter((appointment) =>
+      appointment.doctor.name.firstName
+        .toLowerCase()
+        .includes(searchValue.toLowerCase())
     )
     .filter(
-      (user) => !filters.speciality || user.speciality === filters.speciality
+      (appointment) =>
+        !filters.specialty ||
+        appointment.doctor.specialty.name === filters.specialty
     )
-    .filter((user) => !filters.review || user.review === filters.review);
+    .filter(
+      (appointment) =>
+        !filters.review ||
+        appointment.reviewed === (filters.review === "Reviewed")
+    );
 
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = filteredUsers.slice(indexOfFirstPost, indexOfLastPost);
+  const currentPosts = filteredAppointments.slice(
+    indexOfFirstPost,
+    indexOfLastPost
+  );
 
-  const openReviewModal = (userId) => {
-    setSelectedUserId(userId);
+  const openReviewModal = (reviewId, handleReviewSubmission) => {
+    setSelectedAppointmentId(reviewId);
     setShowModal(true);
   };
 
   const closeReviewModal = () => {
     setShowModal(false);
-    setSelectedUserId(null);
+    setSelectedAppointmentId(null);
   };
 
-  const handleReviewSubmit = () => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === selectedUserId
-          ? { ...user, review: "Temporary Review" }
-          : user
-      )
+  const handleReviewSubmit = async (event) => {
+    event.preventDefault();
+    const reviewText = event.target.elements.reviewText.value;
+    const appointment = appointments.find(
+      (appt) => appt._id === selectedAppointmentId
     );
-    closeReviewModal();
+
+    if (!appointment) return;
+
+    try {
+      const response = await fetch(`${baseURL}/review/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          doctorId: appointment.doctor._id,
+          appointmentId: selectedAppointmentId,
+          userId: appointment.user,
+          rating: 5,
+          comment: reviewText,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit review");
+      }
+
+      const newReview = await response.json();
+
+      // Pass the new review to the parent component
+      setAppointments((prevAppointments) =>
+        prevAppointments.map((appt) =>
+          appt._id === selectedAppointmentId
+            ? { ...appt, reviewed: true, review: newReview }
+            : appt
+        )
+      );
+
+      closeReviewModal();
+    } catch (error) {
+      console.error("Failed to submit review:", error);
+      alert("Something went wrong while submitting your review.");
+    }
   };
 
   return (
@@ -80,13 +133,24 @@ const UsersTable = () => {
       <SearchBar searchTable={searchTable} />
       <Filters filterOptions={filters} setFilters={setFilters} />
       <div className={styles.cardContainer}>
-        {currentPosts.map((user) => (
-          <Card key={user.id} user={user} openReviewModal={openReviewModal} />
+        {currentPosts.map((appointment) => (
+          <Card
+            key={appointment._id}
+            appointment={appointment}
+            openReviewModal={openReviewModal}
+            updateAppointmentReview={(id, newReview) =>
+              setAppointments((prevAppointments) =>
+                prevAppointments.map((appt) =>
+                  appt._id === id ? { ...appt, review: newReview } : appt
+                )
+              )
+            }
+          />
         ))}
       </div>
       <div className={styles.paginationContainer}>
         <Pagination
-          totalPosts={filteredUsers.length}
+          totalPosts={filteredAppointments.length}
           postsPerPage={postsPerPage}
           setCurrentPage={setCurrentPage}
           currentPage={currentPage}
@@ -95,11 +159,9 @@ const UsersTable = () => {
       {showModal && (
         <Modal onClose={closeReviewModal}>
           <h2>Give Review</h2>
-          <form>
-            <textarea placeholder="Enter your review" />
-            <button type="button" onClick={handleReviewSubmit}>
-              Submit Review
-            </button>
+          <form onSubmit={handleReviewSubmit}>
+            <textarea name="reviewText" placeholder="Enter your review" />
+            <button type="submit">Submit Review</button>
           </form>
         </Modal>
       )}
