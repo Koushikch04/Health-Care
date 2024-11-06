@@ -1,12 +1,15 @@
+/* General Table Container */
 .tableContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin: 0 auto;
   max-width: 1200px;
-  padding: 20px;
+  /* padding: 20px; */
+  box-sizing: border-box;
 }
 
+/* Search Bar */
 .searchBar {
   margin-bottom: 20px;
   width: 100%;
@@ -14,6 +17,22 @@
   justify-content: center;
 }
 
+.searchBar input {
+  width: 60%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  transition: border 0.3s ease;
+}
+
+.searchBar input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Filters Section */
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -22,6 +41,24 @@
   justify-content: center;
 }
 
+.filters select,
+.filters input {
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: auto;
+  max-width: 200px;
+  transition: border 0.3s ease;
+}
+
+.filters select:focus,
+.filters input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Card Container for Appointments */
 .cardContainer {
   display: flex;
   flex-wrap: wrap;
@@ -29,12 +66,123 @@
   justify-content: center;
   width: 100%;
   max-width: 1200px;
-  min-height: 420px;
+  height: 450px;
   margin-bottom: 20px;
 }
 
+/* Pagination Container */
 .paginationContainer {
   display: flex;
   justify-content: center;
   width: 100%;
+}
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 500px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1000;
+}
+
+.modal h2 {
+  margin-bottom: 15px;
+}
+
+.modal textarea {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.modal button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.modal button:hover {
+  background-color: #0056b3;
+}
+
+/* Card Styling */
+.card {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  width: calc(25% - 20px); /* Adjust width as needed */
+  min-width: 250px;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Button inside the card */
+.card button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.card button:hover {
+  background-color: #0056b3;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .tableContainer {
+    padding: 10px;
+  }
+
+  .searchBar input,
+  .filters select,
+  .filters input {
+    width: 90%;
+  }
+
+  .cardContainer {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 600px;
+  }
 }

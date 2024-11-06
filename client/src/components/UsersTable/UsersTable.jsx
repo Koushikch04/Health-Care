@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import Card from "./Card";
 import SearchBar from "./SearchBar";
 import Filters from "./Filters";
@@ -34,6 +33,8 @@ const UsersTable = () => {
           }
         );
         const appointmentData = await response.json();
+        console.log(appointmentData);
+
         setAppointments(appointmentData);
       } catch (error) {
         console.error("Failed to fetch appointments:", error);
@@ -101,7 +102,7 @@ const UsersTable = () => {
           doctorId: appointment.doctor._id,
           appointmentId: selectedAppointmentId,
           userId: appointment.user,
-          rating: 5,
+          rating: 3,
           comment: reviewText,
         }),
       });

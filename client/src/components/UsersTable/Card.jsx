@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import styles from "./Card.module.css";
 import { baseURL } from "../../api/api";
 import { useSelector } from "react-redux";
@@ -18,17 +17,13 @@ const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
       if (isReviewed) {
         try {
           const response = await fetch(`${baseURL}/review/${appointment._id}`, {
-            method: "GET",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           });
           const reviewData = await response.json();
-
-          if (reviewData) {
-            setReview(reviewData);
-          }
+          if (reviewData) setReview(reviewData);
         } catch (error) {
           console.error("Failed to fetch review:", error);
         }
@@ -39,7 +34,6 @@ const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
   }, [appointment._id, isReviewed, token]);
 
   const handleReviewSubmission = (newReview) => {
-    // Update review in parent component
     updateAppointmentReview(appointment._id, newReview);
     setReview(newReview);
   };
@@ -61,6 +55,7 @@ const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
           </p>
         ) : (
           <button
+            className={styles.reviewButton}
             onClick={() =>
               openReviewModal(appointment._id, handleReviewSubmission)
             }

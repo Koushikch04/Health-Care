@@ -2,54 +2,92 @@
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 30px; /* Increased padding */
-  width: 360px; /* Increased width */
-  height: 200px; /* Increased height */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  width: 360px;
+  height: 220px;
   text-align: center;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition: box-shadow 0.3s ease, transform 0.3s ease,
+    background-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   transform: translateY(-5px);
+  background-color: #f9f9f9;
 }
 
 .cardHeader {
-  margin-bottom: 20px; /* Increased margin */
+  margin-bottom: 20px;
 }
 
 .cardTitle {
-  font-size: 1.6em; /* Increased font size */
-  margin-bottom: 10px; /* Increased margin */
+  font-size: 1.6em;
+  margin-bottom: 10px;
   color: #333;
+  font-weight: 600;
 }
 
 .cardSpeciality {
-  font-size: 1.2em; /* Increased font size */
-  color: #666;
+  font-size: 1.1em;
+  color: #777;
+  /* margin-bottom: 15px; */
 }
 
 .cardBody {
-  font-size: 1.2em; /* Increased font size */
+  font-size: 1.1em;
   color: #555;
 }
 
 .cardBody p {
-  margin: 15px 0; /* Increased margin */
+  margin: 12px 0;
 }
 
 .cardBody button {
-  background-color: #6b5b95;
+  background-color: var(--primary-color);
   color: white;
   border: none;
-  padding: 12px 20px; /* Increased padding */
+  padding: 12px 25px;
   cursor: pointer;
   border-radius: 30px;
+  font-size: 1em;
+  font-weight: bold;
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .cardBody button:hover {
-  background-color: #5a4b8b;
+  background-color: var(--primary-color-dark);
   transform: scale(1.05);
+}
+
+.cardBody button:focus {
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .card {
+    width: 100%;
+    margin: 10px 0;
+    height: auto;
+  }
+
+  .cardTitle {
+    font-size: 1.4em;
+  }
+
+  .cardSpeciality {
+    font-size: 1em;
+  }
+
+  .cardBody p {
+    font-size: 1em;
+  }
+
+  .cardBody button {
+    width: 100%;
+    padding: 12px;
+  }
 }
