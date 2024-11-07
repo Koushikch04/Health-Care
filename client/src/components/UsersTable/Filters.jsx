@@ -1,40 +1,72 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./Filters.module.css";
 
-const Filters = ({ filterOptions, setFilters }) => {
+const Filters = ({ appointments, filters, setFilters, setCurrentPage }) => {
+  const [specialties, setSpecialties] = useState([]);
+
+  useEffect(() => {
+    // Extract unique specialties from appointments and store them in state
+    const uniqueSpecialties = Array.from(
+      new Set(
+        appointments.map((appointment) => appointment.doctor.specialty.name)
+      )
+    );
+    setSpecialties(uniqueSpecialties);
+  }, [appointments]);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prevFilters) => ({
       ...prevFilters,
       [name]: value,
     }));
+    setCurrentPage(1);
   };
 
   return (
     <div className={styles.filters}>
+      {/* Specialty Filter */}
       <label>
-        Speciality:
-        <select name="speciality" onChange={handleFilterChange}>
+        Specialty:
+        <select
+          name="specialty"
+          value={filters.specialty}
+          onChange={handleFilterChange}
+        >
           <option value="">All</option>
-          <option value="Cardiologist">Cardiologist</option>
-          <option value="Neurologist">Neurologist</option>
-          <option value="Pediatrician">Pediatrician</option>
-          <option value="Orthopedic">Orthopedic</option>
-          <option value="Dermatologist">Dermatologist</option>
-          <option value="Gynecologist">Gynecologist</option>
-          <option value="Oncologist">Oncologist</option>
-          <option value="Urologist">Urologist</option>
+          {specialties.map((specialty) => (
+            <option key={specialty} value={specialty}>
+              {specialty}
+            </option>
+          ))}
         </select>
       </label>
+
+      {/* Date Sorting Filter */}
       <label>
-        Review:
-        <select name="review" onChange={handleFilterChange}>
+        Sort by Date:
+        <select
+          name="dateSort"
+          value={filters.dateSort}
+          onChange={handleFilterChange}
+        >
+          <option value="">Default</option>
+          <option value="asc">Oldest to Newest</option>
+          <option value="desc">Newest to Oldest</option>
+        </select>
+      </label>
+
+      {/* Reviewed/Unreviewed Filter */}
+      <label>
+        Review Status:
+        <select
+          name="reviewStatus"
+          value={filters.reviewStatus}
+          onChange={handleFilterChange}
+        >
           <option value="">All</option>
-          <option value="Excellent">Excellent</option>
-          <option value="Very Good">Very Good</option>
-          <option value="Good">Good</option>
-          <option value="Satisfactory">Satisfactory</option>
-          <option value="No Review Provided">No Review Provided</option>
+          <option value="reviewed">Reviewed</option>
+          <option value="unreviewed">Unreviewed</option>
         </select>
       </label>
     </div>

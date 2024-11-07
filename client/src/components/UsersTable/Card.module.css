@@ -5,7 +5,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 15px;
   width: 360px;
-  height: 220px;
+  height: 250px;
   text-align: center;
   transition: box-shadow 0.3s ease, transform 0.3s ease,
     background-color 0.3s ease;

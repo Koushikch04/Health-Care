@@ -16,6 +16,8 @@ const UsersTable = () => {
   const postsPerPage = 4;
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
 
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
 
@@ -61,9 +63,18 @@ const UsersTable = () => {
     )
     .filter(
       (appointment) =>
-        !filters.review ||
-        appointment.reviewed === (filters.review === "Reviewed")
+        !filters.reviewStatus ||
+        (filters.reviewStatus === "reviewed" && appointment.reviewed) ||
+        (filters.reviewStatus === "unreviewed" && !appointment.reviewed)
     );
+
+  if (filters.dateSort) {
+    filteredAppointments.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return filters.dateSort === "asc" ? dateA - dateB : dateB - dateA;
+    });
+  }
 
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
@@ -84,12 +95,21 @@ const UsersTable = () => {
 
   const handleReviewSubmit = async (event) => {
     event.preventDefault();
+    if (rating == 0) {
+      alert("please give a rating!");
+      return;
+    }
     const reviewText = event.target.elements.reviewText.value;
+    if (reviewText === "") {
+      alert("review cannot be empty!");
+    }
     const appointment = appointments.find(
       (appt) => appt._id === selectedAppointmentId
     );
 
     if (!appointment) return;
+    closeReviewModal();
+    setRating(0);
 
     try {
       const response = await fetch(`${baseURL}/review/`, {
@@ -102,7 +122,7 @@ const UsersTable = () => {
           doctorId: appointment.doctor._id,
           appointmentId: selectedAppointmentId,
           userId: appointment.user,
-          rating: 3,
+          rating,
           comment: reviewText,
         }),
       });
@@ -113,7 +133,6 @@ const UsersTable = () => {
 
       const newReview = await response.json();
 
-      // Pass the new review to the parent component
       setAppointments((prevAppointments) =>
         prevAppointments.map((appt) =>
           appt._id === selectedAppointmentId
@@ -121,18 +140,25 @@ const UsersTable = () => {
             : appt
         )
       );
-
-      closeReviewModal();
     } catch (error) {
       console.error("Failed to submit review:", error);
       alert("Something went wrong while submitting your review.");
     }
   };
 
+  const handleRatingClick = (ratingValue) => {
+    setRating(ratingValue);
+  };
+
   return (
     <div className={styles.tableContainer}>
       <SearchBar searchTable={searchTable} />
-      <Filters filterOptions={filters} setFilters={setFilters} />
+      <Filters
+        appointments={appointments}
+        filters={filters}
+        setFilters={setFilters}
+        setCurrentPage={setCurrentPage}
+      />
       <div className={styles.cardContainer}>
         {currentPosts.map((appointment) => (
           <Card
@@ -161,8 +187,25 @@ const UsersTable = () => {
         <Modal onClose={closeReviewModal}>
           <h2>Give Review</h2>
           <form onSubmit={handleReviewSubmit}>
+            <div className={styles.stars}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  className={`${styles.star} ${
+                    (hoverRating || rating) >= star ? styles.selected : ""
+                  }`}
+                  onClick={() => handleRatingClick(star)} // Set rating on click
+                  onMouseEnter={() => setHoverRating(star)} // Highlight on hover
+                  onMouseLeave={() => setHoverRating(0)} // Reset hover on mouse leave
+                >
+                  ★
+                </span>
+              ))}
+            </div>
             <textarea name="reviewText" placeholder="Enter your review" />
-            <button type="submit">Submit Review</button>
+            <button className={styles.submitReview} type="submit">
+              Submit Review
+            </button>
           </form>
         </Modal>
       )}

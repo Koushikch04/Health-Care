@@ -66,7 +66,7 @@
   justify-content: center;
   width: 100%;
   max-width: 1200px;
-  height: 450px;
+  height: 500px;
   margin-bottom: 20px;
 }
 
@@ -162,6 +162,62 @@
 
 .card button:hover {
   background-color: #0056b3;
+}
+
+.stars {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.star {
+  font-size: 2rem;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.star.selected {
+  color: #ffc107;
+}
+
+.star:hover {
+  color: #ffc107;
+}
+
+textarea {
+  width: 100%;
+  height: 120px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: none;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  transition: border-color 0.3s ease;
+}
+
+textarea:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Submit Button */
+button.submitReview {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+button.submitReview:hover {
+  background-color: var(--primary-color-dark);
 }
 
 /* Mobile Responsiveness */

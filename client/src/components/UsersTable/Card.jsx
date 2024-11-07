@@ -12,6 +12,20 @@ const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
   const patientName = appointment.patientName;
   const isReviewed = appointment.reviewed;
 
+  const appointmentDate = new Date(appointment.date);
+  const formattedDate = appointmentDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const formattedTime = new Date(
+    `1970-01-01T${appointment.time}:00`
+  ).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   useEffect(() => {
     const fetchReview = async () => {
       if (isReviewed) {
@@ -47,6 +61,10 @@ const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
       <div className={styles.cardBody}>
         <p>
           <strong>Patient:</strong> {patientName}
+        </p>
+        <p>
+          {formattedDate}
+          {formattedTime}
         </p>
         {isReviewed ? (
           <p>
