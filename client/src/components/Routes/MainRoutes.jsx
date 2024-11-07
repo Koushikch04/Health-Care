@@ -11,7 +11,6 @@ function MainRoutes() {
   return (
     <Routes>
       {routes.map((route, index) => {
-        // Redirect logged-in users from auth routes to the home page
         if (
           userLoggedIn &&
           (route.path === "/auth/login" || route.path === "/auth/signup")
@@ -25,13 +24,12 @@ function MainRoutes() {
           );
         }
 
-        // Check top-level route's role requirement
         if (route.role && route.role !== role) {
           return (
             <Route
               key={index}
               path={route.path}
-              element={<Navigate to="/profile/details" />}
+              element={<Navigate to="/" />}
             />
           );
         }
@@ -52,7 +50,6 @@ function MainRoutes() {
           <Route key={index} path={route.path} element={element}>
             {route.children &&
               route.children.map((child, childIndex) => {
-                // Check child route's role requirement
                 if (child.role && child.role !== role) {
                   return (
                     <Route
@@ -63,7 +60,6 @@ function MainRoutes() {
                   );
                 }
 
-                // Child element with auth and role check
                 const childElement = child.requiresAuth ? (
                   <ProtectedRoute
                     element={child.element}

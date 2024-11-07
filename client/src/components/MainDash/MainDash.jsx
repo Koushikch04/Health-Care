@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from "react";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 
-import Cards from "../Cards/Cards";
 import Statistics from "../../Statistics/Statistics.jsx";
 import DynamicTable from "../Table/Table"; // Update the import
 import styles from "./MainDash.module.css";
 import { useSelector } from "react-redux";
-import BarChart from "../../Charts/BarChartComponent";
-import BarChartComponent from "../../Charts/BarChartComponent";
-import DoctorDashboard from "../../Charts/DoctorDashboard";
 import { baseURL } from "../../api/api";
 
 const MainDash = () => {
@@ -17,6 +13,7 @@ const MainDash = () => {
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
   const doctorId = userInfo._id;
   const name = userInfo.name.firstName + " " + userInfo.name.lastName;
+  const rating = userInfo.rating;
 
   const today = new Date();
   const options = { year: "numeric", month: "long", day: "numeric" };
@@ -72,6 +69,9 @@ const MainDash = () => {
         <div className={styles.greetings}>
           <h1>Good Morning, {name}</h1>
           <span>Have a nice day.</span>
+          <div className={styles.rating}>
+            <span>Your Rating: {rating} ⭐</span>
+          </div>
         </div>
         <div className={styles.date}>
           <CalendarTodayIcon style={{ marginRight: "8px" }} />
@@ -81,7 +81,6 @@ const MainDash = () => {
       {/* <h3>Have a nice day.</h3> */}
       <Statistics />
       {/* <Cards /> */}
-
       <div className={styles.tables1}>
         {/* <BarChartComponent
           title="Patient Incoming History"
@@ -93,7 +92,6 @@ const MainDash = () => {
           data={rebookingRatesData}
           labels={rebookingLabels}
         /> */}
-        <DoctorDashboard />
       </div>
       <div className={styles.tables1}>
         <DynamicTable

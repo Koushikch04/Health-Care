@@ -40,13 +40,11 @@ export const getUserAppointments = async (req, res) => {
     let query = { user: req.user.id };
     if (status) {
       if (!validStatuses.includes(status)) {
-        return res
-          .status(400)
-          .json({
-            msg: `Invalid status filter. Allowed values are: ${validStatuses.join(
-              ", "
-            )}`,
-          });
+        return res.status(400).json({
+          msg: `Invalid status filter. Allowed values are: ${validStatuses.join(
+            ", "
+          )}`,
+        });
       }
       query.status = status;
     }
@@ -61,7 +59,7 @@ export const getUserAppointments = async (req, res) => {
         },
       })
       .sort({ createdAt: -1 });
-    console.log(appointments);
+    // console.log(appointments);
 
     return res.status(200).json(appointments);
   } catch (error) {

@@ -1,0 +1,74 @@
+.doctorReviewContainer {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  width: 600px;
+  /* height: ; */
+  margin: 20px auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.filterSection {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filterSection label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.filterSection select {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.review {
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.review p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.review strong {
+  font-weight: 600;
+  color: #444;
+}
+
+.review .rating {
+  color: #ffb400;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.loading,
+.error,
+.noReviews {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+  padding: 10px;
+}
+
+.error {
+  color: #d9534f;
+}
+
+.noReviews {
+  color: #888;
+}
+
+.review:hover {
+  background-color: #f3f3f3;
+  border-color: #d0d0d0;
+  transition: background-color 0.3s, border-color 0.3s;
+}

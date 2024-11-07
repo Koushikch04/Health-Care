@@ -9,6 +9,7 @@ import styles from "./Statistics.module.css";
 import Card from "./Card.jsx";
 import { useSelector } from "react-redux";
 import { baseURL } from "../api/api.js";
+import DoctorDashboard from "../Charts/DoctorDashboard.jsx";
 
 const transformDataToCards = (responseData) => {
   const {
@@ -38,7 +39,7 @@ const transformDataToCards = (responseData) => {
       ],
     },
     {
-      title: "Pending",
+      title: "Scheduled",
       color: {
         backGround: "linear-gradient(180deg, #FFC75F 0%, #FFDD99 100%)",
         boxShadow: "0px 10px 20px 0px #f5d67a",
@@ -80,7 +81,6 @@ const transformDataToCards = (responseData) => {
 };
 
 const statistics = () => {
-  const [data, setData] = useState([]);
   const [cardsData, setCardsData] = useState([]);
   const { userInfo } = useSelector((state) => state.auth);
 
@@ -119,6 +119,7 @@ const statistics = () => {
           </div>
         );
       })}
+      <DoctorDashboard />
     </div>
   );
 };

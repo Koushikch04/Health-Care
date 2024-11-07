@@ -7,18 +7,10 @@ import Chart from "react-apexcharts";
 
 import styles from "./Card.module.css";
 
-// Parent Card
 const Card = (props) => {
-  //   const [expanded, setExpanded] = useState(false);
-
-  //   return expanded ? (
-  //     <ExpandedCardTest param={props} setExpanded={() => setExpanded(false)} />
-  //   ) : (
   return <CompactCard param={props} setExpanded={() => setExpanded(true)} />;
-  //   );
 };
 
-// Compact Card
 function CompactCard({ param, setExpanded }) {
   const Png = param.png;
 
@@ -34,8 +26,12 @@ function CompactCard({ param, setExpanded }) {
     >
       <div className={styles.radialBar}>
         <CircularProgressbar
+          className={styles.CircularProgressbar}
           value={param.barValue}
           text={`${param.barValue}%`}
+          styles={{
+            text: { fill: "white", fontSize: "18px", fontWeight: "bold" },
+          }}
         />
         <span>{param.title}</span>
       </div>

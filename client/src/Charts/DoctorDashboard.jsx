@@ -94,8 +94,8 @@ const DoctorDashboard = ({ doctorId }) => {
         </div>
 
         <div className={styles.compactContent}>
-          <h3>Scheduled Appointments</h3>
-          <p>Total Scheduled: {data.summary.total}</p>
+          <h4>View All</h4>
+          <p>Total: {data.summary.total}</p>
         </div>
       </div>
 

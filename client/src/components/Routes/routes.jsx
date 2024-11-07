@@ -2,7 +2,7 @@ import LandingPage from "../LandingPage/LandingPage";
 import SignUp from "../LoginSignUp/SignUp";
 import SignIn from "../LoginSignUp/SignIn";
 import FindDoctorSearch from "../SearchBar/FindDoctorSearch";
-import Review from "../Reviews/Review";
+import Review from "../Reviews/UserReview";
 import Profile from "../Profile/Profile";
 import MainDash from "../MainDash/MainDash";
 import ProfileDetails from "../../Pages/ProfileDetails";
@@ -11,6 +11,7 @@ import AppointmentCalendar from "../AppointmentCalender/AppointmentCalendar";
 import ChatConsultation from "../chatConsultation/chatConsultation";
 import DoctorAppointments from "../Appointments/DoctorAppointments";
 import DoctorAppointmentCalendar from "../AppointmentCalender/DoctorAppointmentCalendar";
+import DoctorReview from "../Reviews/DoctorReview";
 
 const routes = [
   { path: "/", element: <LandingPage />, requiresAuth: false, role: "user" },
@@ -52,6 +53,11 @@ const routes = [
         path: "/profile/doctor/appointments",
         element: <DoctorAppointments />,
         // requiresAuth: true,
+        role: "doctor",
+      },
+      {
+        path: "/profile/doctor/reviews",
+        element: <DoctorReview />,
         role: "doctor",
       },
 

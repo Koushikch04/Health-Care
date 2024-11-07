@@ -56,11 +56,12 @@ const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
       </p>
 
       <div className={styles.actions}>
-        {appointment.status != "canceled" && (
-          <button className={styles.cancelButton} onClick={handleCancel}>
-            Cancel Appointment
-          </button>
-        )}
+        {appointment.status != "canceled" &&
+          appointment.status != "completed" && (
+            <button className={styles.cancelButton} onClick={handleCancel}>
+              Cancel Appointment
+            </button>
+          )}
       </div>
     </Modal>
   );

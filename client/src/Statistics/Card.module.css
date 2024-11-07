@@ -28,20 +28,6 @@
   width: 4rem;
 }
 
-.CircularProgressbar-path {
-  stroke: white;
-  stroke-width: 12px;
-  filter: drop-shadow(2px 4px 6px rgba(255, 255, 255, 0.5));
-}
-
-.CircularProgressbar-trail {
-  display: none;
-}
-
-.CircularProgressbar-text {
-  fill: white;
-}
-
 .radialBar > span {
   font-size: 1.1rem;
   font-weight: bold;

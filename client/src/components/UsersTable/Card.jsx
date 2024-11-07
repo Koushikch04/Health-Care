@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
-import styles from "./Card.module.css";
-import { baseURL } from "../../api/api";
 import { useSelector } from "react-redux";
+
+import { baseURL } from "../../api/api";
+import Modal from "../UI/Modal/Modal.jsx";
+import styles from "./Card.module.css";
 
 const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
   const [review, setReview] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedComment, setSelectedComment] = useState("");
+
   const token = useSelector((state) => state.auth.userToken);
 
   const doctorName = `${appointment.doctor.name.firstName} ${appointment.doctor.name.lastName}`;
@@ -51,6 +56,10 @@ const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
     updateAppointmentReview(appointment._id, newReview);
     setReview(newReview);
   };
+  const handleCommentClick = (comment) => {
+    setSelectedComment(comment);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className={styles.card}>
@@ -69,7 +78,20 @@ const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
         {isReviewed ? (
           <p>
             <strong>Review:</strong>
-            {review ? review.comment : "Loading..."}
+
+            {review ? (
+              <span
+                className={styles.comment}
+                onClick={() => handleCommentClick(review.comment)}
+                title="Click to view full comment"
+              >
+                {review.comment.length > 30
+                  ? review.comment.substring(0, 30) + "..."
+                  : review.comment}
+              </span>
+            ) : (
+              "Loading..."
+            )}
           </p>
         ) : (
           <button
@@ -82,6 +104,11 @@ const Card = ({ appointment, openReviewModal, updateAppointmentReview }) => {
           </button>
         )}
       </div>
+      {isModalOpen && (
+        <Modal onClose={() => setIsModalOpen(false)}>
+          <p>{selectedComment}</p>
+        </Modal>
+      )}
     </div>
   );
 };

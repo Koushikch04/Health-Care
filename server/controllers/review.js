@@ -93,12 +93,23 @@ const createReview = async (req, res) => {
 };
 
 const getReviewsByDoctor = async (req, res) => {
-  const { doctorId } = req.params;
-  const reviews = await Review.find({ doctor: doctorId })
-    .populate("user", "name")
-    .sort({ createdAt: -1 });
+  console.log("Hello");
 
-  res.json(reviews);
+  const { doctorId } = req.params;
+  console.log(doctorId);
+
+  if (!doctorId) {
+    return res.status(400).json({ error: "Doctor ID is required" });
+  }
+
+  try {
+    const reviews = await Review.find({})
+      .populate("user", "name")
+      .sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve reviews" });
+  }
 };
 
 const getReviewsByUser = async (req, res) => {

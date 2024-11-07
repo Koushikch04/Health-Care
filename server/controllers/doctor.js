@@ -90,7 +90,6 @@ export const createDoctor = async (req, res) => {
 
 export const getDoctorAppointments = async (req, res) => {
   const { date } = req.query;
-  console.log(req.user.id);
 
   try {
     const query = { doctor: req.user.id };
@@ -101,7 +100,7 @@ export const getDoctorAppointments = async (req, res) => {
 
     const appointments = await Appointment.find(query);
 
-    console.log(appointments);
+    // console.log(appointments);
 
     return res.status(200).json(appointments);
   } catch (error) {
