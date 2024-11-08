@@ -24,7 +24,6 @@ const MainDash = () => {
       try {
         // setLoading(true);
         const today = new Date();
-        const todayDate = today.toISOString().split("T")[0];
         const response = await fetch(`${baseURL}/doctor/appointment`, {
           method: "GET",
           headers: {

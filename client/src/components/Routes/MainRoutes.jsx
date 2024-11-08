@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 
 import routes from "./routes";
 import ProtectedRoute from "./ProtectedRoute.jsx";
+import { NavigationOutlined } from "@mui/icons-material";
 
 function MainRoutes() {
   const { userLoggedIn, userRole: role } = useSelector((state) => state.auth);
@@ -24,7 +25,21 @@ function MainRoutes() {
           );
         }
 
-        if (route.role && route.role !== role) {
+        if (
+          role === "doctor" &&
+          route.role !== "doctor" &&
+          route.path !== "/profile"
+        ) {
+          return (
+            <Route
+              key={index}
+              path={route.path}
+              element={<Navigate to="/profile/dashboard" />}
+            />
+          );
+        }
+
+        if (route.role && role && route.role !== role) {
           return (
             <Route
               key={index}

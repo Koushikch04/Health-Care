@@ -14,14 +14,13 @@ import DoctorAppointmentCalendar from "../AppointmentCalender/DoctorAppointmentC
 import DoctorReview from "../Reviews/DoctorReview";
 
 const routes = [
-  { path: "/", element: <LandingPage />, requiresAuth: false, role: "user" },
+  { path: "/", element: <LandingPage />, requiresAuth: false },
   { path: "/auth/signup", element: <SignUp />, requiresAuth: false },
   { path: "/auth/login", element: <SignIn />, requiresAuth: false },
   {
     path: "/appointments",
     element: <FindDoctorSearch />,
     requiresAuth: false,
-    role: "user",
   },
   { path: "/reviews", element: <Review />, requiresAuth: true, role: "user" },
   {
@@ -46,13 +45,13 @@ const routes = [
       {
         path: "/profile/dashboard",
         element: <MainDash />,
-        // requiresAuth: true,
+        requiresAuth: true,
         role: "doctor",
       },
       {
         path: "/profile/doctor/appointments",
         element: <DoctorAppointments />,
-        // requiresAuth: true,
+        requiresAuth: true,
         role: "doctor",
       },
       {
