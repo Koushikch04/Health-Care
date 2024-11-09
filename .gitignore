@@ -13,6 +13,7 @@ dist
 dist-ssr
 *.local
 *.env
+/server/migration/
 
 # Editor directories and files
 .vscode/*

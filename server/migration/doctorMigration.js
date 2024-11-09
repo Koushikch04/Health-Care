@@ -37,10 +37,11 @@ async function migrateDoctors() {
       },
       {
         $set: {
-          name: {
-            firstName: "David",
-            lastName: "Wilson",
-          },
+          // name: {
+          //   firstName: "David",
+          //   lastName: "Wilson",
+          // },
+          registrationStatus: "approved",
         },
       }
     );

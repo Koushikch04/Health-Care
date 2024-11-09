@@ -44,6 +44,11 @@ const doctorSchema = new Schema(
       type: String,
       default: "/Images/Appointment/DoctorCard/doctor.png",
     },
+    registrationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

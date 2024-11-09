@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 
 import routes from "./routes";
 import ProtectedRoute from "./ProtectedRoute.jsx";
-import { NavigationOutlined } from "@mui/icons-material";
 
 function MainRoutes() {
   const { userLoggedIn, userRole: role } = useSelector((state) => state.auth);
