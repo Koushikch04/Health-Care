@@ -41,6 +41,51 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const createUser = async (req, res) => {
+  try {
+    console.log(req.body);
+
+    const { firstName, lastName, email, password, gender, dob, phone } =
+      req.body;
+
+    // Validate input (this is basic validation, you can enhance it further)
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Email and password are required." });
+    }
+
+    // Check if the email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ error: "User with this email already exists." });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const newUser = new User({
+      name: { firstName, lastName },
+      contact: { phone },
+      email,
+      password: hashedPassword, // Store the hashed password
+      gender,
+      dob,
+    });
+
+    await newUser.save();
+
+    res.status(201).json({
+      newUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Edit user profile
 export const editUserProfile = async (req, res) => {
   const { id } = req.params;

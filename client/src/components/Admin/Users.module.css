@@ -9,7 +9,7 @@
   font-family: Arial, sans-serif;
 }
 .users {
-  height: 600px;
+  height: 500px;
 }
 
 .filterSection {
@@ -78,8 +78,8 @@
 
 .userCard .userActions {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  flex-direction: row;
+  /* justify-content: space-between; */
 }
 
 .userCard .userActions button {
@@ -88,6 +88,81 @@
   border-radius: 5px;
   background-color: var(--primary-color-dark);
   cursor: pointer;
+}
+
+h2 {
+  text-align: center;
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* Form styling */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup label {
+  font-size: 14px;
+  color: #555;
+  /* margin-bottom: 8px; */
+  font-weight: 500;
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+  padding: 6px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: #007bff;
+}
+
+.formGroup select {
+  appearance: none;
+  background-color: #fff;
+}
+
+.formGroup input[type="date"] {
+  padding-left: 10px;
+}
+
+.button {
+  padding: 12px 20px;
+  background-color: #007bff;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  align-self: center;
+  width: 100%;
+  font-weight: 600;
+}
+
+.modalContent button:hover {
+  background-color: #0056b3;
+}
+
+.formGroup:focus::placeholder,
+select:focus::placeholder {
+  color: #007bff;
 }
 
 .userCard .userActions button:hover {

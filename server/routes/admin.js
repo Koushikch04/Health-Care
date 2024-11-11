@@ -10,6 +10,7 @@ import {
   manageDoctorRegistration,
   rescheduleOrCancelAppointment,
   getTopPerformingDoctors,
+  createUser,
   // handleSupportTickets,
 } from "../controllers/admin.js";
 import { isAdmin, authorizeAdmin } from "../middleware/authVerification.js";
@@ -17,6 +18,7 @@ import { isAdmin, authorizeAdmin } from "../middleware/authVerification.js";
 const router = express.Router();
 
 router.post("/login", login);
+router.post("/user", isAdmin, authorizeAdmin("userManagement"), createUser);
 router.get("/users", isAdmin, authorizeAdmin("userManagement"), getAllUsers);
 router.put(
   "/user/:id",

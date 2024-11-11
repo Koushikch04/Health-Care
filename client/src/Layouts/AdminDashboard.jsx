@@ -14,7 +14,6 @@ const AdminDashboard = () => {
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
   const adminId = userInfo._id;
   const name = userInfo.name.firstName + " " + userInfo.name.lastName;
-  const rating = userInfo.rating;
 
   const today = new Date();
   const options = { year: "numeric", month: "long", day: "numeric" };
@@ -92,9 +91,6 @@ const AdminDashboard = () => {
         <div className={styles.greetings}>
           <h1>Good Morning Admin, {name}</h1>
           <span>Have a nice day.</span>
-          <div className={styles.rating}>
-            <span>Your Rating: {rating} ⭐</span>
-          </div>
         </div>
         <div className={styles.date}>
           <CalendarTodayIcon style={{ marginRight: "8px" }} />
