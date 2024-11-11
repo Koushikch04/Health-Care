@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import mongoose from "mongoose";
+import { login as adminLogin } from "./admin.js";
+import { login as userLogin } from "./user.js";
+import { login as doctorLogin } from "./doctor.js";
 export const registerUser = async (req, res, next) => {
   try {
     const {
@@ -59,32 +60,20 @@ export const registerUser = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { userType } = req.body;
+    console.log(userType);
 
-    let person;
-    person = await User.findOne({ email });
-    if (!person) return res.status(400).json({ msg: "User does not exist. " });
-    const matched = bcrypt.compareSync(password, person.password);
-
-    if (!matched) return res.status(401).json({ msg: "Invalid Credentials" });
-    person.password = "";
-
-    // const token = jwt.sign({ id: person._id }, process.env.JWT_SECRET);
-    // await person.populate("appointment.appointmentid");
-    // req.session.isLoggedIn = true;
-
-    const token = jwt.sign({ id: person._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
-
-    return res.status(200).json({
-      token,
-      person,
-      role: "user",
-      expiresAt,
-    });
+    let handler;
+    if (userType === "user") {
+      handler = userLogin;
+    } else if (userType === "doctor") {
+      handler = doctorLogin;
+    } else if (userType === "admin") {
+      handler = adminLogin;
+    } else {
+      return res.status(400).json({ msg: "Invalid user type" });
+    }
+    return handler(req, res);
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ msg: "An internal server error occurred." });

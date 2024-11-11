@@ -11,7 +11,7 @@ const Card = (props) => {
   return <CompactCard param={props} setExpanded={() => setExpanded(true)} />;
 };
 
-function CompactCard({ param, setExpanded }) {
+function CompactCard({ param, setExpanded, isBarRequired }) {
   const Png = param.png;
 
   return (
@@ -25,14 +25,16 @@ function CompactCard({ param, setExpanded }) {
       onClick={setExpanded}
     >
       <div className={styles.radialBar}>
-        <CircularProgressbar
-          className={styles.CircularProgressbar}
-          value={param.barValue}
-          text={`${param.barValue}%`}
-          styles={{
-            text: { fill: "white", fontSize: "18px", fontWeight: "bold" },
-          }}
-        />
+        {isBarRequired && (
+          <CircularProgressbar
+            className={styles.CircularProgressbar}
+            value={param.barValue}
+            text={`${param.barValue}%`}
+            styles={{
+              text: { fill: "white", fontSize: "18px", fontWeight: "bold" },
+            }}
+          />
+        )}
         <span>{param.title}</span>
       </div>
       <div className={styles.detail}>

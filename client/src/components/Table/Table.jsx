@@ -39,27 +39,42 @@ const DynamicTable = ({ title, headers, rows }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row, index) => (
+            {rows.map((row, rowIndex) => (
               <TableRow
-                key={index}
+                key={rowIndex}
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
               >
-                <TableCell component="th" scope="row">
-                  <span className="status">{row.patientName}</span>
-                </TableCell>
-                <TableCell align="left">
-                  {new Date(row.date).toLocaleDateString("en-US")}{" "}
-                </TableCell>
-                <TableCell align="left">{row.time}</TableCell>
-                <TableCell align="left">{row.reasonForVisit}</TableCell>
-                <TableCell align="left">
-                  <span className="status" style={makeStyle(row.status)}>
-                    {row.status}
-                  </span>
-                </TableCell>
-                {/* <TableCell align="left" className="Details">
-                  Details
-                </TableCell> */}
+                {headers.map((header, headerIndex) => {
+                  // Access the dynamic value from the row based on header name
+                  const cellValue = row[header]; // Dynamically get value from row
+
+                  // Special handling for 'Status' column
+                  if (header.toLowerCase() === "status" && cellValue) {
+                    return (
+                      <TableCell key={headerIndex} align="left">
+                        <span className="status" style={makeStyle(cellValue)}>
+                          {cellValue}
+                        </span>
+                      </TableCell>
+                    );
+                  }
+
+                  // Special handling for 'Date' column
+                  if (header.toLowerCase() === "date" && cellValue) {
+                    return (
+                      <TableCell key={headerIndex} align="left">
+                        {new Date(cellValue).toLocaleDateString("en-US")}
+                      </TableCell>
+                    );
+                  }
+
+                  // For other columns, just display the value
+                  return (
+                    <TableCell key={headerIndex} align="left">
+                      {typeof cellValue !== "undefined" ? cellValue : ""}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>

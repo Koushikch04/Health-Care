@@ -3,7 +3,11 @@ import { useDispatch } from "react-redux";
 
 import FormPage from "./FormPage";
 import useInput from "../../hooks/useInput";
-import { loginUser, loginUserAsDoctor } from "../../store/auth/auth-actions";
+import {
+  loginAsAdmin,
+  loginUser,
+  loginUserAsDoctor,
+} from "../../store/auth/auth-actions";
 import useAlert from "../../hooks/useAlert";
 
 import styles from "./styles/SignUp.module.css";
@@ -37,7 +41,9 @@ const SignIn = () => {
       return;
     }
 
-    if (email.endsWith("@healthcare.com")) {
+    if (email === "superadmin@healthcare.com") {
+      dispatch(loginAsAdmin({ email, password }, alert));
+    } else if (email.endsWith("@healthcare.com")) {
       console.log("doctor");
       dispatch(loginUserAsDoctor({ email, password }, alert));
     } else {

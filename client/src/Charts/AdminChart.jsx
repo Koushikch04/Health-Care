@@ -2,23 +2,27 @@ import React, { useState, useEffect } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { baseURL } from "../api/api";
 import { useSelector } from "react-redux";
-import styles from "./DoctorDashboard.module.css"; // Assuming you are using CSS modules
-import { UilTimes } from "@iconscout/react-unicons"; // Import close icon
+import styles from "./DoctorChart.module.css"; // Assuming you are using CSS modules
 
-const DoctorDashboard = ({ doctorId }) => {
+const AdminChart = () => {
+  const { userToken: token } = useSelector((state) => state.auth);
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState("week");
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
-
-  const { userInfo } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `${baseURL}/appointment/doctor/${userInfo._id}?filter=${filter}`
+          `${baseURL}/admin/appointments/?filter=${filter}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const result = await response.json();
 
@@ -31,7 +35,7 @@ const DoctorDashboard = ({ doctorId }) => {
     };
 
     fetchData();
-  }, [filter, doctorId]);
+  }, [filter]);
 
   const formatChartData = () => {
     if (!data?.data) return { dataset: [], labels: [] };
@@ -132,4 +136,4 @@ const DoctorDashboard = ({ doctorId }) => {
   );
 };
 
-export default DoctorDashboard;
+export default AdminChart;

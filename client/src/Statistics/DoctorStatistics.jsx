@@ -9,7 +9,7 @@ import styles from "./Statistics.module.css";
 import Card from "./Card.jsx";
 import { useSelector } from "react-redux";
 import { baseURL } from "../api/api.js";
-import DoctorDashboard from "../Charts/DoctorDashboard.jsx";
+import DoctorChart from "../Charts/DoctorChart.jsx";
 
 const transformDataToCards = (responseData) => {
   const {
@@ -80,7 +80,7 @@ const transformDataToCards = (responseData) => {
   return cardsData;
 };
 
-const statistics = () => {
+const DoctorStatistics = () => {
   const [cardsData, setCardsData] = useState([]);
   const { userInfo } = useSelector((state) => state.auth);
 
@@ -115,13 +115,14 @@ const statistics = () => {
               value={card.value}
               png={card.png}
               series={card.series}
+              isBarRequired={true}
             />
           </div>
         );
       })}
-      <DoctorDashboard />
+      <DoctorChart />
     </div>
   );
 };
 
-export default statistics;
+export default DoctorStatistics;

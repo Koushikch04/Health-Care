@@ -7,8 +7,6 @@ import {
   // UilSignOutAlt,
 } from "@iconscout/react-unicons";
 
-import { UilUsdSquare, UilMoneyWithdrawal } from "@iconscout/react-unicons";
-
 import img1 from "/Images/LandingPage/Client/img1.png";
 import img2 from "/Images/LandingPage/Client/img2.png";
 import img3 from "/Images/LandingPage/Client/img3.png";
@@ -26,7 +24,7 @@ export const SidebarData = [
   {
     icon: Dashboard,
     heading: "Overview",
-    url: "/profile/dashboard",
+    url: "/profile/doctor/dashboard",
     role: "doctor",
   },
   {
@@ -59,17 +57,26 @@ export const SidebarData = [
     url: "/profile/doctor/calendar",
     role: "doctor",
   },
-  {
-    icon: MessageSharp,
-    heading: "Messages",
-    url: "/",
-  },
+  // {
+  //   icon: MessageSharp,
+  //   heading: "Messages",
+  //   url: "/",
+  // },
   {
     icon: Reviews,
     heading: "Reviews",
     url: "/profile/doctor/reviews",
     role: "doctor",
   },
+
+  {
+    icon: Dashboard,
+    heading: "Overview",
+    url: "/profile/admin/dashboard",
+    role: "admin",
+  },
+  { icon: UilUsersAlt, heading: "Users", url: "/profile/admin/users" },
+  { icon: UilUsersAlt, heading: "Doctors", url: "/profile/admin/doctors" },
   // {
   //   icon: Settings,
   //   heading: "Settings",

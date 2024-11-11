@@ -6,19 +6,22 @@ import { SidebarData } from "../../Data/Data";
 import { UilBars } from "@iconscout/react-unicons";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { authActions } from "../../store/auth/auth-slice";
+import useAlert from "../../hooks/useAlert";
+import { logoutUser } from "../../store/auth/auth-actions";
 
 const Sidebar = () => {
   const [selected, setSelected] = useState(0);
-  const [expanded, setExpaned] = useState(true);
+  const [expanded, setExpanded] = useState(true);
 
+  const { alert } = useAlert();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { userRole: role } = useSelector((state) => state.auth);
 
   const logoutHandler = () => {
-    dispatch(authActions.logout());
+    navigate("/");
+    dispatch(logoutUser(alert));
   };
 
   const sidebarVariants = {

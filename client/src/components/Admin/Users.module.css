@@ -1,0 +1,168 @@
+.UsersContainer {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  width: 80%;
+  height: 730px;
+  margin: 20px auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+.users {
+  height: 600px;
+}
+
+.filterSection {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filterSection label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.filterSection input {
+  width: 150px;
+}
+
+.filterSection select,
+.filterSection input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.userCard img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.userCard .userInfo {
+  flex-grow: 1;
+}
+
+.userCard .userInfo p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.userCard .userInfo .name {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.userCard .userInfo .email {
+  color: #555;
+}
+
+.userCard .userInfo .dob {
+  font-size: 14px;
+  color: #777;
+}
+
+.userCard .userActions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.userCard .userActions button {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: var(--primary-color-dark);
+  cursor: pointer;
+}
+
+.userCard .userActions button:hover {
+  background-color: var(--primary-color);
+  transition: background-color 0.3s;
+}
+
+.loading,
+.error,
+.noUsers {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+  padding: 10px;
+}
+
+.error {
+  color: #d9534f;
+}
+
+.noUsers {
+  color: #888;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.pagination button:hover {
+  background-color: #f0f0f0;
+  transition: background-color 0.3s;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  background-color: #e0e0e0;
+}
+
+.modalContent {
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modalContent table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modalContent table th,
+.modalContent table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.modalContent table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.profileImage {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-top: 15px;
+}

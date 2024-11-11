@@ -12,6 +12,9 @@ import ChatConsultation from "../chatConsultation/chatConsultation";
 import DoctorAppointments from "../Appointments/DoctorAppointments";
 import DoctorAppointmentCalendar from "../AppointmentCalender/DoctorAppointmentCalendar";
 import DoctorReview from "../Reviews/DoctorReview";
+import AdminDashboard from "../../Layouts/AdminDashboard.jsx";
+import Users from "../Admin/Users.jsx";
+import Doctors from "../Admin/Doctors.jsx";
 
 const routes = [
   { path: "/", element: <LandingPage />, requiresAuth: false },
@@ -43,7 +46,7 @@ const routes = [
         role: "doctor",
       },
       {
-        path: "/profile/dashboard",
+        path: "/profile/doctor/dashboard",
         element: <MainDash />,
         requiresAuth: true,
         role: "doctor",
@@ -59,6 +62,14 @@ const routes = [
         element: <DoctorReview />,
         role: "doctor",
       },
+
+      {
+        path: "/profile/admin/dashboard",
+        element: <AdminDashboard />,
+        role: "admin",
+      },
+      { path: "/profile/admin/users", element: <Users />, role: "admin" },
+      { path: "/profile/admin/doctors", element: <Doctors />, role: "admin" },
 
       // { path: "", element: <MainDash /> },
     ],

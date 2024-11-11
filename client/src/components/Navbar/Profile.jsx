@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom"; // Import Link from react-router-dom
+import { Link, useNavigate } from "react-router-dom"; // Import Link from react-router-dom
 
 import styles from "./Profile.module.css";
-import { authActions } from "../../store/auth/auth-slice";
 import { baseURL } from "../../api/api";
+import { logoutUser } from "../../store/auth/auth-actions";
+import useAlert from "../../hooks/useAlert";
 
 function Profile() {
   const [toggleMenu, setToggleMenu] = useState(false);
   const { name, profileImage } = useSelector((state) => state.auth.userInfo);
+
+  const { alert } = useAlert();
 
   const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
   const [uploadedImage, setUploadedImage] = useState(
@@ -25,7 +28,9 @@ function Profile() {
   ];
 
   const handleLogout = () => {
-    dispatch(authActions.logout());
+    dispatch(logoutUser(alert));
+    const navigate = useNavigate();
+    navigate("/");
   };
 
   useEffect(() => {

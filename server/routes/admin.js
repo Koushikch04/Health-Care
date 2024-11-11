@@ -5,17 +5,18 @@ import {
   deleteUser,
   manageAppointments,
   viewReports,
-  adminLogin,
+  login,
   getAllDoctors,
   manageDoctorRegistration,
   rescheduleOrCancelAppointment,
+  getTopPerformingDoctors,
   // handleSupportTickets,
 } from "../controllers/admin.js";
 import { isAdmin, authorizeAdmin } from "../middleware/authVerification.js";
 
 const router = express.Router();
 
-router.post("/login", adminLogin);
+router.post("/login", login);
 router.get("/users", isAdmin, authorizeAdmin("userManagement"), getAllUsers);
 router.put(
   "/user/:id",
@@ -59,6 +60,8 @@ router.put(
 );
 
 router.get("/analytics", isAdmin, authorizeAdmin("analytics"), viewReports);
+
+router.get("/top-doctors", isAdmin, getTopPerformingDoctors);
 
 // router.get(
 //   "/support",

@@ -11,6 +11,7 @@ function MainRoutes() {
   return (
     <Routes>
       {routes.map((route, index) => {
+        console.log(route.path, role, route.role);
         if (
           userLoggedIn &&
           (route.path === "/auth/login" || route.path === "/auth/signup")
@@ -24,16 +25,24 @@ function MainRoutes() {
           );
         }
 
-        if (
-          role === "doctor" &&
-          route.role !== "doctor" &&
-          route.path !== "/profile"
-        ) {
+        if (role === "doctor" && route.path !== "/profile") {
+          console.log("Hello");
+
           return (
             <Route
               key={index}
               path={route.path}
-              element={<Navigate to="/profile/dashboard" />}
+              element={<Navigate to="/profile/doctor/dashboard" />}
+            />
+          );
+        }
+
+        if (role === "admin" && route.path !== "/profile") {
+          return (
+            <Route
+              key={index}
+              path={route.path}
+              element={<Navigate to="/profile/admin/dashboard" />}
             />
           );
         }

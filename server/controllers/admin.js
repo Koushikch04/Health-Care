@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import moment from "moment";
 
 import User from "../models/User.js";
 import Doctor from "../models/Doctor.js";
@@ -13,10 +14,30 @@ import Admin from "../models/Admin.js";
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}); // Fetch all users
-    res.status(200).json(users);
+    const users = await User.aggregate([
+      {
+        $lookup: {
+          from: "appointments",
+          localField: "_id",
+          foreignField: "user",
+          as: "appointments",
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          dob: 1,
+          gender: 1,
+          profileImage: 1,
+          appointmentCount: { $size: "$appointments" },
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, users });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -54,10 +75,29 @@ export const deleteUser = async (req, res) => {
 // View all doctors (assuming doctors are users with 'role: doctor')
 export const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await Doctor.find({}); // Find all doctors
-    res.status(200).json(doctors);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Step 1: Fetch all doctors with populated specialty name
+    const doctors = await Doctor.find()
+      .populate("specialty", "name") // Populate only the `name` field of the specialty
+      .lean(); // Use .lean() to return plain JavaScript objects
+
+    // Step 2: For each doctor, get the appointment count
+    const doctorsWithCounts = await Promise.all(
+      doctors.map(async (doctor) => {
+        const appointmentCount = await Appointment.countDocuments({
+          doctor: doctor._id,
+        });
+        return {
+          ...doctor,
+          appointmentCount,
+          specialization: doctor.specialty.name,
+        };
+      })
+    );
+
+    res.status(200).json({ doctors: doctorsWithCounts });
+  } catch (error) {
+    console.error("Error fetching doctors:", error);
+    res.status(500).json({ error: "Failed to fetch doctors" });
   }
 };
 
@@ -84,11 +124,163 @@ export const manageDoctorRegistration = async (req, res) => {
 
 // View all appointments
 export const manageAppointments = async (req, res) => {
+  const { filter, date } = req.query; // Allow specific date input if desired
+
   try {
-    const appointments = await Appointment.find({}); // Fetch all appointments
-    res.status(200).json(appointments);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (!filter) {
+      // If no filter is provided, return all appointments
+      const appointments = await Appointment.find({});
+      return res.status(200).json(appointments);
+    }
+
+    // If a filter is provided, proceed with date filtering and aggregation
+    const referenceDate = date ? new Date(date) : new Date();
+
+    let startDate, endDate, groupingFormat, responseMapper;
+
+    switch (filter) {
+      case "week": {
+        startDate = moment(referenceDate).startOf("week");
+        endDate = moment(referenceDate).endOf("week");
+        groupingFormat = "%Y-%m-%d";
+
+        responseMapper = (data) => {
+          const days = [];
+          for (
+            let m = moment(startDate);
+            m.isSameOrBefore(endDate);
+            m.add(1, "days")
+          ) {
+            const dateStr = m.format("YYYY-MM-DD");
+            const found = data.find((d) => d._id === dateStr);
+            days.push({
+              date: dateStr,
+              dayName: m.format("dddd"),
+              total: found?.total || 0,
+              scheduled: found?.scheduled || 0,
+              canceled: found?.canceled || 0,
+              completed: found?.completed || 0,
+            });
+          }
+          return days;
+        };
+        break;
+      }
+
+      case "month": {
+        startDate = moment(referenceDate).startOf("month");
+        endDate = moment(referenceDate).endOf("month");
+        groupingFormat = "%Y-%m-%d";
+
+        responseMapper = (data) => {
+          const days = [];
+          for (
+            let m = moment(startDate);
+            m.isSameOrBefore(endDate);
+            m.add(1, "days")
+          ) {
+            const dateStr = m.format("YYYY-MM-DD");
+            const found = data.find((d) => d._id === dateStr);
+            days.push({
+              date: dateStr,
+              dayName: m.format("dddd"),
+              weekOfMonth: m.week() - moment(startDate).week() + 1,
+              total: found?.total || 0,
+              scheduled: found?.scheduled || 0,
+              canceled: found?.canceled || 0,
+              completed: found?.completed || 0,
+            });
+          }
+          return days;
+        };
+        break;
+      }
+
+      case "year": {
+        startDate = moment(referenceDate).startOf("year");
+        endDate = moment(referenceDate).endOf("year");
+        groupingFormat = "%Y-%m";
+
+        responseMapper = (data) => {
+          const months = [];
+          for (
+            let m = moment(startDate);
+            m.isSameOrBefore(endDate);
+            m.add(1, "month")
+          ) {
+            const monthStr = m.format("YYYY-MM");
+            const found = data.find((d) => d._id === monthStr);
+            months.push({
+              month: monthStr,
+              monthName: m.format("MMMM"),
+              total: found?.total || 0,
+              scheduled: found?.scheduled || 0,
+              canceled: found?.canceled || 0,
+              completed: found?.completed || 0,
+            });
+          }
+          return months;
+        };
+        break;
+      }
+
+      default:
+        return res.status(400).json({
+          message: "Invalid filter parameter. Use 'week', 'month', or 'year'",
+        });
+    }
+
+    // MongoDB aggregation pipeline
+    const data = await Appointment.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: startDate.toDate(),
+            $lte: endDate.toDate(),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: groupingFormat, date: "$date" } },
+          total: { $sum: 1 },
+          scheduled: {
+            $sum: { $cond: [{ $eq: ["$status", "scheduled"] }, 1, 0] },
+          },
+          canceled: {
+            $sum: { $cond: [{ $eq: ["$status", "canceled"] }, 1, 0] },
+          },
+          completed: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Generate response with mapped data
+    const result = {
+      filter,
+      period: {
+        start: startDate.format("YYYY-MM-DD"),
+        end: endDate.format("YYYY-MM-DD"),
+      },
+      data: responseMapper(data),
+      summary: {
+        total: data.reduce((sum, item) => sum + item.total, 0),
+        scheduled: data.reduce((sum, item) => sum + item.scheduled, 0),
+        canceled: data.reduce((sum, item) => sum + item.canceled, 0),
+        completed: data.reduce((sum, item) => sum + item.completed, 0),
+      },
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error retrieving appointments:", error);
+    res.status(500).json({
+      message: "Server error",
+      error: error.message || "Unknown error",
+    });
   }
 };
 
@@ -126,20 +318,27 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
 
 // View reports (e.g., user and doctor statistics)
 export const viewReports = async (req, res) => {
+  console.log("got request");
+
   try {
     const userCount = await User.countDocuments();
     const doctorCount = await Doctor.countDocuments();
     const appointmentCount = await Appointment.countDocuments();
     const reviewsCount = await Review.countDocuments();
+    const revenue = 1000;
 
     const report = {
       userCount,
       doctorCount,
       appointmentCount,
-      reviewsCount,
+      revenue,
+      // reviewsCount,
     };
 
-    res.status(200).json(report);
+    res.status(200).json({
+      success: true,
+      data: report,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -189,7 +388,7 @@ export const viewReports = async (req, res) => {
 //     res.status(500).json({ error: err.message });
 //   }
 // };
-export const adminLogin = async (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -209,12 +408,72 @@ export const adminLogin = async (req, res) => {
     // Create a JWT token for the admin
     const token = jwt.sign(
       { id: admin._id, role: admin.role, permissions: admin.permissions },
-      process.env.JWT_SECRET, // Make sure you store your secret in an env variable
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
+    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
 
-    res.status(200).json({ token, message: "Admin logged in successfully" });
+    res.status(200).json({
+      person: admin,
+      token,
+      expiresAt,
+      role: "admin",
+      message: "Admin logged in successfully",
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+const ratingWeight = 0.7;
+const appointmentWeight = 0.3;
+
+export const getTopPerformingDoctors = async (req, res) => {
+  try {
+    const today = new Date();
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setMonth(today.getMonth() - 1); // Define "recent" as the past month
+
+    // Fetch doctors with their recent appointment counts
+    const doctors = await Doctor.find()
+      .select("name specialty rating cost image")
+      .populate("specialty", "name");
+
+    const doctorPerformances = await Promise.all(
+      doctors.map(async (doctor) => {
+        // Count recent appointments for each doctor within the last month
+        const recentAppointmentsCount = await Appointment.countDocuments({
+          doctor: doctor._id,
+          date: { $gte: oneMonthAgo },
+          status: "completed", // Only count completed appointments
+        });
+
+        // Calculate performance score based on rating and recent appointments
+        const performanceScore =
+          doctor.rating * ratingWeight +
+          recentAppointmentsCount * appointmentWeight;
+
+        return {
+          doctor,
+          performanceScore,
+          recentAppointmentsCount,
+        };
+      })
+    );
+
+    // Sort by performanceScore in descending order and take top 5
+    const topDoctors = doctorPerformances
+      .sort((a, b) => b.performanceScore - a.performanceScore)
+      .slice(0, 5)
+      .map(({ doctor, performanceScore, recentAppointmentsCount }) => ({
+        ...doctor.toObject(),
+        performanceScore,
+        recentAppointmentsCount,
+      }));
+
+    res.status(200).json(topDoctors);
+  } catch (error) {
+    console.error("Error fetching top performing doctors:", error);
+    res.status(500).json({ message: "Error fetching top performing doctors" });
   }
 };

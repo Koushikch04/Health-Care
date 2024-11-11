@@ -1,0 +1,60 @@
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  /* color: #4a90e2; */
+  /* font-size: 48px; */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s;
+  margin-bottom: 20px;
+}
+
+.header .date {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  color: #333;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  font-size: 24px;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+  margin-top: 10px;
+}
+
+.header .date:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.MainDash {
+  /* margin-top: 4rem; */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.MainDash h1 {
+  /* margin-top: 1rem; */
+  margin-bottom: 0px;
+}
+
+.tables1 {
+  display: flex;
+  gap: 1rem;
+}
+
+@media screen and (max-width: 1200px) {
+  .MainDash {
+    justify-content: flex-start;
+    margin-top: 2rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .MainDash {
+    align-items: center;
+  }
+}
