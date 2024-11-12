@@ -14,6 +14,11 @@ import {
   // handleSupportTickets,
 } from "../controllers/admin.js";
 import { isAdmin, authorizeAdmin } from "../middleware/authVerification.js";
+import {
+  createDoctor,
+  deleteDoctor,
+  updateDoctor,
+} from "../controllers/doctor.js";
 
 const router = express.Router();
 
@@ -45,6 +50,25 @@ router.put(
   isAdmin,
   authorizeAdmin("doctorManagement"),
   manageDoctorRegistration
+);
+
+router.post(
+  "/doctor",
+  isAdmin,
+  authorizeAdmin("doctorManagement"),
+  createDoctor
+);
+router.put(
+  "/doctor/:id",
+  isAdmin,
+  authorizeAdmin("doctorManagement"),
+  updateDoctor
+);
+router.delete(
+  "/doctor/:id",
+  isAdmin,
+  authorizeAdmin("doctorManagement"),
+  deleteDoctor
 );
 
 // Appointment management routes

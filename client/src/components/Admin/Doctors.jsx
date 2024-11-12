@@ -12,56 +12,79 @@ function Doctors() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [createEditModal, setCreateEditModal] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [uniqueSpecializations, setUniqueSpecializations] = useState([]);
+  const [isEditMode, setIsEditMode] = useState(false);
 
-  // Pagination and filter states
   const [currentPage, setCurrentPage] = useState(1);
-  const [postsPerPage] = useState(4); // Customize the number of doctors per page
+  const [postsPerPage] = useState(4);
   const [searchName, setSearchName] = useState("");
   const [filterGender, setFilterGender] = useState("All");
   const [specialization, setSpecialization] = useState("All");
   const [yearsOfExperience, setYearsOfExperience] = useState("All");
   const [status, setStatus] = useState("All");
+  const initialDoctorValue = {
+    firstName: "",
+    lastName: "",
+    email: "",
+    gender: "",
+    experience: "",
+    cost: "",
+    specialty: "",
+    password: "",
+    phone: "",
+  };
 
-  const currentYear = new Date().getFullYear();
+  const [newDoctor, setNewDoctor] = useState(initialDoctorValue);
+
+  const fetchSpecializations = async () => {
+    try {
+      const response = await fetch(`${baseURL}/specialty/`);
+      const result = await response.json();
+
+      setUniqueSpecializations(result);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${baseURL}/admin/doctors`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch doctors");
+      }
+
+      const data = await response.json();
+
+      setDoctors(data.doctors);
+      setFilteredDoctors(data.doctors);
+
+      // const specializations = Array.from(
+      //   new Set(data.doctors.map((doctor) => doctor.specialization))
+      // );
+      // setUniqueSpecializations(specializations);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDoctors = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`${baseURL}/admin/doctors`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch doctors");
-        }
-
-        const data = await response.json();
-        console.log(data);
-
-        setDoctors(data.doctors);
-        setFilteredDoctors(data.doctors);
-
-        const specializations = Array.from(
-          new Set(data.doctors.map((doctor) => doctor.specialization))
-        );
-        setUniqueSpecializations(specializations);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDoctors();
+    fetchSpecializations();
   }, [token]);
 
   // Filter doctors by name, gender, specialization, experience, and status
@@ -107,6 +130,69 @@ function Doctors() {
     setIsModalOpen(true);
   };
 
+  const handleEditDoctor = (doctor) => {
+    if (doctor) {
+      setSelectedDoctor(doctor);
+      setNewDoctor({
+        firstName: doctor.name.firstName,
+        lastName: doctor.name.lastName,
+        email: doctor.email,
+        gender: doctor.gender,
+      });
+      setIsEditMode(true);
+    } else {
+      setNewDoctor(initialDoctorValue);
+      setIsEditMode(false);
+    }
+    setCreateEditModal(true);
+  };
+
+  const handleDeleteDoctor = async (doctorId) => {
+    try {
+      const response = await fetch(`${baseURL}/admin/doctor/${doctorId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Failed to delete doctor");
+
+      setDoctors(doctors.filter((doc) => doc._id !== doctorId));
+      setFilteredDoctors(filteredDoctors.filter((doc) => doc._id !== doctorId));
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleSaveDoctor = async () => {
+    const url = isEditMode
+      ? `${baseURL}/admin/doctor/${selectedDoctor._id}`
+      : `${baseURL}/admin/doctor`;
+
+    const method = isEditMode ? "PUT" : "POST";
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newDoctor),
+      });
+
+      if (!response.ok) throw new Error("Failed to save user");
+
+      await fetchDoctors();
+      // setIsModalOpen(false);
+      setCreateEditModal(false);
+      setNewDoctor(initialDoctorValue);
+      setIsEditMode(false);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   return (
     <div className={styles.DoctorsContainer}>
       <div className={styles.filterSection}>
@@ -137,11 +223,13 @@ function Doctors() {
             onChange={(e) => setSpecialization(e.target.value)}
           >
             <option value="All">All</option>
-            {uniqueSpecializations.map((spec) => (
-              <option key={spec} value={spec}>
-                {spec}
-              </option>
-            ))}
+            {uniqueSpecializations.map((spec) => {
+              return (
+                <option key={spec._id} value={spec.name}>
+                  {spec.name}
+                </option>
+              );
+            })}
           </select>
         </div>
         <div className={styles.filterItem}>
@@ -167,6 +255,152 @@ function Doctors() {
         </div>
         <button onClick={handleFilterChange}>Apply Filters</button>
       </div>
+
+      <button
+        style={{ marginBottom: "10px" }}
+        onClick={() => handleEditDoctor()}
+      >
+        + Add New Doctor
+      </button>
+
+      {createEditModal && (
+        <Modal onClose={() => setCreateEditModal(false)}>
+          <div className={styles.modalContent}>
+            <h2>{isEditMode ? "Edit User" : "Add New User"}</h2>
+            <form className={styles.form}>
+              <div className={styles.formGroup}>
+                <label htmlFor="firstName">First Name</label>
+                <input
+                  id="firstName"
+                  type="text"
+                  value={newDoctor.firstName}
+                  onChange={(e) => {
+                    return setNewDoctor({
+                      ...newDoctor,
+                      firstName: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="lastName">Last Name</label>
+                <input
+                  id="lastName"
+                  type="text"
+                  value={newDoctor.lastName}
+                  onChange={(e) =>
+                    setNewDoctor({ ...newDoctor, lastName: e.target.value })
+                  }
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={newDoctor.email}
+                  onChange={(e) =>
+                    setNewDoctor({ ...newDoctor, email: e.target.value })
+                  }
+                />
+              </div>
+              {!isEditMode && (
+                <div className={styles.formGroup}>
+                  <label htmlFor="password">Password</label>
+                  <input
+                    id="password"
+                    value={newDoctor.password}
+                    onChange={(e) =>
+                      setNewDoctor({ ...newDoctor, password: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              {!isEditMode && (
+                <div className={styles.formGroup}>
+                  <label htmlFor="phone">phone</label>
+                  <input
+                    id="contact"
+                    value={newDoctor.phone}
+                    onChange={(e) =>
+                      setNewDoctor({ ...newDoctor, phone: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              <div className={styles.formGroup}>
+                <label htmlFor="gender">Gender</label>
+                <select
+                  id="gender"
+                  value={newDoctor.gender}
+                  onChange={(e) =>
+                    setNewDoctor({ ...newDoctor, gender: e.target.value })
+                  }
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              {!isEditMode && (
+                <div className={styles.formGroup}>
+                  <label htmlFor="experience">experience</label>
+                  <input
+                    id="experience"
+                    value={newDoctor.experience}
+                    onChange={(e) =>
+                      setNewDoctor({ ...newDoctor, experience: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              {!isEditMode && (
+                <div className={styles.formGroup}>
+                  <label htmlFor="cost">cost</label>
+                  <input
+                    id="cost"
+                    value={newDoctor.cost}
+                    onChange={(e) =>
+                      setNewDoctor({ ...newDoctor, cost: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              <div className={styles.formGroup}>
+                <label htmlFor="specialty">specialty</label>
+                <select
+                  id="specialty"
+                  value={newDoctor.specialty}
+                  onChange={(e) => {
+                    return setNewDoctor({
+                      ...newDoctor,
+                      specialty: e.target.value,
+                    });
+                  }}
+                >
+                  <option value="">Select Specialty</option>
+                  {uniqueSpecializations.map((spec) => {
+                    return (
+                      <option key={spec._id} value={spec._id}>
+                        {spec.name}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div></div>
+              <button
+                type="button"
+                className={styles.button}
+                onClick={handleSaveDoctor}
+              >
+                {isEditMode ? "Update User" : "Add User"}
+              </button>
+            </form>
+          </div>
+        </Modal>
+      )}
 
       {loading && <p className={styles.loading}>Loading doctors...</p>}
       {error && <p className={styles.error}>{error}</p>}
@@ -201,6 +435,12 @@ function Doctors() {
                     >
                       View Details
                     </button>
+                    <button onClick={() => handleEditDoctor(doctor)}>
+                      Edit
+                    </button>
+                    <button onClick={() => handleDeleteDoctor(doctor._id)}>
+                      Delete
+                    </button>
                   </div>
                 </div>
               ))
@@ -217,7 +457,6 @@ function Doctors() {
         </div>
       )}
 
-      {/* Modal to display the full doctor details */}
       {isModalOpen && selectedDoctor && (
         <Modal onClose={() => setIsModalOpen(false)}>
           <div className={styles.modalContent}>

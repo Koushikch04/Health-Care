@@ -72,6 +72,8 @@ function Users() {
       }
 
       const data = await response.json();
+      console.log(data);
+
       setUsers(data.users);
       setFilteredUsers(data.users);
     } catch (error) {
@@ -137,6 +139,7 @@ function Users() {
     const url = isEditMode
       ? `${baseURL}/admin/user/${selectedUser._id}`
       : `${baseURL}/admin/user`;
+
     const method = isEditMode ? "PUT" : "POST";
     try {
       const response = await fetch(url, {
@@ -159,6 +162,8 @@ function Users() {
         email: "",
         gender: "",
         dob: "",
+        contact: "",
+        password: "",
       });
       setIsEditMode(false);
     } catch (error) {
@@ -168,6 +173,8 @@ function Users() {
 
   // Open modal with user form for editing or adding
   const handleOpenModal = (user = null) => {
+    console.log(user);
+
     if (user) {
       setSelectedUser(user);
       setNewUser({
@@ -176,6 +183,7 @@ function Users() {
         email: user.email,
         gender: user.gender,
         dob: user.dob,
+        contact: user.contact.phone,
       });
       setIsEditMode(true);
     } else {
@@ -185,13 +193,13 @@ function Users() {
         email: "",
         gender: "",
         dob: "",
+        contact: "",
       });
       setIsEditMode(false);
     }
     setCreateEditModal(true);
   };
 
-  // Delete a user
   const handleDeleteUser = async (userId) => {
     try {
       const response = await fetch(`${baseURL}/admin/user/${userId}`, {
@@ -205,7 +213,7 @@ function Users() {
       if (!response.ok) throw new Error("Failed to delete user");
 
       await fetchUsers();
-      setCurrentPage(1);
+      // setCurrentPage(1);
     } catch (error) {
       setError(error.message);
     }
@@ -448,7 +456,6 @@ function Users() {
         </div>
       )}
 
-      {/* Modal to display the full user details */}
       {isModalOpen && selectedUser && (
         <Modal onClose={() => setIsModalOpen(false)}>
           <div className={styles.modalContent}>

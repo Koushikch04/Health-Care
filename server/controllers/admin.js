@@ -30,6 +30,7 @@ export const getAllUsers = async (req, res) => {
           dob: 1,
           gender: 1,
           profileImage: 1,
+          contact: 1,
           appointmentCount: { $size: "$appointments" },
         },
       },
@@ -48,14 +49,12 @@ export const createUser = async (req, res) => {
     const { firstName, lastName, email, password, gender, dob, phone } =
       req.body;
 
-    // Validate input (this is basic validation, you can enhance it further)
     if (!email || !password) {
       return res
         .status(400)
         .json({ error: "Email and password are required." });
     }
 
-    // Check if the email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res
@@ -70,7 +69,7 @@ export const createUser = async (req, res) => {
       name: { firstName, lastName },
       contact: { phone },
       email,
-      password: hashedPassword, // Store the hashed password
+      password: hashedPassword,
       gender,
       dob,
     });
@@ -89,9 +88,19 @@ export const createUser = async (req, res) => {
 // Edit user profile
 export const editUserProfile = async (req, res) => {
   const { id } = req.params;
-  const updates = req.body;
+  const { firstName, lastName, email, gender, dob } = req.body;
+  const toUpdate = {
+    name: {
+      firstName,
+      lastName,
+    },
+    email,
+    gender,
+    dob,
+  };
+
   try {
-    const user = await User.findByIdAndUpdate(id, updates, { new: true });
+    const user = await User.findByIdAndUpdate(id, toUpdate, { new: true });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

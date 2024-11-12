@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import Appointment from "../models/Appointment.js";
 import Doctor from "../models/Doctor.js";
 import Specialty from "../models/Specialty.js";
+import mongoose from "mongoose";
 
 //doctor login
 export const login = async (req, res) => {
@@ -67,23 +68,47 @@ export const getDoctorsBySpecialty = async (req, res) => {
 
 // Create a new doctor (optional, add if needed)
 export const createDoctor = async (req, res) => {
-  const { name, experience, rating, profile, cost, specialty, image } =
-    req.body;
+  console.log(req.body);
+
+  const {
+    firstName,
+    lastName,
+    gender,
+    email,
+    experience,
+    rating,
+    profile,
+    cost,
+    specialty,
+    image,
+    phone,
+    password,
+  } = req.body;
 
   try {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
     const newDoctor = new Doctor({
-      name,
-      experience,
-      rating,
+      name: { firstName, lastName },
+      gender,
+      email,
+      password: hashedPassword,
+      phone: Number(phone),
+      experience: Number(experience),
+      rating: 0,
       profile,
-      cost,
-      specialty,
+      cost: Number(cost),
+      specialty: new mongoose.Types.ObjectId(specialty),
       image,
     });
 
     const savedDoctor = await newDoctor.save();
+    console.log(savedDoctor);
+
     res.status(201).json(savedDoctor);
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({ message: "Error creating doctor", error });
   }
 };
@@ -113,10 +138,17 @@ export const getDoctorAppointments = async (req, res) => {
 // Update a doctor's information (optional, add if needed)
 export const updateDoctor = async (req, res) => {
   const { id } = req.params;
-  const updateData = req.body;
+  const { firstName, lastName, email, gender } = req.body;
+  const toUpdate = {
+    name: {
+      firstName,
+      lastName,
+    },
+    email,
+  };
 
   try {
-    const updatedDoctor = await Doctor.findByIdAndUpdate(id, updateData, {
+    const updatedDoctor = await Doctor.findByIdAndUpdate(id, toUpdate, {
       new: true,
     });
     if (!updatedDoctor) {
@@ -124,6 +156,8 @@ export const updateDoctor = async (req, res) => {
     }
     res.status(200).json(updatedDoctor);
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({ message: "Error updating doctor", error });
   }
 };
