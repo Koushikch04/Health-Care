@@ -54,3 +54,11 @@ export const authorizeAdmin = (action) => (req, res, next) => {
 
   next();
 };
+
+export const verifySuperAdmin = (req, res, next) => {
+  if (req.admin && req.admin.role === "superadmin") {
+    next();
+  } else {
+    return res.status(403).json({ message: "Access denied. Superadmin only." });
+  }
+};

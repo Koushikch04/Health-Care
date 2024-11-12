@@ -531,3 +531,73 @@ export const getTopPerformingDoctors = async (req, res) => {
     res.status(500).json({ message: "Error fetching top performing doctors" });
   }
 };
+
+export const createAdmin = async (req, res) => {
+  const { firstName, lastName, email, password, permissions } = req.body;
+
+  try {
+    // Check if an admin with this email already exists
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res
+        .status(400)
+        .json({ message: "Admin with this email already exists" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new admin
+    const newAdmin = new Admin({
+      name: { firstName, lastName },
+      email,
+      password: hashedPassword,
+      role: "admin",
+      permissions,
+    });
+
+    await newAdmin.save();
+    res
+      .status(201)
+      .json({ message: "Admin created successfully", admin: newAdmin });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error creating admin", error: error.message });
+  }
+};
+
+// Controller to get all admins (superadmin access only)
+export const getAdmins = async (req, res) => {
+  try {
+    const admins = await Admin.find({ role: "admin" });
+    res.json({ admins });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching admins", error: error.message });
+  }
+};
+
+// Controller to update an admin's permissions (superadmin access only)
+export const updateAdminPermissions = async (req, res) => {
+  const { id } = req.params;
+  const { permissions } = req.body;
+
+  try {
+    const admin = await Admin.findById(id);
+    if (!admin || admin.role !== "admin") {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // Update the permissions
+    admin.permissions = permissions;
+    await admin.save();
+
+    res.json({ message: "Permissions updated successfully", admin });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating permissions", error: error.message });
+  }
+};

@@ -11,9 +11,16 @@ import {
   rescheduleOrCancelAppointment,
   getTopPerformingDoctors,
   createUser,
+  createAdmin,
+  getAdmins,
+  updateAdminPermissions,
   // handleSupportTickets,
 } from "../controllers/admin.js";
-import { isAdmin, authorizeAdmin } from "../middleware/authVerification.js";
+import {
+  isAdmin,
+  authorizeAdmin,
+  verifySuperAdmin,
+} from "../middleware/authVerification.js";
 import {
   createDoctor,
   deleteDoctor,
@@ -95,5 +102,16 @@ router.get("/top-doctors", isAdmin, getTopPerformingDoctors);
 //   authorizeAdmin("support"),
 //   handleSupportTickets
 // );
+
+router.post("/create", isAdmin, verifySuperAdmin, createAdmin);
+
+router.get("/", isAdmin, verifySuperAdmin, getAdmins);
+
+router.put(
+  "/:id/permissions",
+  isAdmin,
+  verifySuperAdmin,
+  updateAdminPermissions
+);
 
 export default router;

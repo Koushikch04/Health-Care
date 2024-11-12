@@ -26,8 +26,6 @@ function MainRoutes() {
         }
 
         if (role === "doctor" && route.path !== "/profile") {
-          console.log("Hello");
-
           return (
             <Route
               key={index}

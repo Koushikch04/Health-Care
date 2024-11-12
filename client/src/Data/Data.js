@@ -77,6 +77,7 @@ export const SidebarData = [
   },
   { icon: UilUsersAlt, heading: "Users", url: "/profile/admin/users" },
   { icon: UilUsersAlt, heading: "Doctors", url: "/profile/admin/doctors" },
+  { icon: UilUsersAlt, heading: "Admins", url: "/profile/admin/admins" },
   // {
   //   icon: Settings,
   //   heading: "Settings",

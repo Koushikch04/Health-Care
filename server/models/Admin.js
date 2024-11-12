@@ -33,6 +33,7 @@ const adminSchema = new Schema({
       appointmentManagement: false,
       analytics: false,
       support: false,
+      adminManagement: false,
     },
   },
   lastLogin: {
