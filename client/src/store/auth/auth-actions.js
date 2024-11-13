@@ -72,6 +72,8 @@ export const loginUser = (userData, alert) => async (dispatch) => {
     // dispatch(loginSuccess(data.token));
     // alert("Sign-In Successful");
   } catch (error) {
+    console.log(error);
+
     alert.error({
       message: error.msg || "An unexpected error occurred",
       title: "Login failed",
