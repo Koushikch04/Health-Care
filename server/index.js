@@ -75,6 +75,10 @@ app.get("/", verifyToken, (req, res) => {
   res.send("Sever Home Page");
 });
 
+app.get("/test", (req, res) => {
+  res.send("Hello");
+});
+
 const PORT = process.env.PORT;
 mongoose
   .connect(MONGO_URL)
