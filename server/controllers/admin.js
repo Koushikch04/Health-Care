@@ -582,7 +582,8 @@ export const getAdmins = async (req, res) => {
 // Controller to update an admin's permissions (superadmin access only)
 export const updateAdminPermissions = async (req, res) => {
   const { id } = req.params;
-  const { permissions } = req.body;
+  const { firstName, lastName, email, permissions } = req.body;
+  console.log(req.body);
 
   try {
     const admin = await Admin.findById(id);
@@ -591,13 +592,35 @@ export const updateAdminPermissions = async (req, res) => {
     }
 
     // Update the permissions
+    admin.name.firstName = firstName;
+    admin.name.lastName = lastName;
+    admin.email = email;
     admin.permissions = permissions;
     await admin.save();
 
     res.json({ message: "Permissions updated successfully", admin });
   } catch (error) {
+    console.log(error);
+
     res
       .status(500)
       .json({ message: "Error updating permissions", error: error.message });
+  }
+};
+
+export const deleteAdmin = async (req, res) => {
+  const { id } = req.params;
+  try {
+    let admin = await Admin.findById(id);
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+    if (admin.role == "superadmin") {
+      return res.status(404).json({ message: "Cannot delete super admin" });
+    }
+    admin = await Admin.findByIdAndDelete(id);
+    return res.status(200).json({ message: "Admin deleted Successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.nessage });
   }
 };

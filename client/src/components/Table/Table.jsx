@@ -14,6 +14,11 @@ const makeStyle = (status) => {
   if (status === "Scheduled") return { background: "#FF919D", color: "red" };
   return { background: "#59bfff", color: "white" };
 };
+const formatString = (str) => {
+  return str
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^./, (match) => match.toUpperCase());
+};
 
 const DynamicTable = ({ title, headers, rows }) => {
   return (
@@ -32,7 +37,7 @@ const DynamicTable = ({ title, headers, rows }) => {
                   align="left"
                   style={{ fontWeight: "bold" }}
                 >
-                  {header}
+                  {formatString(header)}
                 </TableCell>
               ))}
               <TableCell align="left"></TableCell>
@@ -71,7 +76,11 @@ const DynamicTable = ({ title, headers, rows }) => {
                   // For other columns, just display the value
                   return (
                     <TableCell key={headerIndex} align="left">
-                      {typeof cellValue !== "undefined" ? cellValue : ""}
+                      {typeof cellValue !== "undefined"
+                        ? cellValue === ""
+                          ? "-"
+                          : cellValue
+                        : ""}
                     </TableCell>
                   );
                 })}

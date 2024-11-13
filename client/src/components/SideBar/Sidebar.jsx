@@ -18,6 +18,7 @@ const Sidebar = () => {
   const dispatch = useDispatch();
 
   const { userRole: role } = useSelector((state) => state.auth);
+  console.log(role);
 
   const logoutHandler = () => {
     navigate("/");

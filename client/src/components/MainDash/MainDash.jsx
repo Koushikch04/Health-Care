@@ -62,6 +62,8 @@ const MainDash = () => {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
 
+  console.log(upcomingAppointments, recentAppointments);
+
   return (
     <div className={styles.MainDash}>
       <div className={styles.header}>
@@ -95,24 +97,12 @@ const MainDash = () => {
       <div className={styles.tables1}>
         <DynamicTable
           title="Upcoming Appointments"
-          headers={[
-            "Patient Name",
-            "Date",
-            "Time",
-            "Reason For Visit",
-            "Status",
-          ]}
+          headers={["patientName", "date", "time", "reasonForVisit", "status"]}
           rows={upcomingAppointments}
         />
         <DynamicTable
           title="Recent Appointments"
-          headers={[
-            "Patient Name",
-            "Date",
-            "Time",
-            "Reason For Visit",
-            "Status",
-          ]}
+          headers={["patientName", "date", "time", "reasonForVisit", "status"]}
           rows={recentAppointments}
         />
       </div>

@@ -14,6 +14,7 @@ import {
   createAdmin,
   getAdmins,
   updateAdminPermissions,
+  deleteAdmin,
   // handleSupportTickets,
 } from "../controllers/admin.js";
 import {
@@ -106,6 +107,8 @@ router.get("/top-doctors", isAdmin, getTopPerformingDoctors);
 router.post("/create", isAdmin, verifySuperAdmin, createAdmin);
 
 router.get("/", isAdmin, verifySuperAdmin, getAdmins);
+
+router.delete("/delete/:id", isAdmin, verifySuperAdmin, deleteAdmin);
 
 router.put(
   "/:id/permissions",

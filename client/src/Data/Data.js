@@ -75,9 +75,24 @@ export const SidebarData = [
     url: "/profile/admin/dashboard",
     role: "admin",
   },
-  { icon: UilUsersAlt, heading: "Users", url: "/profile/admin/users" },
-  { icon: UilUsersAlt, heading: "Doctors", url: "/profile/admin/doctors" },
-  { icon: UilUsersAlt, heading: "Admins", url: "/profile/admin/admins" },
+  {
+    icon: UilUsersAlt,
+    heading: "Users",
+    url: "/profile/admin/users",
+    role: "admin",
+  },
+  {
+    icon: UilUsersAlt,
+    heading: "Doctors",
+    url: "/profile/admin/doctors",
+    role: "admin",
+  },
+  {
+    icon: UilUsersAlt,
+    heading: "Admins",
+    url: "/profile/admin/admins",
+    role: "admin",
+  },
   // {
   //   icon: Settings,
   //   heading: "Settings",

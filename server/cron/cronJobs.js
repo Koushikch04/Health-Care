@@ -4,11 +4,11 @@ import Review from "../models/Review.js";
 import Doctor from "../models/Doctor.js";
 
 const scheduleJobs = () => {
-  console.log("schedule file running");
+  // console.log("schedule file running");
 
   cron.schedule("* * * * *", async () => {
     try {
-      console.log("cron file running");
+      // console.log("cron file running");
 
       const now = new Date();
       const batchSize = 100;
@@ -20,7 +20,7 @@ const scheduleJobs = () => {
       }).limit(batchSize);
 
       // If appointments found, mark as completed and create reviews
-      console.log(appointmentsToComplete.length);
+      // console.log(appointmentsToComplete.length);
 
       if (appointmentsToComplete.length > 0) {
         for (let appointment of appointmentsToComplete) {
@@ -43,9 +43,9 @@ const scheduleJobs = () => {
           //     );
           //   }
         }
-        console.log(
-          `${appointmentsToComplete.length} completed appointments processed.`
-        );
+        // console.log(
+        //   `${appointmentsToComplete.length} completed appointments processed.`
+        // );
       }
     } catch (error) {
       console.error("Error processing cron job:", error);
