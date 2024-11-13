@@ -21,6 +21,7 @@
 .filterSection label {
   font-weight: bold;
   margin-right: 10px;
+  display: flex;
 }
 
 .filterSection input {
@@ -111,9 +112,17 @@
 }
 
 .formGroup label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.formGroup label {
   font-size: 14px;
   color: #555;
-  /* margin-bottom: 8px; */
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
   font-weight: 500;
 }
 
@@ -126,6 +135,10 @@
   border-radius: 4px;
   outline: none;
   transition: border-color 0.3s ease;
+}
+
+.formGroup input {
+  margin-top: 10px;
 }
 
 .formGroup input:focus,

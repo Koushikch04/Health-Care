@@ -266,7 +266,7 @@ function Doctors() {
       {createEditModal && (
         <Modal onClose={() => setCreateEditModal(false)}>
           <div className={styles.modalContent}>
-            <h2>{isEditMode ? "Edit User" : "Add New User"}</h2>
+            <h2>{isEditMode ? "Edit Doctor" : "Add New Doctor"}</h2>
             <form className={styles.form}>
               <div className={styles.formGroup}>
                 <label htmlFor="firstName">First Name</label>

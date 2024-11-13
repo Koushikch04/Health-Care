@@ -20,7 +20,7 @@ function Admins() {
   const [searchName, setSearchName] = useState("");
   const [status, setStatus] = useState("All");
 
-  const initalAdmin = {
+  const initialAdmin = {
     firstName: "",
     lastName: "",
     email: "",
@@ -33,7 +33,7 @@ function Admins() {
       analytics: false,
     },
   };
-  const [newAdmin, setNewAdmin] = useState(initalAdmin);
+  const [newAdmin, setNewAdmin] = useState(initialAdmin);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,9 +73,7 @@ function Admins() {
       const matchesName = `${admin.firstName} ${admin.lastName}`
         .toLowerCase()
         .includes(searchName.toLowerCase());
-      const matchesStatus =
-        status === "All" || (status === "Active" && admin.isActive);
-      return matchesName && matchesStatus;
+      return matchesName;
     });
     setFilteredAdmins(filtered);
     setCurrentPage(1);
@@ -91,26 +89,35 @@ function Admins() {
     setSelectedAdmin(admin);
     if (admin) {
       setNewAdmin({
-        firstName: admin.firstName,
-        lastName: admin.lastName,
+        ...initialAdmin,
+        firstName: admin.name.firstName,
+        lastName: admin.name.lastName,
         email: admin.email,
         phone: admin.phone,
-        isActive: admin.isActive,
+        permissions: {
+          ...initialAdmin.permissions,
+          userManagement: admin.permissions.userManagement,
+          doctorManagement: admin.permissions.doctorManagement,
+          appointmentManagement: admin.permissions.appointmentManagement,
+          analytics: admin.permissions.analytics,
+          adminManagement: admin.permissions.adminManagement,
+        },
       });
       setIsEditMode(true);
     } else {
-      setNewAdmin(initalAdmin);
+      setNewAdmin(initialAdmin);
       setIsEditMode(false);
     }
     setCreateEditModal(true);
   };
 
-  // Save or update admin
   const handleSaveAdmin = async () => {
     const url = isEditMode
-      ? `${baseURL}/superadmin/admin/${selectedAdmin._id}`
-      : `${baseURL}/superadmin/admin`;
+      ? `${baseURL}/admin/${selectedAdmin._id}/permissions`
+      : `${baseURL}/admin/create`;
     const method = isEditMode ? "PUT" : "POST";
+    const payload = newAdmin;
+    delete payload.password;
 
     try {
       const response = await fetch(url, {
@@ -123,6 +130,7 @@ function Admins() {
       });
 
       if (!response.ok) throw new Error("Failed to save admin");
+      console.log(newAdmin);
 
       await fetchAdmins();
       setCreateEditModal(false);
@@ -133,7 +141,7 @@ function Admins() {
 
   const handlePermissionChange = (e) => {
     const { name, checked } = e.target;
-    setSelectedAdmin((prevState) => ({
+    setNewAdmin((prevState) => ({
       ...prevState,
       permissions: {
         ...prevState.permissions,
@@ -144,7 +152,7 @@ function Admins() {
   // Delete admin
   const handleDeleteAdmin = async (adminId) => {
     try {
-      const response = await fetch(`${baseURL}/superadmin/admin/${adminId}`, {
+      const response = await fetch(`${baseURL}/admin/delete/${adminId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -170,11 +178,6 @@ function Admins() {
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
         />
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="All">All</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
         <button onClick={handleFilterChange}>Apply Filters</button>
         <button onClick={() => handleOpenModal()}>+ Add New Admin</button>
       </div>
@@ -232,7 +235,9 @@ function Admins() {
                     <th>Email</th>
                     <td>{selectedAdmin.email}</td>
                   </tr>
-                  <h2 className={styles.heading}>Permissions</h2>
+                  <tr className={styles.heading}>
+                    <td>Permissions</td>
+                  </tr>
                   <tr>
                     <th>User Management</th>
                     <td>
@@ -274,68 +279,90 @@ function Admins() {
       {createEditModal && (
         <Modal onClose={() => setCreateEditModal(false)}>
           <h2>{isEditMode ? "Edit Admin" : "Add New Admin"}</h2>
-          <form onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="text"
-              placeholder="First Name"
-              value={newAdmin.firstName}
-              onChange={(e) =>
-                setNewAdmin({ ...newAdmin, firstName: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={newAdmin.lastName}
-              onChange={(e) =>
-                setNewAdmin({ ...newAdmin, lastName: e.target.value })
-              }
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={newAdmin.email}
-              onChange={(e) =>
-                setNewAdmin({ ...newAdmin, email: e.target.value })
-              }
-            />
+          <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
+            <div className={styles.formGroup}>
+              <label htmlFor="firstName">FirstName</label>
+              <input
+                type="text"
+                id="firstName"
+                placeholder="First Name"
+                value={newAdmin.firstName}
+                onChange={(e) =>
+                  setNewAdmin({ ...newAdmin, firstName: e.target.value })
+                }
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={newAdmin.lastName}
+                onChange={(e) =>
+                  setNewAdmin({ ...newAdmin, lastName: e.target.value })
+                }
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <input
+                type="email"
+                placeholder="Email"
+                value={newAdmin.email}
+                onChange={(e) =>
+                  setNewAdmin({ ...newAdmin, email: e.target.value })
+                }
+              />
+            </div>
+            {!isEditMode && (
+              <div className={styles.formGroup}>
+                <label htmlFor="password">Password</label>
+                <input
+                  id="password"
+                  value={newAdmin.password}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, password: e.target.value })
+                  }
+                />
+              </div>
+            )}
             <h3>Permissions</h3>
-            <label>
-              <input
-                type="checkbox"
-                name="userManagement"
-                checked={selectedAdmin.permissions.userManagement}
-                onChange={handlePermissionChange}
-              />
-              User Management
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="doctorManagement"
-                checked={selectedAdmin.permissions.doctorManagement}
-                onChange={handlePermissionChange}
-              />
-              Doctor Management
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="appointmentManagement"
-                checked={selectedAdmin.permissions.appointmentManagement}
-                onChange={handlePermissionChange}
-              />
-              Appointment Management
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="analytics"
-                checked={selectedAdmin.permissions.analytics}
-                onChange={handlePermissionChange}
-              />
-              Analytics
-            </label>
+            <div className={styles.formGroup}>
+              <label>
+                <input
+                  type="checkbox"
+                  name="userManagement"
+                  checked={newAdmin.permissions.userManagement}
+                  onChange={handlePermissionChange}
+                />
+                User Management
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="doctorManagement"
+                  checked={newAdmin.permissions.doctorManagement}
+                  onChange={handlePermissionChange}
+                />
+                Doctor Management
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="appointmentManagement"
+                  checked={newAdmin.permissions.appointmentManagement}
+                  onChange={handlePermissionChange}
+                />
+                Appointment Management
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="analytics"
+                  checked={newAdmin.permissions.analytics}
+                  onChange={handlePermissionChange}
+                />
+                Analytics
+              </label>
+            </div>
             <button type="button" onClick={handleSaveAdmin}>
               {isEditMode ? "Update Admin" : "Add Admin"}
             </button>
