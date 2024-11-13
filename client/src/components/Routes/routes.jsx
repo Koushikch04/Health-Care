@@ -16,6 +16,7 @@ import AdminDashboard from "../../Layouts/AdminDashboard.jsx";
 import Users from "../Admin/Users.jsx";
 import Doctors from "../Admin/Doctors.jsx";
 import Admins from "../Admin/Admins.jsx";
+import AdminAppointments from "../Admin/Appointments.jsx";
 
 const routes = [
   { path: "/", element: <LandingPage />, requiresAuth: false },
@@ -72,6 +73,11 @@ const routes = [
       { path: "/profile/admin/users", element: <Users />, role: "admin" },
       { path: "/profile/admin/doctors", element: <Doctors />, role: "admin" },
       { path: "/profile/admin/admins", element: <Admins />, role: "admin" },
+      {
+        path: "/profile/admin/appointments",
+        element: <AdminAppointments />,
+        role: "admin",
+      },
 
       // { path: "", element: <MainDash /> },
     ],

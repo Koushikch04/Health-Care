@@ -82,6 +82,12 @@ export const SidebarData = [
     role: "admin",
   },
   {
+    icon: UilClipboardAlt,
+    heading: "Appointments",
+    url: "/profile/admin/appointments",
+    role: "admin",
+  },
+  {
     icon: UilUsersAlt,
     heading: "Doctors",
     url: "/profile/admin/doctors",

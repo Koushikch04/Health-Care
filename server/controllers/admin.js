@@ -178,16 +178,27 @@ export const manageDoctorRegistration = async (req, res) => {
 
 // View all appointments
 export const manageAppointments = async (req, res) => {
-  const { filter, date } = req.query; // Allow specific date input if desired
+  console.log("Hello");
+
+  const { filter, date } = req.query;
 
   try {
     if (!filter) {
-      // If no filter is provided, return all appointments
-      const appointments = await Appointment.find({});
+      const appointments = await Appointment.find({})
+        .populate({
+          path: "doctor",
+          select: "name experience rating specialty",
+          populate: {
+            path: "specialty",
+            model: "Specialty",
+            select: "name",
+          },
+        })
+        .sort({ createdAt: -1 });
+
       return res.status(200).json(appointments);
     }
 
-    // If a filter is provided, proceed with date filtering and aggregation
     const referenceDate = date ? new Date(date) : new Date();
 
     let startDate, endDate, groupingFormat, responseMapper;
