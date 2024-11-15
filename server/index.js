@@ -21,7 +21,7 @@ import appointmentRoutes from "./routes/appointment.js";
 import specialtyRoutes from "./routes/specialty.js";
 import profileRoutes from "./routes/profile.js";
 import findSpecialtyRoutes from "./routes/findSpecialty.js";
-import reviewRoutes from "./routes/Review.js";
+import reviewRoutes from "./routes/review.js";
 import adminRoutes from "./routes/admin.js";
 
 import { verifyToken } from "./middleware/authVerification.js";
