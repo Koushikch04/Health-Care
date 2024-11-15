@@ -12,6 +12,7 @@ import useAlert from "../../hooks/useAlert";
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
@@ -128,11 +129,14 @@ const SignUp = () => {
       email,
       password,
     };
+    setLoading(true);
     try {
       await dispatch(registerUser(userData, alert));
       navigate("/auth/login");
     } catch (error) {
       setErrorMessage(error.msg);
+    } finally {
+      setLoading(false);
     }
   };
 

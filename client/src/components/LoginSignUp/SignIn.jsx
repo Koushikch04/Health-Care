@@ -14,6 +14,7 @@ import styles from "./styles/SignUp.module.css";
 
 const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const { alert } = useAlert();
 
@@ -41,14 +42,21 @@ const SignIn = () => {
       return;
     }
 
-    if (email === "superadmin@healthcare.com") {
-      dispatch(loginAsAdmin({ email, password }, alert));
-    } else if (email.endsWith("@healthcare.com")) {
-      console.log("doctor");
-      dispatch(loginUserAsDoctor({ email, password }, alert));
-    } else {
-      console.log("user");
-      dispatch(loginUser({ email, password }, alert));
+    setLoading(true); // Start loading
+    try {
+      if (email === "superadmin@healthcare.com") {
+        await dispatch(loginAsAdmin({ email, password }, alert));
+      } else if (email.endsWith("@healthcare.com")) {
+        console.log("doctor");
+        await dispatch(loginUserAsDoctor({ email, password }, alert));
+      } else {
+        console.log("user");
+        await dispatch(loginUser({ email, password }, alert));
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -99,15 +107,14 @@ const SignIn = () => {
                   <div className={styles.error}>
                     Password must be at least 7 characters.
                   </div>
-                )}{" "}
-                {/* Inline error */}
+                )}
               </div>
               <button
                 className={styles.signInButton}
-                disabled={!emailIsValid || !passwordIsValid}
+                disabled={!emailIsValid || !passwordIsValid || loading}
                 type="submit"
               >
-                Submit
+                {loading ? <span className={styles.spinner}></span> : "Submit"}
               </button>
             </FormPage>
           </form>
