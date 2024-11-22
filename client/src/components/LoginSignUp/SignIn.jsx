@@ -11,8 +11,11 @@ import {
 import useAlert from "../../hooks/useAlert";
 
 import styles from "./styles/SignUp.module.css";
+import { baseURL } from "../../api/api";
 
 const SignIn = () => {
+  console.log("Hello", baseURL);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();

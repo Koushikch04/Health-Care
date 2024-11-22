@@ -1,3 +1,6 @@
 // const baseURL = "http://localhost:8000";
-const baseURL = "https://health-care-backend-f9eb.onrender.com";
+
+console.log(import.meta.env);
+
+const baseURL = import.meta.env.VITE_BACKEND || "http://localhost:8000";
 export { baseURL };
