@@ -30,8 +30,6 @@ export const registerUser = (userData, alert) => async (dispatch) => {
 };
 
 export const loginUser = (userData, alert) => async (dispatch) => {
-  console.log(`${baseURL}/auth/login`);
-
   try {
     const response = await fetch(`${baseURL}/auth/login`, {
       method: "POST",
