@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 
 import FormPage from "./FormPage";
+import CircularSpinner from "../Spinners/CircularSpinner.jsx";
 import useInput from "../../hooks/useInput";
 import {
   loginAsAdmin,
@@ -14,8 +15,6 @@ import styles from "./styles/SignUp.module.css";
 import { baseURL } from "../../api/api";
 
 const SignIn = () => {
-  console.log("Hello", baseURL);
-
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
@@ -117,7 +116,8 @@ const SignIn = () => {
                 disabled={!emailIsValid || !passwordIsValid || loading}
                 type="submit"
               >
-                {loading ? <span className={styles.spinner}></span> : "Submit"}
+                {/* {loading ? <span className={styles.spinner}></span> : "Submit"} */}
+                {loading ? <CircularSpinner /> : "Submit"}
               </button>
             </FormPage>
           </form>

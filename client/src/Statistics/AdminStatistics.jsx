@@ -10,6 +10,7 @@ import Card from "./Card.jsx";
 import { useSelector } from "react-redux";
 import { baseURL } from "../api/api.js";
 import AdminChart from "../Charts/AdminChart.jsx";
+import StatisticsSpinner from "../components/Spinners/StatisticsSpinner.jsx";
 
 const transformDataToCards = (responseData) => {
   const { userCount, doctorCount, appointmentCount, revenue } =
@@ -26,13 +27,8 @@ const transformDataToCards = (responseData) => {
       },
       barValue: 100,
       value: userCount.toString(),
-      png: DashboardIcon, // Icon for total appointments
-      series: [
-        {
-          name: "Appointments",
-          //   data: [pendingAppointments, completedAppointments],
-        },
-      ],
+      png: DashboardIcon,
+      series: [],
     },
     {
       title: "Doctors",
@@ -41,10 +37,8 @@ const transformDataToCards = (responseData) => {
         boxShadow: "0px 10px 20px 0px #f5d67a",
       },
       barValue: 100,
-      //   Math.floor((pendingAppointments / totalAppointments) * 100) || 0,
       value: doctorCount.toString(),
-      png: AccessTimeIcon, // Icon for pending appointments
-      //   series: [{ name: "Pending Appointments", data: [pendingAppointments] }],
+      png: AccessTimeIcon,
     },
     {
       title: "Appointments",
@@ -53,12 +47,8 @@ const transformDataToCards = (responseData) => {
         boxShadow: "0px 10px 20px 0px #9ecfff",
       },
       barValue: 100,
-      //     Math.floor((completedAppointments / totalAppointments) * 100) || 0,
       value: appointmentCount.toString(),
-      png: CheckCircleIcon, // Icon for completed appointments
-      series: [
-        // { name: "Completed Appointments", data: [completedAppointments] },
-      ],
+      png: CheckCircleIcon,
     },
     {
       title: "Revenue",
@@ -69,7 +59,6 @@ const transformDataToCards = (responseData) => {
       barValue: Math.floor((revenue / expectedMaxRevenue) * 100) || 0,
       value: `$${revenue.toLocaleString()}`,
       png: AttachMoneyIcon,
-      //   series: [{ name: "Revenue", data: [revenue] }],
     },
   ];
 
@@ -78,6 +67,7 @@ const transformDataToCards = (responseData) => {
 
 const AdminStatistics = () => {
   const [cardsData, setCardsData] = useState([]);
+  const [loading, setLoading] = useState(true); // Add loading state
   const { userInfo } = useSelector((state) => state.auth);
   const { userToken: token } = useSelector((state) => state.auth);
 
@@ -92,32 +82,39 @@ const AdminStatistics = () => {
         });
 
         const statistics = await response.json();
-
-        // setData(statistics.data);
         setCardsData(transformDataToCards(statistics));
       } catch (error) {
         console.error(error.message);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, [userInfo._id]);
+
+  if (loading) {
+    return (
+      <div className={styles.spinnerContainer}>
+        <StatisticsSpinner />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.statistics}>
-      {cardsData.map((card, id) => {
-        return (
-          <div className={styles.parentContainer} key={id}>
-            <Card
-              title={card.title}
-              color={card.color}
-              isBarRequired={true}
-              barValue={card.barValue}
-              value={card.value}
-              png={card.png}
-              series={card.series}
-            />
-          </div>
-        );
-      })}
+      {cardsData.map((card, id) => (
+        <div className={styles.parentContainer} key={id}>
+          <Card
+            title={card.title}
+            color={card.color}
+            isBarRequired={true}
+            barValue={card.barValue}
+            value={card.value}
+            png={card.png}
+            series={card.series}
+          />
+        </div>
+      ))}
       <AdminChart />
     </div>
   );
