@@ -42,7 +42,7 @@ const SignIn = () => {
       return;
     }
 
-    setLoading(true); // Start loading
+    setLoading(true);
     try {
       if (email === "superadmin@healthcare.com") {
         await dispatch(loginAsAdmin({ email, password }, alert));
@@ -56,7 +56,7 @@ const SignIn = () => {
     } catch (error) {
       console.error("Error during login:", error);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
