@@ -130,6 +130,7 @@ const SignUp = () => {
       password,
     };
     setLoading(true);
+
     try {
       await dispatch(registerUser(userData, alert));
       navigate("/auth/login");
@@ -197,11 +198,7 @@ const SignUp = () => {
               onPrev={prevStep}
               showPrev={true}
               showNext={true}
-              disabled={
-                !phoneIsTouched ||
-                !phoneIsValid ||
-                (emergencyIsTouched && !emergencyIsValid)
-              }
+              disabled={!phoneIsValid || !emergencyIsValid}
             >
               <div className={styles.field}>
                 <div className={styles.label}>Phone Number</div>
@@ -242,12 +239,7 @@ const SignUp = () => {
               onPrev={prevStep}
               showPrev={true}
               showNext={true}
-              disabled={
-                !dobIsTouched ||
-                !genderIsTouched ||
-                !dobIsValid ||
-                !genderIsValid
-              }
+              disabled={!dobIsValid || !genderIsValid}
             >
               <div className={styles.field}>
                 <div className={styles.label}>Date</div>
@@ -292,12 +284,8 @@ const SignUp = () => {
               showPrev={true}
               showNext={false}
               showSubmit={true}
-              disabled={
-                !emailIsTouched ||
-                !passwordIsTouched ||
-                !emailIsValid ||
-                !passwordIsValid
-              }
+              disabled={!emailIsValid || !passwordIsValid}
+              loading={loading}
             >
               <div className={styles.field}>
                 <div className={styles.label}>Email Address</div>

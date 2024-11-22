@@ -12,6 +12,7 @@ const FormPage = ({
   showNext,
   showSubmit,
   disabled = false,
+  loading = false,
 }) => {
   return (
     <div
@@ -50,9 +51,9 @@ const FormPage = ({
               type="button"
               className={`${styles.submit} ${styles.signupbtn}`}
               onClick={onSubmit}
-              disabled={disabled}
+              disabled={disabled || loading}
             >
-              Submit
+              {loading ? <span className={styles.spinner}></span> : "Submit"}
             </button>
           )}
         </div>
