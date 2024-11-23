@@ -46,10 +46,11 @@ const AppointmentCalendar = () => {
   const [highlightedDays, setHighlightedDays] = useState([]);
   const [allAppointments, setAllAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState(initialValue);
+  const [loading, setLoading] = useState(false);
 
   const fetchAllAppointments = async () => {
     if (!token) return;
-
+    setLoading(true);
     try {
       const response = await fetch(`${baseURL}/appointment`, {
         method: "GET",
@@ -67,9 +68,11 @@ const AppointmentCalendar = () => {
       console.log(data);
 
       setAllAppointments(data);
-      updateHighlightedDays(data); // Initial highlight setup
+      updateHighlightedDays(data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

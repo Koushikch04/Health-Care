@@ -67,6 +67,13 @@
   color: #888;
 }
 
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+}
+
 .review:hover {
   background-color: #f3f3f3;
   border-color: #d0d0d0;

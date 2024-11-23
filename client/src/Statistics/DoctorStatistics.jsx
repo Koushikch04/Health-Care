@@ -10,6 +10,7 @@ import Card from "./Card.jsx";
 import { useSelector } from "react-redux";
 import { baseURL } from "../api/api.js";
 import DoctorChart from "../Charts/DoctorChart.jsx";
+import StatisticsSpinner from "../components/Spinners/StatisticsSpinner.jsx";
 
 const transformDataToCards = (responseData) => {
   const {
@@ -82,10 +83,13 @@ const transformDataToCards = (responseData) => {
 
 const DoctorStatistics = () => {
   const [cardsData, setCardsData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const { userInfo } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const response = await fetch(
           `${baseURL}/doctor/statistics?doctorId=${userInfo._id}`
@@ -99,10 +103,20 @@ const DoctorStatistics = () => {
         setCardsData(transformDataToCards(statistics));
       } catch (error) {
         console.error(error.message);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, [userInfo._id]);
+
+  if (loading) {
+    return (
+      <div className={styles.spinnerContainer}>
+        <StatisticsSpinner />
+      </div>
+    );
+  }
   return (
     <div className={styles.statistics}>
       {cardsData.map((card, id) => {

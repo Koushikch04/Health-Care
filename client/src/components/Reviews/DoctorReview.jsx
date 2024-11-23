@@ -4,6 +4,7 @@ import { baseURL } from "../../api/api";
 import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx"; // Import the Modal component
 import styles from "./DoctorReview.module.css";
+import TableSpinner from "../Spinners/TableSpinner.jsx";
 
 function DoctorReview() {
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
@@ -79,6 +80,13 @@ function DoctorReview() {
     setSelectedComment(comment);
     setIsModalOpen(true);
   };
+
+  if (loading)
+    return (
+      <div className={styles.spinnerContainer}>
+        <TableSpinner message="loading reviews..." />
+      </div>
+    );
 
   return (
     <div className={styles.doctorReviewContainer}>

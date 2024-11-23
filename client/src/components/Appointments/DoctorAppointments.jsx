@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import styles from "./Appointments.module.css";
 import { baseURL } from "../../api/api";
 import DoctorAppointmentDetails from "./DoctorAppointmentDetails.jsx";
+import TableSpinner from "../Spinners/TableSpinner.jsx";
 
 function DoctorAppointments() {
   const token = useSelector((state) => state.auth.userToken);
@@ -86,7 +87,12 @@ function DoctorAppointments() {
     setSelectedAppointment(null);
   };
 
-  if (loading) return <p>Loading Appointments ... </p>;
+  if (loading)
+    return (
+      <div className={styles.spinnerContainer}>
+        <TableSpinner message="loading appointments..." />
+      </div>
+    );
   if (error) return <p>Error: {error}</p>;
 
   return (

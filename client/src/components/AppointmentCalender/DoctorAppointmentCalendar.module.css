@@ -128,6 +128,13 @@
   background: rgba(145, 254, 159, 0.5);
 }
 
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+}
+
 .noAppointments {
   text-align: center;
   color: #777;

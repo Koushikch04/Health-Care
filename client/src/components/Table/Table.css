@@ -1,6 +1,9 @@
 .MuiTableRow-root > * {
   padding: 10px;
 }
+.MuiTable-root {
+  min-height: 400px;
+}
 
 .MuiTableRow-root.MuiTableRow-head > * {
   font-weight: bold !important;

@@ -9,6 +9,7 @@ import DoctorStatistics from "../../Statistics/DoctorStatistics.jsx";
 
 const MainDash = () => {
   const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
   const doctorId = userInfo._id;
@@ -22,7 +23,7 @@ const MainDash = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // setLoading(true);
+        setLoading(true);
         const today = new Date();
         const response = await fetch(`${baseURL}/doctor/appointment`, {
           method: "GET",
@@ -32,14 +33,13 @@ const MainDash = () => {
           },
         });
         const result = await response.json();
-        // setData(result);
         setAppointments(result);
         console.log("success");
         console.log(result);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     };
 
@@ -99,11 +99,13 @@ const MainDash = () => {
           title="Upcoming Appointments"
           headers={["patientName", "date", "time", "reasonForVisit", "status"]}
           rows={upcomingAppointments}
+          loading={loading}
         />
         <DynamicTable
           title="Recent Appointments"
           headers={["patientName", "date", "time", "reasonForVisit", "status"]}
           rows={recentAppointments}
+          loading={loading}
         />
       </div>
     </div>
