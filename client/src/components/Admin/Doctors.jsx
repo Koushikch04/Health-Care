@@ -4,6 +4,7 @@ import { baseURL } from "../../api/api";
 import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx";
 import styles from "./Doctors.module.css";
+import TableSpinner from "../Spinners/TableSpinner.jsx";
 
 function Doctors() {
   const { userToken: token } = useSelector((state) => state.auth);
@@ -402,7 +403,11 @@ function Doctors() {
         </Modal>
       )}
 
-      {loading && <p className={styles.loading}>Loading doctors...</p>}
+      {loading && (
+        <div className={styles.spinnerContainer}>
+          <TableSpinner message="Loading doctors..." />
+        </div>
+      )}
       {error && <p className={styles.error}>{error}</p>}
       {!loading && !error && (
         <div>

@@ -4,6 +4,7 @@ import { baseURL } from "../../api/api";
 import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx";
 import styles from "./Users.module.css";
+import TableSpinner from "../Spinners/TableSpinner.jsx";
 
 function Users() {
   const { userToken: token } = useSelector((state) => state.auth);
@@ -87,7 +88,6 @@ function Users() {
     fetchUsers();
   }, [token]);
 
-  // Filter users by name, gender, age range, status, and registration date
   const handleFilterChange = () => {
     const filtered = users.filter((user) => {
       const matchesName = `${user.name.firstName} ${user.name.lastName}`
@@ -407,7 +407,11 @@ function Users() {
         </Modal>
       )}
 
-      {loading && <p className={styles.loading}>Loading users...</p>}
+      {loading && (
+        <div className={styles.spinnerContainer}>
+          <TableSpinner message="Loading Users..." />
+        </div>
+      )}
       {error && <p className={styles.error}>{error}</p>}
       {!loading && !error && (
         <div>

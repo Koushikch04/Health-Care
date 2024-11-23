@@ -170,6 +170,13 @@ select:focus::placeholder {
   transition: background-color 0.3s;
 }
 
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+}
+
 .loading,
 .error,
 .noUsers {

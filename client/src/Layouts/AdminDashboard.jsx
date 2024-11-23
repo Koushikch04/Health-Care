@@ -10,6 +10,8 @@ import AdminStatistics from "../Statistics/AdminStatistics.jsx";
 const AdminDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [topDoctors, setTopDoctors] = useState([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [loadingTopDoctors, setLoadingTopDoctors] = useState(false);
 
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
   const adminId = userInfo._id;
@@ -21,8 +23,10 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log("set here");
+
+      setLoadingAppointments(true);
       try {
-        // setLoading(true);
         const today = new Date();
         const response = await fetch(`${baseURL}/admin/appointments`, {
           method: "GET",
@@ -32,15 +36,17 @@ const AdminDashboard = () => {
           },
         });
         const result = await response.json();
-        // setData(result);
         setAppointments(result);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        // setLoading(false);
+        console.log("removed here");
+
+        setLoadingAppointments(false);
       }
     };
     const fetchTopPerformingDoctors = async () => {
+      setLoadingTopDoctors(true);
       try {
         const response = await fetch(`${baseURL}/admin/top-doctors`, {
           method: "GET",
@@ -62,6 +68,8 @@ const AdminDashboard = () => {
         setTopDoctors(finalResult);
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoadingTopDoctors(false);
       }
     };
 
@@ -109,14 +117,15 @@ const AdminDashboard = () => {
             "Specialty",
             "Rating",
             "Recent Appointments",
-            // "Status",
           ]}
           rows={topDoctors}
+          loading={loadingAppointments}
         />
         <DynamicTable
           title="Recent Appointments"
           headers={["patientName", "date", "time", "reasonForVisit", "status"]}
           rows={recentAppointments}
+          loading={loadingTopDoctors}
         />
       </div>
     </div>
