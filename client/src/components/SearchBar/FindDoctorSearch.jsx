@@ -18,6 +18,8 @@ const FindDoctorSearch = () => {
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [moveToTop, setMoveToTop] = useState(false);
   const [showImage, setShowImage] = useState(true);
+
+  const [loadingSpecialty, setLoadingSpecialty] = useState(false);
   const [filters, setFilters] = useState({
     minExperience: 0,
     minRating: 0,
@@ -124,6 +126,7 @@ const FindDoctorSearch = () => {
 
   useEffect(() => {
     const fetchSpecialties = async () => {
+      setLoadingSpecialty(true);
       try {
         const response = await fetch(`${baseURL}/specialty/details`);
         const data = await response.json();
@@ -143,6 +146,10 @@ const FindDoctorSearch = () => {
         }
       } catch (error) {
         console.error("Error fetching specialties:", error);
+      } finally {
+        setTimeout(() => {
+          setLoadingSpecialty(false);
+        }, 1000);
       }
     };
 
@@ -174,6 +181,7 @@ const FindDoctorSearch = () => {
             searchData={searchData}
             selectedItem={selectedItem}
             onItemClick={handleSpecialtySelect}
+            loading={loadingSpecialty}
           />
         )}
         {search ? (

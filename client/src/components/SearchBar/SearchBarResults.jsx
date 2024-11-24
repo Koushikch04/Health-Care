@@ -1,8 +1,15 @@
 import React, { useEffect } from "react";
 import ScrollReveal from "scrollreveal";
 import styles from "./SearchBarResults.module.css";
+import SearchBarSpinner from "../Spinners/SearchBarSpinner";
+import CircularSpinner from "../Spinners/CircularSpinner";
 
-const SearchBarResults = ({ searchData, selectedItem, onItemClick }) => {
+const SearchBarResults = ({
+  searchData,
+  selectedItem,
+  onItemClick,
+  loading,
+}) => {
   if (!Array.isArray(searchData)) {
     return null;
   }
@@ -21,22 +28,28 @@ const SearchBarResults = ({ searchData, selectedItem, onItemClick }) => {
 
   return (
     <div className={styles.results_list}>
-      {searchData.map((data, index) => (
-        <a
-          href="#"
-          key={index}
-          className={`${styles.search_suggestion_line} ${
-            selectedItem === index ? styles.active : ""
-          }`}
-          onClick={(e) => {
-            e.preventDefault();
-            onItemClick(data);
-          }}
-        >
-          <span>{data.name}</span>
-          <span className={styles.specialty}>{data.specialty}</span>
-        </a>
-      ))}
+      {loading && (
+        <div className={styles.spinner}>
+          <CircularSpinner />
+        </div>
+      )}
+      {!loading &&
+        searchData.map((data, index) => (
+          <a
+            href="#"
+            key={index}
+            className={`${styles.search_suggestion_line} ${
+              selectedItem === index ? styles.active : ""
+            }`}
+            onClick={(e) => {
+              e.preventDefault();
+              onItemClick(data);
+            }}
+          >
+            <span>{data.name}</span>
+            <span className={styles.specialty}>{data.specialty}</span>
+          </a>
+        ))}
     </div>
   );
 };

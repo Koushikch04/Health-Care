@@ -19,7 +19,10 @@ const Updates = (props) => {
   return (
     <div className={styles.Updates}>
       {props.updates.map((appointment) => (
-        <div className={styles.update} key={appointment.id}>
+        <div
+          className={styles.update}
+          key={`${appointment.id}-${appointment.type}`}
+        >
           {/* <img src={appointment.img} alt="profile" /> */}
           <div className={styles.noti}>
             <div style={{ marginBottom: "0.5rem" }}>

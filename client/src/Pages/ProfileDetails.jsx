@@ -5,11 +5,13 @@ import useAlert from "../hooks/useAlert";
 import styles from "./ProfileDetails.module.css";
 import { baseURL } from "../api/api";
 import { authActions } from "../store/auth/auth-slice";
+import CircularSpinner from "../components/Spinners/CircularSpinner";
 
 const ProfileDetails = () => {
   const userInfo = useSelector((state) => state.auth.userInfo);
   const token = useSelector((state) => state.auth.userToken);
   const { name, email, profileImage } = userInfo || {};
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
   const { alert } = useAlert();
@@ -46,6 +48,8 @@ const ProfileDetails = () => {
     }
   };
 
+  console.log(loading);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     switch (name) {
@@ -66,40 +70,46 @@ const ProfileDetails = () => {
   };
 
   const handleSaveChanges = async () => {
+    setLoading(true);
     const formData = new FormData();
     formData.append("firstName", firstName);
     formData.append("lastName", lastName);
     formData.append("email", email);
 
-    // Append the selected image file
     const fileInput = document.querySelector("input[type='file']");
     if (fileInput && fileInput.files[0]) {
       formData.append("profileImage", fileInput.files[0]);
     }
 
-    const response = await fetch(`${baseURL}/profile/update`, {
-      method: "PUT",
-      body: formData,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const response = await fetch(`${baseURL}/profile/update`, {
+        method: "PUT",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      alert.success({ message: data.msg, title: "Success" });
-      dispatch(
-        authActions.updateUserInfo({
-          name: {
-            firstName,
-            lastName,
-          },
-          profileImage: data.updatedProfileImage || profileImage,
-        })
-      );
-    } else {
-      const error = await response.json();
-      alert.error({ message: error.msg, title: "Error" });
+      if (response.ok) {
+        const data = await response.json();
+        alert.success({ message: data.msg, title: "Success" });
+        dispatch(
+          authActions.updateUserInfo({
+            name: {
+              firstName,
+              lastName,
+            },
+            profileImage: data.updatedProfileImage || profileImage,
+          })
+        );
+      } else {
+        const error = await response.json();
+        alert.error({ message: error.msg, title: "Error" });
+      }
+    } catch (error) {
+      alert.error({ message: "Something went wrong!", title: "Error" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,6 +142,7 @@ const ProfileDetails = () => {
                 type="file"
                 className={styles.image_upload}
                 onChange={handleImageUpload}
+                disabled={loading}
               />
             </label>
             &nbsp;
@@ -161,6 +172,7 @@ const ProfileDetails = () => {
               name="firstName"
               value={firstName}
               onChange={handleChange}
+              disabled={loading}
             />
           </div>
 
@@ -172,6 +184,7 @@ const ProfileDetails = () => {
               name="lastName"
               value={lastName}
               onChange={handleChange}
+              disabled={loading}
             />
           </div>
 
@@ -193,16 +206,17 @@ const ProfileDetails = () => {
             type="button"
             className={`${styles.btn} ${styles.btn_primary}`}
             onClick={handleSaveChanges}
+            disabled={loading}
           >
-            Save changes
+            {loading ? <CircularSpinner /> : "Save changes"}
           </button>
           &nbsp;
-          <button
+          {/* <button
             type="button"
             className={`${styles.btn} ${styles.btn_default}`}
           >
             Cancel
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

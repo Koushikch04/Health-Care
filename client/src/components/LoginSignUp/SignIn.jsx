@@ -12,7 +12,6 @@ import {
 import useAlert from "../../hooks/useAlert";
 
 import styles from "./styles/SignUp.module.css";
-import { baseURL } from "../../api/api";
 
 const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");

@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import { baseURL } from "../../api/api";
 import styles from "./AppointmentCalendar.module.css";
 import { useEffect, useState } from "react";
+import TableSpinner from "../Spinners/TableSpinner";
 
 const initialValue = dayjs();
 
@@ -126,17 +127,25 @@ const AppointmentCalendar = () => {
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
-    updateHighlightedDays(allAppointments); // Ensure we update highlights for new month
+    updateHighlightedDays(allAppointments);
   };
 
   const handleMonthChange = (newMonth) => {
-    setSelectedDate(newMonth); // Update the selected date to the new month
-    updateHighlightedDays(allAppointments); // Refresh highlighted days
+    setSelectedDate(newMonth);
+    updateHighlightedDays(allAppointments);
   };
 
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
   };
+
+  if (loading) {
+    return (
+      <div className={styles.spinnerContainer}>
+        <TableSpinner message="Loading Appointments..." />
+      </div>
+    );
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -181,6 +190,7 @@ const AppointmentCalendar = () => {
                 {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
                 Appointments
               </h3>
+
               {filteredAppointments.length > 0 ? (
                 filteredAppointments.map((appointment) => (
                   <div

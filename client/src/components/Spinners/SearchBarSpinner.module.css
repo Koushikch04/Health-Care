@@ -1,0 +1,38 @@
+.searchBarSpinner {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  display: inline-block;
+  /* background: #74a6f2; */
+  padding: 10px;
+  border-radius: 10px;
+  vertical-align: middle;
+  margin: 0;
+}
+
+.loader {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  /* background-color: #fff;
+  box-shadow: 32px 0 #fff, -32px 0 #fff; */
+  box-shadow: 16px 0 red, -16px 0 red;
+  background-color: red;
+  position: relative;
+  animation: flash 0.5s ease-out infinite alternate;
+}
+
+@keyframes flash {
+  0% {
+    background-color: #fff2;
+    box-shadow: 32px 0 #fff2, -32px 0 #fff;
+  }
+  50% {
+    background-color: #fff;
+    box-shadow: 32px 0 #fff2, -32px 0 #fff2;
+  }
+  100% {
+    background-color: #fff2;
+    box-shadow: 32px 0 #fff, -32px 0 #fff2;
+  }
+}

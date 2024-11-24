@@ -133,6 +133,13 @@ span.status.completed {
   background: rgb(145 254 159 / 47%);
 }
 
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+}
+
 @media (max-width: 600px) {
   .appointmentsTable {
     font-size: 14px;
