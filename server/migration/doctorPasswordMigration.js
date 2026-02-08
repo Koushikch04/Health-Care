@@ -1,16 +1,20 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
 
 import Doctor from "../models/Doctor.js";
 
+dotenv.config();
+const MONGO_URL = process.env.MONGO_URL;
+
 // Connect to your MongoDB
-mongoose.connect(
-  "mongodb+srv://chk240404:root12@cluster0.dgqbi.mongodb.net/HealthCare?retryWrites=true&w=majority&appName=Cluster0",
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }
-);
+if (!MONGO_URL) {
+  throw new Error("Missing MONGO_URL in environment.");
+}
+mongoose.connect(MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 // Define the Doctor model
 

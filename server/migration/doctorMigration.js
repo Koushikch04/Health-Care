@@ -1,15 +1,16 @@
 import mongoose from "mongoose";
 import { config } from "dotenv";
-config();
 
 import Doctor from "../models/Doctor.js";
 
 config();
-const MONGO_URL =
-  "mongodb+srv://chk240404:root12@cluster0.dgqbi.mongodb.net/HealthCare?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URL = process.env.MONGO_URL;
 
 async function connectDB() {
   try {
+    if (!MONGO_URL) {
+      throw new Error("Missing MONGO_URL in environment.");
+    }
     await mongoose.connect(MONGO_URL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,

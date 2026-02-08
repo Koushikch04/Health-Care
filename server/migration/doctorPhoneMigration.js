@@ -1,17 +1,20 @@
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+
 import Doctor from "../models/Doctor.js";
 
-const MONGO_URI = process.env.MONGO_URL;
+dotenv.config();
+const MONGO_URL = process.env.MONGO_URL;
 
 async function migrateDoctors() {
   try {
-    await mongoose.connect(
-      "mongodb+srv://chk240404:root12@cluster0.dgqbi.mongodb.net/HealthCare?retryWrites=true&w=majority&appName=Cluster0",
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      }
-    );
+    if (!MONGO_URL) {
+      throw new Error("Missing MONGO_URL in environment.");
+    }
+    await mongoose.connect(MONGO_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
     // Fetch all doctors
     const doctors = await Doctor.find({});
