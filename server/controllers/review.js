@@ -7,7 +7,9 @@ import Specialty from "../models/Specialty.js";
 const getUserProfileId = async (req) => {
   if (req.user?.profileId) return req.user.profileId;
   if (req.user?.accountId) {
-    const profile = await UserProfile.findOne({ accountId: req.user.accountId });
+    const profile = await UserProfile.findOne({
+      accountId: req.user.accountId,
+    });
     return profile?._id;
   }
   return null;
@@ -113,11 +115,16 @@ const getReviewsByDoctor = async (req, res) => {
   }
 
   try {
-    const reviews = await Review.find({})
-      .populate("user", "name")
+    const reviews = await Review.find({ doctor: doctorId })
+      .populate({
+        path: "user",
+        select: "name",
+      })
       .sort({ createdAt: -1 });
+    console.log(reviews);
     res.json(reviews);
   } catch (error) {
+    console.error("Error fetching reviews:", error);
     res.status(500).json({ error: "Failed to retrieve reviews" });
   }
 };

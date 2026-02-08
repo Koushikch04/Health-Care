@@ -10,6 +10,10 @@ const adminProfileSchema = new Schema(
       unique: true,
       required: true,
     },
+    name: {
+      firstName: String,
+      lastName: String,
+    },
     role: {
       type: String,
       enum: ["admin", "superadmin"],

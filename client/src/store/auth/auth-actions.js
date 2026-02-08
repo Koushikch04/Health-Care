@@ -62,9 +62,13 @@ export const loginAccount = (userData, alert) => async (dispatch) => {
     });
     console.log("logged in as", data);
 
+    const personWithEmail = data.person
+      ? { ...data.person, email: data.account?.email || data.person.email }
+      : data.person;
+
     dispatch(
       authActions.login({
-        person: data.person,
+        person: personWithEmail,
         token: data.token,
         expiresAt: data.expiresAt,
         role: data.role,

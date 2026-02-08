@@ -64,8 +64,15 @@ export const isAdmin = async (req, res, next) => {
 
 export const authorizeAdmin = (action) => (req, res, next) => {
   const { permissions } = req.admin;
+  console.log("Admin permissions:", permissions);
+  console.log("Required action:", action);
+  console.log(
+    "Permission for action:",
+    permissions.get(action),
+    permissions[action],
+  );
 
-  if (!permissions[action]) {
+  if (!permissions.get(action)) {
     return res.status(403).json({ message: "Unauthorized: Permission denied" });
   }
 

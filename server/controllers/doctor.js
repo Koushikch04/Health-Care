@@ -1,58 +1,10 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 import Appointment from "../models/Appointment.js";
 import Account from "../models/Account.js";
 import DoctorProfile from "../models/DoctorProfile.js";
 import Specialty from "../models/Specialty.js";
-
-//doctor login
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const account = await Account.findOne({ email: email.toLowerCase() });
-    if (!account) return res.status(400).json({ msg: "User does not exist" });
-
-    if (!account.roles.includes("doctor")) {
-      return res.status(403).json({ msg: "Access denied" });
-    }
-
-    const matched = await bcrypt.compare(password, account.password);
-    if (!matched) return res.status(401).json({ msg: "Invalid Credentials" });
-
-    let person = await DoctorProfile.findOne({
-      accountId: account._id,
-    }).populate("specialty");
-
-    if (person) {
-      person = { ...person.toObject(), rating: person.rating?.average ?? 0 };
-    }
-
-    const token = jwt.sign(
-      {
-        accountId: account._id,
-        role: "doctor",
-        roles: account.roles,
-        profileId: person?._id,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
-
-    return res.status(200).json({
-      token,
-      person,
-      role: "doctor",
-      roles: account.roles,
-      expiresAt,
-    });
-  } catch (err) {
-    console.log("login error:", err);
-  }
-};
 
 //Get all doctors
 export const getDoctors = async (req, res) => {

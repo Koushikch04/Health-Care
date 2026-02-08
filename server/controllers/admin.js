@@ -1,5 +1,4 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import moment from "moment";
 
 import Account from "../models/Account.js";
@@ -489,56 +488,6 @@ export const viewReports = async (req, res) => {
 //     res.status(500).json({ error: err.message });
 //   }
 // };
-export const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const account = await Account.findOne({ email: email.toLowerCase() });
-
-    if (!account) {
-      return res.status(400).json({ message: "Admin not found" });
-    }
-
-    if (!account.roles.includes("admin") && !account.roles.includes("superadmin")) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    // Compare the password
-    const isMatch = await bcrypt.compare(password, account.password);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid password" });
-    }
-
-    const adminProfile = await AdminProfile.findOne({
-      accountId: account._id,
-    });
-
-    // Create a JWT token for the admin
-    const token = jwt.sign(
-      {
-        accountId: account._id,
-        role: account.roles.includes("superadmin") ? "superadmin" : "admin",
-        roles: account.roles,
-        profileId: adminProfile?._id,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" },
-    );
-    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
-
-    res.status(200).json({
-      person: adminProfile,
-      token,
-      expiresAt,
-      role: account.roles.includes("superadmin") ? "superadmin" : "admin",
-      message: "Admin logged in successfully",
-    });
-  } catch (err) {
-    res.status(500).json({ msg: err.message });
-  }
-};
-
 const ratingWeight = 0.7;
 const appointmentWeight = 0.3;
 
@@ -581,12 +530,19 @@ export const getTopPerformingDoctors = async (req, res) => {
     const topDoctors = doctorPerformances
       .sort((a, b) => b.performanceScore - a.performanceScore)
       .slice(0, 5)
-      .map(({ doctor, performanceScore, recentAppointmentsCount, averageRating }) => ({
-        ...doctor.toObject(),
-        performanceScore,
-        recentAppointmentsCount,
-        rating: averageRating,
-      }));
+      .map(
+        ({
+          doctor,
+          performanceScore,
+          recentAppointmentsCount,
+          averageRating,
+        }) => ({
+          ...doctor.toObject(),
+          performanceScore,
+          recentAppointmentsCount,
+          rating: averageRating,
+        }),
+      );
 
     res.status(200).json(topDoctors);
   } catch (error) {
@@ -621,6 +577,7 @@ export const createAdmin = async (req, res) => {
 
     const newAdmin = await AdminProfile.create({
       accountId: account._id,
+      name: { firstName, lastName },
       role: "admin",
       permissions,
     });
@@ -651,6 +608,7 @@ export const getAdmins = async (req, res) => {
       { $unwind: { path: "$account", preserveNullAndEmptyArrays: true } },
       {
         $project: {
+          name: 1,
           role: 1,
           permissions: 1,
           accountId: 1,
@@ -679,6 +637,12 @@ export const updateAdminPermissions = async (req, res) => {
     }
 
     // Update the permissions
+    if (firstName || lastName) {
+      admin.name = {
+        firstName: firstName ?? admin.name?.firstName,
+        lastName: lastName ?? admin.name?.lastName,
+      };
+    }
     admin.permissions = permissions;
     await admin.save();
     if (email) {
