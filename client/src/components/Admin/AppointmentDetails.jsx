@@ -4,6 +4,7 @@ import styles from "./AppointmentDetails.module.css";
 import useAlert from "../../hooks/useAlert";
 import { baseURL } from "../../api/api";
 import { useDispatch, useSelector } from "react-redux";
+import { cancelAppointment } from "../../store/auth/auth-actions";
 
 const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
   const [isRescheduling, setIsRescheduling] = useState(false);
@@ -13,10 +14,22 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
   const { alert } = useAlert();
   const token = useSelector((state) => state.auth.userToken);
   const dispatch = useDispatch();
+  const canCancel =
+    appointment.status !== "canceled" && appointment.status !== "completed";
 
   const handleCancel = async () => {
     try {
-      await dispatch(cancelAppointment(appointment.id)); // Assumes cancelAppointment is defined
+      if (!canCancel) {
+        alert.info({
+          message: "This appointment can no longer be canceled.",
+          title: "Cancellation Not Allowed",
+        });
+        return;
+      }
+
+      await dispatch(
+        cancelAppointment(appointment.id, alert, "admin", appointment.status)
+      );
       alert.success({
         message: "Appointment canceled successfully.",
         title: "Canceled",
@@ -160,9 +173,11 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
         </form>
       ) : (
         <div className={styles.actions}>
-          <button className={styles.cancelButton} onClick={handleCancel}>
-            Cancel Appointment
-          </button>
+          {canCancel && (
+            <button className={styles.cancelButton} onClick={handleCancel}>
+              Cancel Appointment
+            </button>
+          )}
           <button
             className={styles.rescheduleButton}
             onClick={() => setIsRescheduling(true)}

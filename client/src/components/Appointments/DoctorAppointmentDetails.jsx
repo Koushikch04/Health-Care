@@ -10,11 +10,13 @@ const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
   const role = useSelector((state) => state.auth.userRole);
   const dispatch = useDispatch();
   const { alert } = useAlert();
+  const canCancel =
+    appointment.status !== "canceled" && appointment.status !== "completed";
 
   const handleCancel = async () => {
     try {
       const success = await dispatch(
-        cancelAppointment(appointment._id, alert, role)
+        cancelAppointment(appointment._id, alert, role, appointment.status)
       );
       if (success) {
         onCancel(appointment._id);
@@ -56,12 +58,11 @@ const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
       </p>
 
       <div className={styles.actions}>
-        {appointment.status != "canceled" &&
-          appointment.status != "completed" && (
-            <button className={styles.cancelButton} onClick={handleCancel}>
-              Cancel Appointment
-            </button>
-          )}
+        {canCancel && (
+          <button className={styles.cancelButton} onClick={handleCancel}>
+            Cancel Appointment
+          </button>
+        )}
       </div>
     </Modal>
   );
