@@ -25,7 +25,10 @@ import reviewRoutes from "./routes/review.js";
 import adminRoutes from "./routes/admin.js";
 
 import { verifyToken } from "./middleware/authVerification.js";
-
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://health-care-red-five.vercel.app",
+];
 dotenv.config();
 const MONGO_URL = process.env.MONGO_URL;
 
@@ -40,15 +43,28 @@ const __dirname = path.dirname(__filename);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://health-care-red-five.vercel.app",
-    ],
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    origin: function (origin, callback) {
+      // allow server-to-server / Postman / curl
+      if (!origin) return callback(null, true);
+
+      // allow exact known origins
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // allow ALL Vercel preview deployments
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
-  })
+  }),
 );
 
 // app.use(
