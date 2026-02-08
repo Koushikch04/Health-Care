@@ -81,7 +81,7 @@ function MainRoutes() {
           <Route key={index} path={route.path} element={element}>
             {route.children &&
               route.children.map((child, childIndex) => {
-                if (child.role && !roleMatches(child.role, role)) {
+                if (userLoggedIn && child.role && !roleMatches(child.role, role)) {
                   return (
                     <Route
                       key={childIndex}

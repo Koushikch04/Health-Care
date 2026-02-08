@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import classes from "./Sidebar.module.css";
 import { UilSignOutAlt } from "@iconscout/react-unicons";
@@ -16,12 +16,16 @@ const Sidebar = () => {
   const { alert } = useAlert();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const logoutInProgressRef = useRef(false);
 
   const { userRole: role } = useSelector((state) => state.auth);
   const isAdminRole = role === "admin" || role === "superadmin";
   console.log(role);
 
   const logoutHandler = () => {
+    if (logoutInProgressRef.current) return;
+    logoutInProgressRef.current = true;
+
     dispatch(logoutUser(alert));
     navigate("/", { replace: true });
   };
