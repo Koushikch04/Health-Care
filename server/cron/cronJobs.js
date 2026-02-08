@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import Appointment from "../models/Appointment.js";
 import Review from "../models/Review.js";
-import Doctor from "../models/Doctor.js";
+import DoctorProfile from "../models/DoctorProfile.js";
 
 let isRunning = false;
 
@@ -9,7 +9,7 @@ const scheduleJobs = () => {
   console.log("schedule file running");
 
   // Every minute
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("*/5 * * * *", async () => {
     if (isRunning) return;
     isRunning = true;
 
@@ -59,7 +59,7 @@ const scheduleJobs = () => {
       for (const appointment of overdueAppointments) {
         if (appointment.reviewed) continue;
 
-        const doctor = await Doctor.findById(appointment.doctor);
+        const doctor = await DoctorProfile.findById(appointment.doctor);
         if (!doctor) continue;
 
         const reviewExists = await Review.exists({

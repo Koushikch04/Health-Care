@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import AdminProfile from "../models/AdminProfile.js";
 
 export const verifyToken = async (req, res, next) => {
   try {
@@ -18,6 +19,7 @@ export const verifyToken = async (req, res, next) => {
 
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     req.user = verified;
+    req.account = verified;
     // console.log(req.user);
 
     next();
@@ -26,7 +28,7 @@ export const verifyToken = async (req, res, next) => {
   }
 };
 
-export const isAdmin = (req, res, next) => {
+export const isAdmin = async (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
 
   if (!token) {
@@ -37,8 +39,23 @@ export const isAdmin = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const roles = decoded?.roles || [];
+    const isAdminRole = roles.includes("admin") || roles.includes("superadmin");
 
-    req.admin = decoded;
+    if (!isAdminRole) {
+      return res.status(403).json({ message: "Access denied. Admin only." });
+    }
+
+    const adminProfile = await AdminProfile.findOne({
+      accountId: decoded.accountId,
+    });
+
+    req.admin = {
+      accountId: decoded.accountId,
+      role: decoded.role,
+      roles,
+      permissions: adminProfile?.permissions || new Map(),
+    };
     next();
   } catch (err) {
     res.status(400).json({ message: "Invalid token" });
@@ -56,7 +73,7 @@ export const authorizeAdmin = (action) => (req, res, next) => {
 };
 
 export const verifySuperAdmin = (req, res, next) => {
-  if (req.admin && req.admin.role === "superadmin") {
+  if (req.admin && req.admin.roles?.includes("superadmin")) {
     next();
   } else {
     return res.status(403).json({ message: "Access denied. Superadmin only." });

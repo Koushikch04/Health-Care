@@ -2,12 +2,36 @@ import mongoose from "mongoose";
 import moment from "moment";
 
 import Appointment from "../models/Appointment.js";
+import UserProfile from "../models/UserProfile.js";
+import DoctorProfile from "../models/DoctorProfile.js";
+
+const getUserProfileId = async (req) => {
+  if (req.user?.profileId) return req.user.profileId;
+  if (req.user?.accountId) {
+    const profile = await UserProfile.findOne({ accountId: req.user.accountId });
+    return profile?._id;
+  }
+  return null;
+};
+
+const getDoctorProfileId = async (req) => {
+  if (req.user?.profileId) return req.user.profileId;
+  if (req.user?.accountId) {
+    const profile = await DoctorProfile.findOne({
+      accountId: req.user.accountId,
+    });
+    return profile?._id;
+  }
+  return null;
+};
 
 export const createAppointment = async (req, res) => {
   const { patientName, reasonForVisit, additionalNotes, date, time, doctorId } =
     req.body;
 
-  if (!patientName || !date || !time || !req.user.id || !doctorId) {
+  const userProfileId = await getUserProfileId(req);
+
+  if (!patientName || !date || !time || !userProfileId || !doctorId) {
     return res
       .status(400)
       .json({ message: "Please provide all required fields." });
@@ -16,7 +40,7 @@ export const createAppointment = async (req, res) => {
   try {
     const newAppointment = new Appointment({
       doctor: doctorId,
-      user: req.user.id,
+      user: userProfileId,
       patientName,
       reasonForVisit,
       additionalNotes,
@@ -37,7 +61,8 @@ export const getUserAppointments = async (req, res) => {
   const { status } = req.query;
   const validStatuses = ["scheduled", "completed", "canceled"];
   try {
-    let query = { user: req.user.id };
+    const userProfileId = await getUserProfileId(req);
+    let query = { user: userProfileId };
     if (status) {
       if (!validStatuses.includes(status)) {
         return res.status(400).json({
@@ -61,7 +86,19 @@ export const getUserAppointments = async (req, res) => {
       .sort({ createdAt: -1 });
     // console.log(appointments);
 
-    return res.status(200).json(appointments);
+    const response = appointments.map((appointment) => {
+      const doctor = appointment.doctor?.toObject
+        ? appointment.doctor.toObject()
+        : appointment.doctor;
+      return {
+        ...appointment.toObject(),
+        doctor: doctor
+          ? { ...doctor, rating: doctor.rating?.average ?? 0 }
+          : doctor,
+      };
+    });
+
+    return res.status(200).json(response);
   } catch (error) {
     console.log(error.message);
 
@@ -141,7 +178,8 @@ export const getAvailableTimeSlots = async (req, res) => {
 };
 
 export const cancelAppointment = async (req, res) => {
-  const { appointmentId, role } = req.params;
+  const { appointmentId } = req.params;
+  const role = req.query.role || req.params.role || req.user.role;
 
   try {
     const appointment = await Appointment.findById(appointmentId);
@@ -151,9 +189,14 @@ export const cancelAppointment = async (req, res) => {
       return res.status(404).json({ message: "Appointment not found." });
     }
 
+    const userProfileId = await getUserProfileId(req);
+    const doctorProfileId = await getDoctorProfileId(req);
+
     if (
-      (role === "user" && appointment.user.toString() !== req.user.id) ||
-      (role === "doctor" && appointment.doctor.toString !== req.user.id)
+      (role === "user" &&
+        appointment.user.toString() !== userProfileId?.toString()) ||
+      (role === "doctor" &&
+        appointment.doctor.toString() !== doctorProfileId?.toString())
     ) {
       return res
         .status(403)
@@ -187,13 +230,22 @@ export const getAppointmentDetails = async (req, res) => {
       return res.status(404).json({ message: "Appointment not found." });
     }
 
-    if (appointment.user.toString() !== req.user.id) {
+    const userProfileId = await getUserProfileId(req);
+    if (appointment.user.toString() !== userProfileId?.toString()) {
       return res
         .status(403)
         .json({ message: "Not authorized to view this appointment." });
     }
 
-    return res.status(200).json(appointment);
+    const doctor = appointment.doctor?.toObject
+      ? appointment.doctor.toObject()
+      : appointment.doctor;
+    return res.status(200).json({
+      ...appointment.toObject(),
+      doctor: doctor
+        ? { ...doctor, rating: doctor.rating?.average ?? 0 }
+        : doctor,
+    });
   } catch (error) {
     console.error(error.message);
     return res
