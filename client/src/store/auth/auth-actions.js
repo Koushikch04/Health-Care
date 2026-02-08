@@ -197,9 +197,22 @@ export const checkAuthStatus = () => (dispatch) => {
   }
 };
 
-export const cancelAppointment = (appointmentId, alert, role = "user") => {
+export const cancelAppointment = (
+  appointmentId,
+  alert,
+  role = "user",
+  appointmentStatus
+) => {
   return async (dispatch) => {
     try {
+      if (appointmentStatus === "canceled" || appointmentStatus === "completed") {
+        alert.info({
+          message: "This appointment can no longer be canceled.",
+          title: "Cancellation Not Allowed",
+        });
+        return false;
+      }
+
       const response = await fetch(
         `${baseURL}/appointment/${appointmentId}?role=${role}`,
         {
