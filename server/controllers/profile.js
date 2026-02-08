@@ -14,12 +14,17 @@ export const updateProfile = async (req, res) => {
     user.name.lastName = lastName;
 
     if (req.file) {
-      user.profileImage = req.file.path;
+      // Normalize path for URL usage (Windows uses backslashes)
+      user.profileImage = req.file.path.replace(/\\/g, "/");
     }
 
     await user.save();
 
-    res.status(200).json({ msg: "Profile updated successfully", user });
+    res.status(200).json({
+      msg: "Profile updated successfully",
+      user,
+      updatedProfileImage: user.profileImage,
+    });
   } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({ msg: "Error updating profile" });

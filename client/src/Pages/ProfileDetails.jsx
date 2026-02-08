@@ -93,15 +93,20 @@ const ProfileDetails = () => {
       if (response.ok) {
         const data = await response.json();
         alert.success({ message: data.msg, title: "Success" });
+        const nextProfileImage =
+          data?.updatedProfileImage || data?.user?.profileImage || profileImage;
         dispatch(
           authActions.updateUserInfo({
             name: {
               firstName,
               lastName,
             },
-            profileImage: data.updatedProfileImage || profileImage,
+            profileImage: nextProfileImage,
           })
         );
+        if (nextProfileImage) {
+          setUploadedImage(`${baseURL}/${nextProfileImage}`);
+        }
       } else {
         const error = await response.json();
         alert.error({ message: error.msg, title: "Error" });
