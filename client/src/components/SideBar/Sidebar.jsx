@@ -22,8 +22,8 @@ const Sidebar = () => {
   console.log(role);
 
   const logoutHandler = () => {
-    navigate("/");
     dispatch(logoutUser(alert));
+    navigate("/", { replace: true });
   };
 
   const sidebarVariants = {
@@ -62,7 +62,7 @@ const Sidebar = () => {
             (item) =>
               !item.role ||
               item.role === role ||
-              (item.role === "admin" && isAdminRole)
+              (item.role === "admin" && isAdminRole),
           ).map((item, index) => (
             <div
               className={

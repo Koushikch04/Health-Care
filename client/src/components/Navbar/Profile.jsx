@@ -9,13 +9,17 @@ import useAlert from "../../hooks/useAlert";
 
 function Profile() {
   const [toggleMenu, setToggleMenu] = useState(false);
-  const { name, profileImage } = useSelector((state) => state.auth.userInfo);
+  const userInfo = useSelector((state) => state.auth.userInfo);
+  const name = userInfo?.name;
+  const profileImage = userInfo?.profileImage;
 
   const { alert } = useAlert();
+  const navigate = useNavigate();
+  const logoutInProgressRef = useRef(false);
 
   const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
   const [uploadedImage, setUploadedImage] = useState(
-    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png"
+    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png",
   );
 
   const menuRef = useRef(null);
@@ -28,9 +32,10 @@ function Profile() {
   ];
 
   const handleLogout = () => {
+    if (logoutInProgressRef.current) return; // Prevent multiple logout attempts
+    logoutInProgressRef.current = true;
     dispatch(logoutUser(alert));
-    const navigate = useNavigate();
-    navigate("/");
+    navigate("/", { replace: true });
   };
 
   useEffect(() => {
@@ -89,7 +94,7 @@ function Profile() {
                   <p>{item.label}</p>
                   <span>{">"}</span>
                 </Link>
-              )
+              ),
             )}
           </div>
         </div>
