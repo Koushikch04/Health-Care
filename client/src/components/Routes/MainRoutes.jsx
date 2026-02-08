@@ -25,7 +25,7 @@ function MainRoutes() {
           );
         }
 
-        if (role === "doctor" && route.path !== "/profile") {
+        if (userLoggedIn && role === "doctor" && route.path !== "/profile") {
           return (
             <Route
               key={index}
@@ -35,7 +35,7 @@ function MainRoutes() {
           );
         }
 
-        if (role === "admin" && route.path !== "/profile") {
+        if (userLoggedIn && isAdminRole(role) && route.path !== "/profile") {
           return (
             <Route
               key={index}

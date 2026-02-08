@@ -9,9 +9,13 @@ import useAlert from "../../hooks/useAlert";
 
 function Profile() {
   const [toggleMenu, setToggleMenu] = useState(false);
-  const { name, profileImage } = useSelector((state) => state.auth.userInfo);
+  const userInfo = useSelector((state) => state.auth.userInfo);
+  const name = userInfo?.name;
+  const profileImage = userInfo?.profileImage;
 
   const { alert } = useAlert();
+  const navigate = useNavigate();
+  const logoutInProgressRef = useRef(false);
 
   const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
   const [uploadedImage, setUploadedImage] = useState(
@@ -28,9 +32,11 @@ function Profile() {
   ];
 
   const handleLogout = () => {
+    if (logoutInProgressRef.current) return;
+    logoutInProgressRef.current = true;
+
     dispatch(logoutUser(alert));
-    const navigate = useNavigate();
-    navigate("/");
+    navigate("/", { replace: true });
   };
 
   useEffect(() => {
