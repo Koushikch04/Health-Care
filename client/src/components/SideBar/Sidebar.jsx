@@ -19,6 +19,7 @@ const Sidebar = () => {
   const logoutInProgressRef = useRef(false);
 
   const { userRole: role } = useSelector((state) => state.auth);
+  const isAdminRole = role === "admin" || role === "superadmin";
   console.log(role);
 
   const logoutHandler = () => {
@@ -61,27 +62,30 @@ const Sidebar = () => {
         </div>
 
         <div className={classes.menu}>
-          {SidebarData.filter((item) => !item.role || item.role === role).map(
-            (item, index) => (
-              <div
-                className={
-                  selected === index
-                    ? `${classes.menuItem} ${classes.active}`
-                    : classes.menuItem
+          {SidebarData.filter(
+            (item) =>
+              !item.role ||
+              item.role === role ||
+              (item.role === "admin" && isAdminRole)
+          ).map((item, index) => (
+            <div
+              className={
+                selected === index
+                  ? `${classes.menuItem} ${classes.active}`
+                  : classes.menuItem
+              }
+              key={index}
+              onClick={() => {
+                setSelected(index);
+                if (item.url) {
+                  navigate(item.url);
                 }
-                key={index}
-                onClick={() => {
-                  setSelected(index);
-                  if (item.url) {
-                    navigate(item.url);
-                  }
-                }}
-              >
-                <item.icon />
-                <span>{item.heading}</span>
-              </div>
-            )
-          )}
+              }}
+            >
+              <item.icon />
+              <span>{item.heading}</span>
+            </div>
+          ))}
           <div className={classes.menuItem} onClick={logoutHandler}>
             <UilSignOutAlt /> <span>Log out</span>
           </div>

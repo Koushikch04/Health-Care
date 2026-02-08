@@ -5,7 +5,6 @@ import {
   deleteUser,
   manageAppointments,
   viewReports,
-  login,
   getAllDoctors,
   manageDoctorRegistration,
   rescheduleOrCancelAppointment,
@@ -29,8 +28,6 @@ import {
 } from "../controllers/doctor.js";
 
 const router = express.Router();
-
-router.post("/login", login);
 router.post("/user", isAdmin, authorizeAdmin("userManagement"), createUser);
 router.get("/users", isAdmin, authorizeAdmin("userManagement"), getAllUsers);
 router.put(

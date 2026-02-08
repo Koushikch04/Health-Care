@@ -6,12 +6,12 @@ const Schema = mongoose.Schema;
 const reviewSchema = new Schema({
   doctor: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Doctor",
+    ref: "DoctorProfile",
     required: true,
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "UserProfile",
     required: true,
   },
   appointment: {

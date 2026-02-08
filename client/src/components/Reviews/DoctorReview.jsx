@@ -5,6 +5,7 @@ import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx"; // Import the Modal component
 import styles from "./DoctorReview.module.css";
 import TableSpinner from "../Spinners/TableSpinner.jsx";
+import { ContinuousColorLegend } from "@mui/x-charts";
 
 function DoctorReview() {
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
@@ -40,6 +41,7 @@ function DoctorReview() {
         }
 
         const data = await response.json();
+        console.log("Fetched reviews:", data);
         setReviews(data);
         setFilteredReviews(data);
       } catch (error) {
@@ -62,7 +64,7 @@ function DoctorReview() {
       setFilteredReviews(reviews);
     } else {
       setFilteredReviews(
-        reviews.filter((review) => review.rating === parseInt(rating))
+        reviews.filter((review) => review.rating === parseInt(rating)),
       );
     }
   };
@@ -72,7 +74,7 @@ function DoctorReview() {
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentReviews = filteredReviews.slice(
     indexOfFirstPost,
-    indexOfLastPost
+    indexOfLastPost,
   );
 
   // Open modal with full comment

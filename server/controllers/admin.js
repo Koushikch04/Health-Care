@@ -1,12 +1,12 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import moment from "moment";
 
-import User from "../models/User.js";
-import Doctor from "../models/Doctor.js";
+import Account from "../models/Account.js";
+import UserProfile from "../models/UserProfile.js";
+import DoctorProfile from "../models/DoctorProfile.js";
 import Appointment from "../models/Appointment.js";
 import Review from "../models/Review.js";
-import Admin from "../models/Admin.js";
+import AdminProfile from "../models/AdminProfile.js";
 // import SupportTicket from "../models/"; // Assuming you have a SupportTicket model
 
 // User Management Controllers
@@ -14,7 +14,16 @@ import Admin from "../models/Admin.js";
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.aggregate([
+    const users = await UserProfile.aggregate([
+      {
+        $lookup: {
+          from: "accounts",
+          localField: "accountId",
+          foreignField: "_id",
+          as: "account",
+        },
+      },
+      { $unwind: { path: "$account", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "appointments",
@@ -26,12 +35,13 @@ export const getAllUsers = async (req, res) => {
       {
         $project: {
           name: 1,
-          email: 1,
+          email: "$account.email",
           dob: 1,
           gender: 1,
           profileImage: 1,
           contact: 1,
           appointmentCount: { $size: "$appointments" },
+          accountId: 1,
         },
       },
     ]);
@@ -55,8 +65,10 @@ export const createUser = async (req, res) => {
         .json({ error: "Email and password are required." });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const existingAccount = await Account.findOne({
+      email: email.toLowerCase(),
+    });
+    if (existingAccount) {
       return res
         .status(400)
         .json({ error: "User with this email already exists." });
@@ -65,16 +77,19 @@ export const createUser = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const newUser = new User({
+    const account = await Account.create({
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      roles: ["user"],
+    });
+
+    const newUser = await UserProfile.create({
+      accountId: account._id,
       name: { firstName, lastName },
       contact: { phone },
-      email,
-      password: hashedPassword,
       gender,
       dob,
     });
-
-    await newUser.save();
 
     res.status(201).json({
       newUser,
@@ -94,15 +109,21 @@ export const editUserProfile = async (req, res) => {
       firstName,
       lastName,
     },
-    email,
     gender,
     dob,
   };
 
   try {
-    const user = await User.findByIdAndUpdate(id, toUpdate, { new: true });
+    const user = await UserProfile.findByIdAndUpdate(id, toUpdate, {
+      new: true,
+    });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+    if (email) {
+      await Account.findByIdAndUpdate(user.accountId, {
+        email: email.toLowerCase(),
+      });
     }
     res.status(200).json(user);
   } catch (err) {
@@ -114,10 +135,11 @@ export const editUserProfile = async (req, res) => {
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await User.findByIdAndDelete(id);
+    const user = await UserProfile.findByIdAndDelete(id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    await Account.findByIdAndDelete(user.accountId);
     res.status(200).json({ message: "User deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -130,7 +152,7 @@ export const deleteUser = async (req, res) => {
 export const getAllDoctors = async (req, res) => {
   try {
     // Step 1: Fetch all doctors with populated specialty name
-    const doctors = await Doctor.find()
+    const doctors = await DoctorProfile.find()
       .populate("specialty", "name") // Populate only the `name` field of the specialty
       .lean(); // Use .lean() to return plain JavaScript objects
 
@@ -143,9 +165,10 @@ export const getAllDoctors = async (req, res) => {
         return {
           ...doctor,
           appointmentCount,
-          specialization: doctor.specialty.name,
+          specialization: doctor.specialty?.name,
+          rating: doctor.rating?.average ?? 0,
         };
-      })
+      }),
     );
 
     res.status(200).json({ doctors: doctorsWithCounts });
@@ -160,10 +183,10 @@ export const manageDoctorRegistration = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body; // Status can be 'approved' or 'rejected'
   try {
-    const doctor = await User.findByIdAndUpdate(
+    const doctor = await DoctorProfile.findByIdAndUpdate(
       id,
       { registrationStatus: status },
-      { new: true }
+      { new: true },
     );
     if (!doctor) {
       return res.status(404).json({ error: "Doctor not found" });
@@ -196,7 +219,19 @@ export const manageAppointments = async (req, res) => {
         })
         .sort({ createdAt: -1 });
 
-      return res.status(200).json(appointments);
+      const response = appointments.map((appointment) => {
+        const doctor = appointment.doctor?.toObject
+          ? appointment.doctor.toObject()
+          : appointment.doctor;
+        return {
+          ...appointment.toObject(),
+          doctor: doctor
+            ? { ...doctor, rating: doctor.rating?.average ?? 0 }
+            : doctor,
+        };
+      });
+
+      return res.status(200).json(response);
     }
 
     const referenceDate = date ? new Date(date) : new Date();
@@ -359,13 +394,13 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
       appointment = await Appointment.findByIdAndUpdate(
         id,
         { status: "canceled" },
-        { new: true }
+        { new: true },
       );
     } else if (status === "rescheduled") {
       appointment = await Appointment.findByIdAndUpdate(
         id,
         { date: newDate },
-        { new: true }
+        { new: true },
       );
     }
 
@@ -386,8 +421,8 @@ export const viewReports = async (req, res) => {
   console.log("got request");
 
   try {
-    const userCount = await User.countDocuments();
-    const doctorCount = await Doctor.countDocuments();
+    const userCount = await UserProfile.countDocuments();
+    const doctorCount = await DoctorProfile.countDocuments();
     const appointmentCount = await Appointment.countDocuments();
     const reviewsCount = await Review.countDocuments();
     const revenue = 1000;
@@ -453,43 +488,6 @@ export const viewReports = async (req, res) => {
 //     res.status(500).json({ error: err.message });
 //   }
 // };
-export const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const admin = await Admin.findOne({ email });
-
-    if (!admin) {
-      return res.status(400).json({ message: "Admin not found" });
-    }
-
-    // Compare the password
-    const isMatch = await bcrypt.compare(password, admin.password);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid password" });
-    }
-
-    // Create a JWT token for the admin
-    const token = jwt.sign(
-      { id: admin._id, role: admin.role, permissions: admin.permissions },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
-
-    res.status(200).json({
-      person: admin,
-      token,
-      expiresAt,
-      role: "admin",
-      message: "Admin logged in successfully",
-    });
-  } catch (err) {
-    res.status(500).json({ msg: err.message });
-  }
-};
-
 const ratingWeight = 0.7;
 const appointmentWeight = 0.3;
 
@@ -500,7 +498,7 @@ export const getTopPerformingDoctors = async (req, res) => {
     oneMonthAgo.setMonth(today.getMonth() - 1); // Define "recent" as the past month
 
     // Fetch doctors with their recent appointment counts
-    const doctors = await Doctor.find()
+    const doctors = await DoctorProfile.find()
       .select("name specialty rating cost image")
       .populate("specialty", "name");
 
@@ -514,27 +512,37 @@ export const getTopPerformingDoctors = async (req, res) => {
         });
 
         // Calculate performance score based on rating and recent appointments
+        const averageRating = doctor.rating?.average ?? 0;
         const performanceScore =
-          doctor.rating * ratingWeight +
+          averageRating * ratingWeight +
           recentAppointmentsCount * appointmentWeight;
 
         return {
           doctor,
           performanceScore,
           recentAppointmentsCount,
+          averageRating,
         };
-      })
+      }),
     );
 
     // Sort by performanceScore in descending order and take top 5
     const topDoctors = doctorPerformances
       .sort((a, b) => b.performanceScore - a.performanceScore)
       .slice(0, 5)
-      .map(({ doctor, performanceScore, recentAppointmentsCount }) => ({
-        ...doctor.toObject(),
-        performanceScore,
-        recentAppointmentsCount,
-      }));
+      .map(
+        ({
+          doctor,
+          performanceScore,
+          recentAppointmentsCount,
+          averageRating,
+        }) => ({
+          ...doctor.toObject(),
+          performanceScore,
+          recentAppointmentsCount,
+          rating: averageRating,
+        }),
+      );
 
     res.status(200).json(topDoctors);
   } catch (error) {
@@ -548,8 +556,10 @@ export const createAdmin = async (req, res) => {
 
   try {
     // Check if an admin with this email already exists
-    const existingAdmin = await Admin.findOne({ email });
-    if (existingAdmin) {
+    const existingAccount = await Account.findOne({
+      email: email.toLowerCase(),
+    });
+    if (existingAccount) {
       return res
         .status(400)
         .json({ message: "Admin with this email already exists" });
@@ -558,16 +568,20 @@ export const createAdmin = async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new admin
-    const newAdmin = new Admin({
-      name: { firstName, lastName },
-      email,
+    // Create new admin account
+    const account = await Account.create({
+      email: email.toLowerCase(),
       password: hashedPassword,
+      roles: ["admin"],
+    });
+
+    const newAdmin = await AdminProfile.create({
+      accountId: account._id,
+      name: { firstName, lastName },
       role: "admin",
       permissions,
     });
 
-    await newAdmin.save();
     res
       .status(201)
       .json({ message: "Admin created successfully", admin: newAdmin });
@@ -581,7 +595,27 @@ export const createAdmin = async (req, res) => {
 // Controller to get all admins (superadmin access only)
 export const getAdmins = async (req, res) => {
   try {
-    const admins = await Admin.find({ role: "admin" });
+    const admins = await AdminProfile.aggregate([
+      { $match: { role: "admin" } },
+      {
+        $lookup: {
+          from: "accounts",
+          localField: "accountId",
+          foreignField: "_id",
+          as: "account",
+        },
+      },
+      { $unwind: { path: "$account", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          name: 1,
+          role: 1,
+          permissions: 1,
+          accountId: 1,
+          email: "$account.email",
+        },
+      },
+    ]);
     res.json({ admins });
   } catch (error) {
     res
@@ -597,17 +631,25 @@ export const updateAdminPermissions = async (req, res) => {
   console.log(req.body);
 
   try {
-    const admin = await Admin.findById(id);
+    const admin = await AdminProfile.findById(id);
     if (!admin || admin.role !== "admin") {
       return res.status(404).json({ message: "Admin not found" });
     }
 
     // Update the permissions
-    admin.name.firstName = firstName;
-    admin.name.lastName = lastName;
-    admin.email = email;
+    if (firstName || lastName) {
+      admin.name = {
+        firstName: firstName ?? admin.name?.firstName,
+        lastName: lastName ?? admin.name?.lastName,
+      };
+    }
     admin.permissions = permissions;
     await admin.save();
+    if (email) {
+      await Account.findByIdAndUpdate(admin.accountId, {
+        email: email.toLowerCase(),
+      });
+    }
 
     res.json({ message: "Permissions updated successfully", admin });
   } catch (error) {
@@ -622,14 +664,15 @@ export const updateAdminPermissions = async (req, res) => {
 export const deleteAdmin = async (req, res) => {
   const { id } = req.params;
   try {
-    let admin = await Admin.findById(id);
+    let admin = await AdminProfile.findById(id);
     if (!admin) {
       return res.status(404).json({ error: "Admin not found" });
     }
     if (admin.role == "superadmin") {
       return res.status(404).json({ message: "Cannot delete super admin" });
     }
-    admin = await Admin.findByIdAndDelete(id);
+    admin = await AdminProfile.findByIdAndDelete(id);
+    await Account.findByIdAndDelete(admin.accountId);
     return res.status(200).json({ message: "Admin deleted Successfully" });
   } catch (error) {
     res.status(500).json({ message: error.nessage });

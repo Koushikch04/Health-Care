@@ -15,8 +15,11 @@ const AdminDashboard = () => {
   const [loadingTopDoctors, setLoadingTopDoctors] = useState(false);
 
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
-  const adminId = userInfo._id;
-  const name = userInfo.name.firstName + " " + userInfo.name.lastName;
+  const adminId = userInfo?._id;
+  const name =
+    userInfo?.name?.firstName && userInfo?.name?.lastName
+      ? `${userInfo.name.firstName} ${userInfo.name.lastName}`
+      : userInfo?.email || "Admin";
 
   const today = new Date();
   const options = { year: "numeric", month: "long", day: "numeric" };
@@ -37,6 +40,7 @@ const AdminDashboard = () => {
           },
         });
         const result = await response.json();
+        console.log("Appointments data:", result);
         setAppointments(result);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -76,7 +80,7 @@ const AdminDashboard = () => {
 
     fetchData();
     fetchTopPerformingDoctors();
-  }, [adminId]);
+  }, [adminId, token]);
 
   const currentDate = new Date();
 
@@ -84,7 +88,7 @@ const AdminDashboard = () => {
     .filter(
       (appointment) =>
         appointment.status === "scheduled" &&
-        new Date(appointment.date) > currentDate
+        new Date(appointment.date) > currentDate,
     )
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .slice(0, 5);

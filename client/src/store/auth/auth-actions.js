@@ -29,7 +29,7 @@ export const registerUser = (userData, alert) => async (dispatch) => {
   }
 };
 
-export const loginUser = (userData, alert) => async (dispatch) => {
+export const loginAccount = (userData, alert) => async (dispatch) => {
   try {
     const response = await fetch(`${baseURL}/auth/login`, {
       method: "POST",
@@ -37,7 +37,6 @@ export const loginUser = (userData, alert) => async (dispatch) => {
       body: JSON.stringify({
         email: userData.email,
         password: userData.password,
-        userType: "user",
       }),
     });
 
@@ -55,119 +54,31 @@ export const loginUser = (userData, alert) => async (dispatch) => {
     localStorage.setItem("token", data.token);
     console.log(data);
 
+    const displayName =
+      data.person?.name?.firstName || data.account?.email || "there";
     alert.success({
-      message: `Hello, ${data.person.name.firstName} `,
+      message: `Hello, ${displayName} `,
       title: "Login Success",
     });
-    console.log("logged in as", data.role);
+    console.log("logged in as", data);
+
+    const personWithEmail = data.person
+      ? { ...data.person, email: data.account?.email || data.person.email }
+      : data.person;
 
     dispatch(
       authActions.login({
-        person: data.person,
+        person: personWithEmail,
         token: data.token,
         expiresAt: data.expiresAt,
         role: data.role,
-      })
+      }),
     );
     // dispatch(loginSuccess(data.token));
     // alert("Sign-In Successful");
   } catch (error) {
     console.log(error);
 
-    alert.error({
-      message: error.msg || "An unexpected error occurred",
-      title: "Login failed",
-    });
-  }
-};
-
-export const loginUserAsDoctor = (userData, alert) => async (dispatch) => {
-  try {
-    const response = await fetch(`${baseURL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: userData.email,
-        password: userData.password,
-        userType: "doctor",
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      alert.error({
-        message: errorData.msg || "Login failed",
-        title: "Login failed",
-      });
-      return;
-    }
-
-    const data = await response.json();
-    localStorage.setItem("token", data.token);
-
-    alert.success({
-      message: `Hello, ${data.person.name.firstName} `,
-      title: "Login Success",
-    });
-
-    console.log("logged in as", data.role);
-
-    dispatch(
-      authActions.login({
-        person: data.person,
-        token: data.token,
-        expiresAt: data.expiresAt,
-        role: data.role,
-      })
-    );
-  } catch (error) {
-    alert.error({
-      message: error.msg || "An unexpected error occurred",
-      title: "Login failed",
-    });
-  }
-};
-
-export const loginAsAdmin = (userData, alert) => async (dispatch) => {
-  try {
-    const response = await fetch(`${baseURL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: userData.email,
-        password: userData.password,
-        userType: "admin",
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      alert.error({
-        message: errorData.msg || "Login failed",
-        title: "Login failed",
-      });
-      return;
-    }
-
-    const data = await response.json();
-    localStorage.setItem("token", data.token);
-
-    alert.success({
-      message: `Hello, ${data.person.name.firstName} `,
-      title: "Login Success",
-    });
-
-    console.log("logged in as", data.role);
-
-    dispatch(
-      authActions.login({
-        person: data.person,
-        token: data.token,
-        expiresAt: data.expiresAt,
-        role: data.role,
-      })
-    );
-  } catch (error) {
     alert.error({
       message: error.msg || "An unexpected error occurred",
       title: "Login failed",
@@ -201,11 +112,14 @@ export const cancelAppointment = (
   appointmentId,
   alert,
   role = "user",
-  appointmentStatus
+  appointmentStatus,
 ) => {
   return async (dispatch) => {
     try {
-      if (appointmentStatus === "canceled" || appointmentStatus === "completed") {
+      if (
+        appointmentStatus === "canceled" ||
+        appointmentStatus === "completed"
+      ) {
         alert.info({
           message: "This appointment can no longer be canceled.",
           title: "Cancellation Not Allowed",
@@ -221,7 +135,7 @@ export const cancelAppointment = (
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -236,7 +150,7 @@ export const cancelAppointment = (
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       const appointmentData = await canceledAppointment.json();
       if (role == "user") {

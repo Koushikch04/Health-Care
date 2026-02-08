@@ -10,7 +10,6 @@ import scheduleJobs from "./cron/cronJobs.js";
 import Appointment from "./models/Appointment.js";
 import Speciality from "./models/Specialty.js";
 import Review from "./models/Review.js";
-import Doctor from "./models/Doctor.js";
 
 // import session from "express-session";
 // import MongoDBStore from "connect-mongodb-session";

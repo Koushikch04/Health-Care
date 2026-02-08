@@ -1,8 +1,19 @@
 import Review from "../models/Review.js";
 import Appointment from "../models/Appointment.js";
-import Doctor from "../models/Doctor.js";
-import User from "../models/User.js";
+import DoctorProfile from "../models/DoctorProfile.js";
+import UserProfile from "../models/UserProfile.js";
 import Specialty from "../models/Specialty.js";
+
+const getUserProfileId = async (req) => {
+  if (req.user?.profileId) return req.user.profileId;
+  if (req.user?.accountId) {
+    const profile = await UserProfile.findOne({
+      accountId: req.user.accountId,
+    });
+    return profile?._id;
+  }
+  return null;
+};
 
 const getReviewByAppointmentId = async (req, res) => {
   const { appointmentId } = req.params;
@@ -44,7 +55,8 @@ const createReview = async (req, res) => {
   }
 
   // Ensure the appointment belongs to the current user and is completed
-  if (appointment.user.toString() !== req.user.id) {
+  const userProfileId = await getUserProfileId(req);
+  if (appointment.user.toString() !== userProfileId?.toString()) {
     res
       .status(401)
       .json({ error: "You can only review your own appointments." });
@@ -71,7 +83,7 @@ const createReview = async (req, res) => {
   // Create the review
   const review = await Review.create({
     doctor: doctorId,
-    user: req.user.id,
+    user: userProfileId,
     appointment: appointmentId,
     rating,
     comment,
@@ -79,12 +91,12 @@ const createReview = async (req, res) => {
   appointment.reviewed = true;
 
   // Update doctor's average rating
-  const doctor = await Doctor.findById(doctorId);
+  const doctor = await DoctorProfile.findById(doctorId);
   if (doctor) {
     const reviews = await Review.find({ doctor: doctorId });
-    const averageRating =
-      reviews.reduce((acc, item) => acc + item.rating, 0) / reviews.length;
-    doctor.rating = averageRating;
+    const total = reviews.reduce((acc, item) => acc + item.rating, 0);
+    const averageRating = reviews.length ? total / reviews.length : 0;
+    doctor.rating = { average: averageRating, count: reviews.length };
     await doctor.save();
     await appointment.save();
   }
@@ -103,11 +115,16 @@ const getReviewsByDoctor = async (req, res) => {
   }
 
   try {
-    const reviews = await Review.find({})
-      .populate("user", "name")
+    const reviews = await Review.find({ doctor: doctorId })
+      .populate({
+        path: "user",
+        select: "name",
+      })
       .sort({ createdAt: -1 });
+    console.log(reviews);
     res.json(reviews);
   } catch (error) {
+    console.error("Error fetching reviews:", error);
     res.status(500).json({ error: "Failed to retrieve reviews" });
   }
 };
@@ -115,7 +132,8 @@ const getReviewsByDoctor = async (req, res) => {
 const getReviewsByUser = async (req, res) => {
   const { userId } = req.params;
 
-  if (req.user.id.toString() !== userId.toString()) {
+  const userProfileId = await getUserProfileId(req);
+  if (userProfileId?.toString() !== userId.toString()) {
     res.status(401);
     throw new Error("Not authorized to view these reviews.");
   }
