@@ -1,45 +1,20 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-
-import Appointment from "../models/Appointment.js";
-import Doctor from "../models/Doctor.js";
-import Specialty from "../models/Specialty.js";
 import mongoose from "mongoose";
 
-//doctor login
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    let person;
-
-    person = await Doctor.findOne({ email });
-    if (!person) return res.status(400).json({ msg: "User does not exist" });
-    const matched = bcrypt.compareSync(password, person.password);
-    if (!matched) return res.status(401).json({ msg: "Invalid Credentials" });
-    person.password = "";
-    const token = jwt.sign({ id: person._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    person.role = "doctor";
-
-    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
-
-    return res.status(200).json({
-      token,
-      person,
-      role: "doctor",
-      expiresAt,
-    });
-  } catch (err) {
-    console.log("login error:", err);
-  }
-};
+import Appointment from "../models/Appointment.js";
+import Account from "../models/Account.js";
+import DoctorProfile from "../models/DoctorProfile.js";
+import Specialty from "../models/Specialty.js";
 
 //Get all doctors
 export const getDoctors = async (req, res) => {
   try {
-    const doctors = await Doctor.find().populate("specialty");
-    res.status(200).json(doctors);
+    const doctors = await DoctorProfile.find().populate("specialty");
+    const response = doctors.map((doctor) => ({
+      ...doctor.toObject(),
+      rating: doctor.rating?.average ?? 0,
+    }));
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ message: "Error retrieving doctors", error });
   }
@@ -55,10 +30,16 @@ export const getDoctorsBySpecialty = async (req, res) => {
       return res.status(404).json({ message: "Specialty not found" });
     }
 
-    const doctors = await Doctor.find({ specialty: specialtyId }).populate(
+    const doctors = await DoctorProfile.find({
+      specialty: specialtyId,
+    }).populate(
       "specialty"
     );
-    res.status(200).json(doctors);
+    const response = doctors.map((doctor) => ({
+      ...doctor.toObject(),
+      rating: doctor.rating?.average ?? 0,
+    }));
+    res.status(200).json(response);
   } catch (error) {
     res
       .status(500)
@@ -88,22 +69,33 @@ export const createDoctor = async (req, res) => {
   try {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const newDoctor = new Doctor({
+    const existingAccount = await Account.findOne({
+      email: email.toLowerCase(),
+    });
+    if (existingAccount) {
+      return res
+        .status(400)
+        .json({ message: "Doctor with this email already exists." });
+    }
+    const account = await Account.create({
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      roles: ["doctor"],
+    });
+
+    const newDoctor = new DoctorProfile({
+      accountId: account._id,
       name: { firstName, lastName },
       gender,
-      email,
-      password: hashedPassword,
       phone: Number(phone),
       experience: Number(experience),
-      rating: 0,
-      profile,
+      biography: profile,
       cost: Number(cost),
       specialty: new mongoose.Types.ObjectId(specialty),
       image,
     });
 
     const savedDoctor = await newDoctor.save();
-    console.log(savedDoctor);
 
     res.status(201).json(savedDoctor);
   } catch (error) {
@@ -117,7 +109,7 @@ export const getDoctorAppointments = async (req, res) => {
   const { date } = req.query;
 
   try {
-    const query = { doctor: req.user.id };
+    const query = { doctor: req.user.profileId };
 
     if (date) {
       query.date = new Date(date);
@@ -148,11 +140,16 @@ export const updateDoctor = async (req, res) => {
   };
 
   try {
-    const updatedDoctor = await Doctor.findByIdAndUpdate(id, toUpdate, {
+    const updatedDoctor = await DoctorProfile.findByIdAndUpdate(id, toUpdate, {
       new: true,
     });
     if (!updatedDoctor) {
       return res.status(404).json({ message: "Doctor not found" });
+    }
+    if (email) {
+      await Account.findByIdAndUpdate(updatedDoctor.accountId, {
+        email: email.toLowerCase(),
+      });
     }
     res.status(200).json(updatedDoctor);
   } catch (error) {
@@ -167,10 +164,11 @@ export const deleteDoctor = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedDoctor = await Doctor.findByIdAndDelete(id);
+    const deletedDoctor = await DoctorProfile.findByIdAndDelete(id);
     if (!deletedDoctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
+    await Account.findByIdAndDelete(deletedDoctor.accountId);
     res.status(200).json({ message: "Doctor deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting doctor", error });
@@ -188,7 +186,7 @@ export const getDoctorAppointmentStatistics = async (req, res) => {
   }
 
   try {
-    const doctor = await Doctor.findById(doctorId);
+    const doctor = await DoctorProfile.findById(doctorId);
 
     if (!doctor) {
       return res.status(404).json({

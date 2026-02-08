@@ -5,6 +5,16 @@ import { useSelector } from "react-redux";
 import routes from "./routes";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 
+const isAdminRole = (role) => role === "admin" || role === "superadmin";
+
+const roleMatches = (requiredRole, userRole) => {
+  if (!requiredRole) return true;
+  if (requiredRole === "admin") {
+    return isAdminRole(userRole);
+  }
+  return requiredRole === userRole;
+};
+
 function MainRoutes() {
   const { userLoggedIn, userRole: role } = useSelector((state) => state.auth);
 
@@ -35,7 +45,7 @@ function MainRoutes() {
           );
         }
 
-        if (role === "admin" && route.path !== "/profile") {
+        if (isAdminRole(role) && route.path !== "/profile") {
           return (
             <Route
               key={index}
@@ -45,7 +55,7 @@ function MainRoutes() {
           );
         }
 
-        if (route.role && role && route.role !== role) {
+        if (route.role && role && !roleMatches(route.role, role)) {
           return (
             <Route
               key={index}
@@ -71,7 +81,7 @@ function MainRoutes() {
           <Route key={index} path={route.path} element={element}>
             {route.children &&
               route.children.map((child, childIndex) => {
-                if (child.role && child.role !== role) {
+                if (child.role && !roleMatches(child.role, role)) {
                   return (
                     <Route
                       key={childIndex}

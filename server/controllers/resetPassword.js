@@ -5,14 +5,14 @@ import dotenv from "dotenv";
 
 import sendMail from "../middleware/sendMail.js";
 
-import User from "../models/User.js";
+import Account from "../models/Account.js";
 import Otp from "../models/Otp.js";
 
 export const validateAndOtpSender = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email: email });
-    if (!user)
+    const account = await Account.findOne({ email: email.toLowerCase() });
+    if (!account)
       return res.status(401).json({
         title: "Failed",
         message: "UserId does not exist!",
@@ -118,8 +118,8 @@ export const changePassword = async (req, res) => {
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(newPassword, salt);
 
-    const user = await User.findOneAndUpdate(
-      { email: email },
+    const user = await Account.findOneAndUpdate(
+      { email: email.toLowerCase() },
       { password: passwordHash },
       { new: true }
     );
@@ -155,15 +155,15 @@ export const resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt();
     const newPasswordHash = await bcrypt.hash(newPassword, salt);
     let matched = false;
-    person = await User.findOne({ email: email });
+    person = await Account.findOne({ email: email.toLowerCase() });
     console.log(person, email);
     if (bcrypt.compareSync(oldPassword, person.password)) {
       matched = true;
-      person = await User.findOneAndUpdate(
-        { email },
+      person = await Account.findOneAndUpdate(
+        { email: email.toLowerCase() },
         { password: newPasswordHash }
       );
-      console.log(await User.find({ email: email }), newPasswordHash);
+      console.log(await Account.find({ email: email.toLowerCase() }), newPasswordHash);
     }
     if (!matched) {
       return res.status(404).json({

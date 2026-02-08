@@ -1,5 +1,5 @@
 import Specialty from "../models/Specialty.js";
-import Doctor from "../models/Doctor.js";
+import DoctorProfile from "../models/DoctorProfile.js";
 export const getAllSpecialties = async (req, res) => {
   try {
     const specialties = await Specialty.find();
@@ -15,7 +15,7 @@ export const getSpecialityDetails = async (req, res) => {
     const specialties = await Specialty.find();
 
     // Fetch all doctors
-    const doctors = await Doctor.find();
+    const doctors = await DoctorProfile.find();
 
     // Map doctors to their specialties
     const specialtiesWithDoctors = specialties.map((specialty) => {
@@ -31,7 +31,7 @@ export const getSpecialityDetails = async (req, res) => {
           id: doctor._id,
           name: doctor.name,
           experience: doctor.experience,
-          rating: doctor.rating,
+          rating: doctor.rating?.average ?? 0,
           image: doctor.image || "/Images/Appointment/DoctorCard/doctor.png",
           cost: doctor.cost,
           profile: doctor.profile,

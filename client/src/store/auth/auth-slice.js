@@ -18,6 +18,7 @@ const authSlice = createSlice({
       state.userLoggedIn = true;
       state.userInfo = action.payload.person;
       state.userToken = action.payload.token;
+      console.log(action.payload.person);
       state.expirationTime = action.payload.expiresAt;
       state.userRole = action.payload.role;
 

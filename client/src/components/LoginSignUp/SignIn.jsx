@@ -4,11 +4,7 @@ import { useDispatch } from "react-redux";
 import FormPage from "./FormPage";
 import CircularSpinner from "../Spinners/CircularSpinner.jsx";
 import useInput from "../../hooks/useInput";
-import {
-  loginAsAdmin,
-  loginUser,
-  loginUserAsDoctor,
-} from "../../store/auth/auth-actions";
+import { loginAccount } from "../../store/auth/auth-actions";
 import useAlert from "../../hooks/useAlert";
 
 import styles from "./styles/SignUp.module.css";
@@ -45,15 +41,7 @@ const SignIn = () => {
 
     setLoading(true);
     try {
-      if (email === "superadmin@healthcare.com") {
-        await dispatch(loginAsAdmin({ email, password }, alert));
-      } else if (email.endsWith("@healthcare.com")) {
-        console.log("doctor");
-        await dispatch(loginUserAsDoctor({ email, password }, alert));
-      } else {
-        console.log("user");
-        await dispatch(loginUser({ email, password }, alert));
-      }
+      await dispatch(loginAccount({ email, password }, alert));
     } catch (error) {
       console.error("Error during login:", error);
     } finally {
