@@ -11,11 +11,24 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const { alert } = useAlert();
+  const canCancel =
+    appointment.status !== "canceled" && appointment.status !== "completed";
 
   const handleCancel = async () => {
+    if (!canCancel) {
+      alert.info({
+        message: "This appointment can no longer be canceled.",
+        title: "Cancellation Not Allowed",
+      });
+      onClose();
+      return;
+    }
+
     setLoading(true);
     try {
-      const success = await dispatch(cancelAppointment(appointment._id, alert));
+      const success = await dispatch(
+        cancelAppointment(appointment._id, alert, "user", appointment.status)
+      );
       if (success) {
         onCancel(appointment._id);
       }
@@ -58,7 +71,7 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
         <button
           className={styles.cancelButton}
           onClick={handleCancel}
-          disabled={loading}
+          disabled={loading || !canCancel}
         >
           {loading ? <CircularSpinner /> : "Cancel Appointment"}
         </button>
