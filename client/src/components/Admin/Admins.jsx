@@ -5,59 +5,56 @@ import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx";
 import styles from "./Admins.module.css";
 
+const INITIAL_ADMIN = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+  permissions: {
+    adminManagement: false,
+    userManagement: false,
+    appointmentManagement: false,
+    doctorManagement: false,
+    analytics: false,
+  },
+};
+
 function Admins() {
   const { userToken: token } = useSelector((state) => state.auth);
+
   const [admins, setAdmins] = useState([]);
   const [filteredAdmins, setFilteredAdmins] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [createEditModal, setCreateEditModal] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState(null);
+
+  const [searchName, setSearchName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 5;
+
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Filter states
-  const [searchName, setSearchName] = useState("");
-  const [status, setStatus] = useState("All");
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [formAdmin, setFormAdmin] = useState(INITIAL_ADMIN);
 
-  const initialAdmin = {
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    permissions: {
-      adminManagement: false,
-      userManagement: false,
-      appointmentManagement: false,
-      doctorManagement: false,
-      analytics: false,
-    },
-  };
-  const [newAdmin, setNewAdmin] = useState(initialAdmin);
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [postsPerPage] = useState(5);
-
-  // Fetch admins
+  /* ================= FETCH ================= */
   const fetchAdmins = async () => {
     setLoading(true);
+    setError(null);
+
     try {
-      const response = await fetch(`${baseURL}/admin/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch(`${baseURL}/admin/`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch admins");
+      if (!res.ok) throw new Error("Failed to fetch admins");
 
-      const data = await response.json();
-      console.log(data);
-
+      const data = await res.json();
       setAdmins(data.admins);
       setFilteredAdmins(data.admins);
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -67,106 +64,136 @@ function Admins() {
     fetchAdmins();
   }, [token]);
 
-  // Filter admins
-  const handleFilterChange = () => {
-    const filtered = admins.filter((admin) => {
-      const matchesName = `${admin.firstName} ${admin.lastName}`
+  /* ================= FILTER ================= */
+  const applyFilters = () => {
+    const filtered = admins.filter((admin) =>
+      `${admin.firstName} ${admin.lastName}`
         .toLowerCase()
-        .includes(searchName.toLowerCase());
-      return matchesName;
-    });
+        .includes(searchName.toLowerCase()),
+    );
+
     setFilteredAdmins(filtered);
     setCurrentPage(1);
   };
 
-  const handleAdminClick = (admin) => {
+  /* ================= PAGINATION ================= */
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentAdmins = filteredAdmins.slice(indexOfFirstPost, indexOfLastPost);
+
+  /* ================= MODALS ================= */
+  const openViewModal = (admin) => {
     setSelectedAdmin(admin);
-    setIsModalOpen(true);
+    setIsViewModalOpen(true);
   };
 
-  // Handle opening modal for add/edit
-  const handleOpenModal = (admin = null) => {
+  const openCreateModal = () => {
+    setError(null);
+    setIsEditMode(false);
+    setFormAdmin(INITIAL_ADMIN);
+    setIsFormModalOpen(true);
+  };
+
+  const openEditModal = (admin) => {
+    setError(null);
+    setIsEditMode(true);
     setSelectedAdmin(admin);
-    if (admin) {
-      setNewAdmin({
-        ...initialAdmin,
-        firstName: admin.name.firstName,
-        lastName: admin.name.lastName,
-        email: admin.email,
-        phone: admin.phone,
-        permissions: {
-          ...initialAdmin.permissions,
-          userManagement: admin.permissions.userManagement,
-          doctorManagement: admin.permissions.doctorManagement,
-          appointmentManagement: admin.permissions.appointmentManagement,
-          analytics: admin.permissions.analytics,
-          adminManagement: admin.permissions.adminManagement,
-        },
-      });
-      setIsEditMode(true);
-    } else {
-      setNewAdmin(initialAdmin);
-      setIsEditMode(false);
+
+    setFormAdmin({
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      email: admin.email,
+      password: "",
+      permissions: { ...admin.permissions },
+    });
+
+    setIsFormModalOpen(true);
+  };
+
+  /* ================= FORM ================= */
+  const handlePermissionChange = (e) => {
+    const { name, checked } = e.target;
+    setFormAdmin((prev) => ({
+      ...prev,
+      permissions: {
+        ...prev.permissions,
+        [name]: checked,
+      },
+    }));
+  };
+
+  const validateForm = () => {
+    if (!formAdmin.firstName.trim()) return "First name is required";
+    if (!formAdmin.lastName.trim()) return "Last name is required";
+    if (!formAdmin.email.trim()) return "Email is required";
+
+    if (!isEditMode && !formAdmin.password.trim()) {
+      return "Password is required for new admins";
     }
-    setCreateEditModal(true);
+
+    return null;
   };
 
   const handleSaveAdmin = async () => {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     const url = isEditMode
       ? `${baseURL}/admin/${selectedAdmin._id}/permissions`
       : `${baseURL}/admin/create`;
+
     const method = isEditMode ? "PUT" : "POST";
-    const payload = newAdmin;
-    delete payload.password;
+
+    const payload = isEditMode
+      ? { permissions: formAdmin.permissions }
+      : formAdmin;
 
     try {
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newAdmin),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to save admin");
-      console.log(newAdmin);
+      if (!res.ok) throw new Error("Failed to save admin");
 
       await fetchAdmins();
-      setCreateEditModal(false);
-    } catch (error) {
-      setError(error.message);
+      setIsFormModalOpen(false);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
-  const handlePermissionChange = (e) => {
-    const { name, checked } = e.target;
-    setNewAdmin((prevState) => ({
-      ...prevState,
-      permissions: {
-        ...prevState.permissions,
-        [name]: checked,
-      },
-    }));
-  };
-  // Delete admin
-  const handleDeleteAdmin = async (adminId) => {
+  /* ================= DELETE ================= */
+  const handleDeleteAdmin = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this admin? This action cannot be undone.",
+    );
+
+    if (!confirmed) return;
+
     try {
-      const response = await fetch(`${baseURL}/admin/delete/${adminId}`, {
+      const res = await fetch(`${baseURL}/admin/delete/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error("Failed to delete admin");
+      if (!res.ok) throw new Error("Failed to delete admin");
 
       await fetchAdmins();
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
+  /* ================= RENDER ================= */
   return (
     <div className={styles.AdminsContainer}>
       <h2 className={styles.title}>Admin Management</h2>
@@ -178,199 +205,158 @@ function Admins() {
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
         />
-        <button onClick={handleFilterChange}>Apply Filters</button>
-        <button onClick={() => handleOpenModal()}>+ Add New Admin</button>
+        <button onClick={applyFilters}>Apply Filters</button>
+        <button onClick={openCreateModal}>+ Add New Admin</button>
       </div>
 
       {loading && <p className={styles.loading}>Loading Admins...</p>}
+      {error && <p className={styles.error}>{error}</p>}
+
       {!loading && !error && (
-        <div>
+        <>
           <div className={styles.admins}>
-            {filteredAdmins.length > 0 ? (
-              filteredAdmins.map((admin) => (
-                <div key={admin._id} className={styles.adminCard}>
-                  <div className={styles.adminInfo}>
-                    <p className={styles.name}>
-                      {admin.firstName} {admin.lastName}
-                    </p>
-                    <p className={styles.email}>{admin.email}</p>
-                  </div>
-                  <div className={styles.adminActions}>
-                    <button
-                      onClick={() => handleAdminClick(admin)}
-                      className={styles.viewDetailsButton}
-                    >
-                      View Details
-                    </button>
-                    <button onClick={() => handleOpenModal(admin)}>Edit</button>
-                    <button onClick={() => handleDeleteAdmin(admin._id)}>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
+            {currentAdmins.length === 0 && (
               <p className={styles.noAdmins}>No Admins found.</p>
             )}
+
+            {currentAdmins.map((admin) => (
+              <div key={admin._id} className={styles.adminCard}>
+                <div className={styles.adminInfo}>
+                  <p className={styles.name}>
+                    {admin.firstName} {admin.lastName}
+                  </p>
+                  <p className={styles.email}>{admin.email}</p>
+                </div>
+
+                <div className={styles.adminActions}>
+                  <button onClick={() => openViewModal(admin)}>
+                    View Details
+                  </button>
+                  <button onClick={() => openEditModal(admin)}>Edit</button>
+                  <button onClick={() => handleDeleteAdmin(admin._id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
+
           <Pagination
             totalPosts={filteredAdmins.length}
             postsPerPage={postsPerPage}
-            setCurrentPage={setCurrentPage}
             currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
           />
-        </div>
+        </>
       )}
 
-      {isModalOpen && selectedAdmin && (
-        <Modal onClose={() => setIsModalOpen(false)}>
+      {/* VIEW MODAL */}
+      {isViewModalOpen && selectedAdmin && (
+        <Modal onClose={() => setIsViewModalOpen(false)}>
           <div className={styles.modalContent}>
             <h2 className={styles.heading}>
-              {selectedAdmin.name.firstName} {selectedAdmin.name.lastName}
+              {selectedAdmin.firstName} {selectedAdmin.lastName}
             </h2>
-            <div>
-              <table>
-                <tbody>
-                  <tr>
-                    <th>Email</th>
-                    <td>{selectedAdmin.email}</td>
-                  </tr>
-                  <tr className={styles.heading}>
-                    <td>Permissions</td>
-                  </tr>
-                  <tr>
-                    <th>User Management</th>
-                    <td>
-                      {selectedAdmin.permissions.userManagement
-                        ? "true"
-                        : "false"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>Doctor Management</th>
-                    <td>
-                      {selectedAdmin.permissions.doctorManagement
-                        ? "true"
-                        : "false"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>Appointment Management</th>
-                    <td>
-                      {selectedAdmin.permissions.appointmentManagement
-                        ? "true"
-                        : "false"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>Analytics Management</th>
-                    <td>
-                      {selectedAdmin.permissions.analytics ? "true" : "false"}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+
+            <table>
+              <tbody>
+                <tr>
+                  <th>Email</th>
+                  <td>{selectedAdmin.email}</td>
+                </tr>
+
+                <tr className={styles.heading}>
+                  <td>Permissions</td>
+                </tr>
+
+                {Object.entries(selectedAdmin.permissions).map(
+                  ([key, value]) => (
+                    <tr key={key}>
+                      <th>{key}</th>
+                      <td>{value ? "true" : "false"}</td>
+                    </tr>
+                  ),
+                )}
+              </tbody>
+            </table>
           </div>
         </Modal>
       )}
 
-      {/* Modal for add/edit admin */}
-      {createEditModal && (
-        <Modal onClose={() => setCreateEditModal(false)}>
+      {/* CREATE / EDIT MODAL */}
+      {isFormModalOpen && (
+        <Modal onClose={() => setIsFormModalOpen(false)}>
           <h2>{isEditMode ? "Edit Admin" : "Add New Admin"}</h2>
+
           <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
             <div className={styles.formGroup}>
-              <label htmlFor="firstName">FirstName</label>
+              <label>First Name</label>
               <input
-                type="text"
-                id="firstName"
-                placeholder="First Name"
-                value={newAdmin.firstName}
+                value={formAdmin.firstName}
                 onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, firstName: e.target.value })
+                  setFormAdmin({ ...formAdmin, firstName: e.target.value })
                 }
               />
             </div>
+
             <div className={styles.formGroup}>
+              <label>Last Name</label>
               <input
-                type="text"
-                placeholder="Last Name"
-                value={newAdmin.lastName}
+                value={formAdmin.lastName}
                 onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, lastName: e.target.value })
+                  setFormAdmin({ ...formAdmin, lastName: e.target.value })
                 }
               />
             </div>
+
             <div className={styles.formGroup}>
+              <label>Email</label>
               <input
                 type="email"
-                placeholder="Email"
-                value={newAdmin.email}
+                value={formAdmin.email}
                 onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, email: e.target.value })
+                  setFormAdmin({ ...formAdmin, email: e.target.value })
                 }
               />
             </div>
+
             {!isEditMode && (
               <div className={styles.formGroup}>
-                <label htmlFor="password">Password</label>
+                <label>Password</label>
                 <input
-                  id="password"
-                  value={newAdmin.password}
+                  type="password"
+                  value={formAdmin.password}
                   onChange={(e) =>
-                    setNewAdmin({ ...newAdmin, password: e.target.value })
+                    setFormAdmin({
+                      ...formAdmin,
+                      password: e.target.value,
+                    })
                   }
                 />
               </div>
             )}
+
             <h3>Permissions</h3>
             <div className={styles.formGroup}>
-              <label>
-                <input
-                  type="checkbox"
-                  name="userManagement"
-                  checked={newAdmin.permissions.userManagement}
-                  onChange={handlePermissionChange}
-                />
-                User Management
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="doctorManagement"
-                  checked={newAdmin.permissions.doctorManagement}
-                  onChange={handlePermissionChange}
-                />
-                Doctor Management
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="appointmentManagement"
-                  checked={newAdmin.permissions.appointmentManagement}
-                  onChange={handlePermissionChange}
-                />
-                Appointment Management
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="analytics"
-                  checked={newAdmin.permissions.analytics}
-                  onChange={handlePermissionChange}
-                />
-                Analytics
-              </label>
+              {Object.keys(formAdmin.permissions).map((perm) => (
+                <label key={perm}>
+                  <input
+                    type="checkbox"
+                    name={perm}
+                    checked={formAdmin.permissions[perm]}
+                    onChange={handlePermissionChange}
+                  />
+                  {perm}
+                </label>
+              ))}
             </div>
+
             <button type="button" onClick={handleSaveAdmin}>
               {isEditMode ? "Update Admin" : "Add Admin"}
             </button>
           </form>
         </Modal>
       )}
-
-      {error && <p className={styles.error}>{error}</p>}
     </div>
   );
 }
