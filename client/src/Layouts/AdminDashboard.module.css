@@ -46,6 +46,19 @@
   gap: 1rem;
 }
 
+.notice {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  padding: 12px 16px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+}
+
 @media screen and (max-width: 1200px) {
   .MainDash {
     justify-content: flex-start;

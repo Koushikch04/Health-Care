@@ -12,14 +12,19 @@ function Profile() {
   const userInfo = useSelector((state) => state.auth.userInfo);
   const name = userInfo?.name;
   const profileImage = userInfo?.profileImage;
+  const userInfo = useSelector((state) => state.auth.userInfo);
+  const name = userInfo?.name;
+  const profileImage = userInfo?.profileImage;
 
   const { alert } = useAlert();
+  const navigate = useNavigate();
+  const logoutInProgressRef = useRef(false);
   const navigate = useNavigate();
   const logoutInProgressRef = useRef(false);
 
   const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
   const [uploadedImage, setUploadedImage] = useState(
-    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png"
+    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png",
   );
 
   const menuRef = useRef(null);
@@ -36,6 +41,7 @@ function Profile() {
     logoutInProgressRef.current = true;
 
     dispatch(logoutUser(alert));
+    navigate("/", { replace: true });
     navigate("/", { replace: true });
   };
 
@@ -95,7 +101,7 @@ function Profile() {
                   <p>{item.label}</p>
                   <span>{">"}</span>
                 </Link>
-              )
+              ),
             )}
           </div>
         </div>

@@ -13,6 +13,8 @@ const AdminDashboard = () => {
   const [topDoctors, setTopDoctors] = useState([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [loadingTopDoctors, setLoadingTopDoctors] = useState(false);
+  const [appointmentsError, setAppointmentsError] = useState(null);
+  const [doctorsError, setDoctorsError] = useState(null);
 
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
   const adminId = userInfo?._id;
@@ -25,13 +27,43 @@ const AdminDashboard = () => {
   const options = { year: "numeric", month: "long", day: "numeric" };
   const formattedDate = today.toLocaleDateString(undefined, options);
 
+  const getPermissionValue = (permissions, key) => {
+    if (!permissions) return false;
+    if (permissions instanceof Map) return Boolean(permissions.get(key));
+    if (Array.isArray(permissions)) {
+      const entry = permissions.find(
+        (perm) => perm?.[0] === key || perm?.key === key,
+      );
+      return Boolean(entry?.[1] ?? entry?.value);
+    }
+    return Boolean(permissions[key]);
+  };
+
+  const canManageAppointments = getPermissionValue(
+    userInfo?.permissions,
+    "appointmentManagement",
+  );
+  const canManageDoctors = getPermissionValue(
+    userInfo?.permissions,
+    "doctorManagement",
+  );
+
   useEffect(() => {
     const fetchData = async () => {
-      console.log("set here");
+      if (!token || !canManageAppointments) {
+        setAppointments([]);
+        setAppointmentsError(
+          canManageAppointments
+            ? null
+            : "You do not have permission to view appointments.",
+        );
+        setLoadingAppointments(false);
+        return;
+      }
 
+      setAppointmentsError(null);
       setLoadingAppointments(true);
       try {
-        const today = new Date();
         const response = await fetch(`${baseURL}/admin/appointments`, {
           method: "GET",
           headers: {
@@ -40,17 +72,35 @@ const AdminDashboard = () => {
           },
         });
         const result = await response.json();
-        console.log("Appointments data:", result);
+        if (!response.ok) {
+          setAppointmentsError(
+            result?.message || "Failed to load appointments.",
+          );
+          setAppointments([]);
+          return;
+        }
+
         setAppointments(result);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setAppointmentsError("Failed to load appointments.");
       } finally {
-        console.log("removed here");
-
         setLoadingAppointments(false);
       }
     };
     const fetchTopPerformingDoctors = async () => {
+      if (!token || !canManageDoctors) {
+        setTopDoctors([]);
+        setDoctorsError(
+          canManageDoctors
+            ? null
+            : "You do not have permission to view doctors.",
+        );
+        setLoadingTopDoctors(false);
+        return;
+      }
+
+      setDoctorsError(null);
       setLoadingTopDoctors(true);
       try {
         const response = await fetch(`${baseURL}/admin/top-doctors`, {
@@ -61,6 +111,11 @@ const AdminDashboard = () => {
           },
         });
         const result = await response.json();
+        if (!response.ok) {
+          setDoctorsError(result?.message || "Failed to load doctors.");
+          setTopDoctors([]);
+          return;
+        }
 
         const finalResult = result.map((doctorData) => ({
           "Doctor Name": `${doctorData.name.firstName} ${doctorData.name.lastName}`,
@@ -68,11 +123,11 @@ const AdminDashboard = () => {
           Rating: doctorData.rating,
           "Recent Appointments": doctorData.recentAppointmentsCount,
         }));
-        console.log(finalResult);
 
         setTopDoctors(finalResult);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setDoctorsError("Failed to load doctors.");
       } finally {
         setLoadingTopDoctors(false);
       }
@@ -80,7 +135,7 @@ const AdminDashboard = () => {
 
     fetchData();
     fetchTopPerformingDoctors();
-  }, [adminId, token]);
+  }, [adminId, token, canManageAppointments, canManageDoctors]);
 
   const currentDate = new Date();
 
@@ -115,23 +170,36 @@ const AdminDashboard = () => {
       {/* <Cards /> */}
       <div className={styles.tables1}></div>
       <div className={styles.tables1}>
-        <DynamicTable
-          title="Top Performing Doctors"
-          headers={[
-            "Doctor Name",
-            "Specialty",
-            "Rating",
-            "Recent Appointments",
-          ]}
-          rows={topDoctors}
-          loading={loadingAppointments}
-        />
-        <DynamicTable
-          title="Recent Appointments"
-          headers={["patientName", "date", "time", "reasonForVisit", "status"]}
-          rows={recentAppointments}
-          loading={loadingTopDoctors}
-        />
+        {canManageDoctors ? (
+          <DynamicTable
+            title="Top Performing Doctors"
+            headers={[
+              "Doctor Name",
+              "Specialty",
+              "Rating",
+              "Recent Appointments",
+            ]}
+            rows={topDoctors}
+            loading={loadingTopDoctors}
+          />
+        ) : (
+          <div className={styles.notice}>
+            {doctorsError || "You do not have permission to view doctors."}
+          </div>
+        )}
+        {canManageAppointments ? (
+          <DynamicTable
+            title="Recent Appointments"
+            headers={["patientName", "date", "time", "reasonForVisit", "status"]}
+            rows={recentAppointments}
+            loading={loadingAppointments}
+          />
+        ) : (
+          <div className={styles.notice}>
+            {appointmentsError ||
+              "You do not have permission to view appointments."}
+          </div>
+        )}
       </div>
     </div>
   );

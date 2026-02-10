@@ -553,7 +553,7 @@ export const getTopPerformingDoctors = async (req, res) => {
 
 export const createAdmin = async (req, res) => {
   const { firstName, lastName, email, password, permissions } = req.body;
-
+  console.log(req.body);
   try {
     // Check if an admin with this email already exists
     const existingAccount = await Account.findOne({
@@ -586,6 +586,7 @@ export const createAdmin = async (req, res) => {
       .status(201)
       .json({ message: "Admin created successfully", admin: newAdmin });
   } catch (error) {
+    console.log(error);
     res
       .status(500)
       .json({ message: "Error creating admin", error: error.message });

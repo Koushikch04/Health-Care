@@ -1,109 +1,202 @@
-.AdminsContainer {
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  width: 80%;
-  height: 730px;
-  margin: 20px auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
+/* =========================
+   Container
+========================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
-.admins {
-  height: 500px;
+
+.AdminsContainer {
+  padding: 24px;
+  background: linear-gradient(180deg, #ffffff, #f6f8fb);
+  border-radius: 14px;
+  width: 85%;
+  max-width: 1200px;
+  margin: 24px auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  font-family: "Inter", Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   Header & Filters
+========================= */
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #222;
 }
 
 .filterSection {
   display: flex;
+  gap: 12px;
   align-items: center;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
 
-.filterSection label {
-  font-weight: bold;
-  margin-right: 10px;
+.filterSection input {
+  width: 220px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.filterSection button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--primary-color);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filterSection button:hover {
+  background-color: var(--primary-color-dark);
+}
+
+/* =========================
+   Admin List
+========================= */
+.admins {
   display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding-right: 6px;
+  max-height: 420px;
 }
 
-.filterSection input {
-  width: 150px;
-}
-
-.filterSection select,
-.filterSection input {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-right: 10px;
-}
-
+/* =========================
+   Admin Card
+========================= */
 .adminCard {
   display: flex;
   align-items: center;
-  padding: 15px;
-  margin-bottom: 15px;
+  padding: 16px 18px;
   background-color: #ffffff;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.adminCard img {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-right: 15px;
+.adminCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
 }
 
-.adminCard .adminInfo {
+.adminInfo {
   flex-grow: 1;
 }
 
-.adminCard .adminInfo p {
-  margin: 5px 0;
-  color: #333;
+.adminInfo .name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #222;
 }
 
-.adminCard .adminInfo .name {
-  font-weight: bold;
-  color: var(--primary-color);
-}
-
-.adminCard .adminInfo .email {
-  color: #555;
-}
-
-.adminCard .adminInfo .dob {
+.adminInfo .email {
   font-size: 14px;
-  color: #777;
+  color: #666;
 }
 
-.adminCard .adminActions {
+/* =========================
+   Admin Actions
+========================= */
+.adminActions {
   display: flex;
-  flex-direction: row;
-  /* justify-content: space-between; */
+  gap: 8px;
 }
 
-.adminCard .adminActions button {
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: var(--primary-color-dark);
+.adminActions button {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #f7f7f7;
+  font-size: 13px;
   cursor: pointer;
+}
+
+.adminActions button:hover {
+  background-color: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+
+/* =========================
+   Pagination
+========================= */
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================
+   Modal Content
+========================= */
+.modalContent {
+  padding: 24px;
+  background-color: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-height: 80vh;
+  scrollbar-gutter: stable;
+  overflow-y: auto;
 }
 
 .heading {
   text-align: center;
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+/* =========================
+   Modal Table
+========================= */
+.modalContent table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modalContent th,
+.modalContent td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.modalContent th {
+  background-color: #f7f9fc;
   font-weight: 600;
 }
 
-/* Form styling */
+/* =========================
+   Forms
+========================= */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+.modalContent {
+  overflow-x: hidden;
+}
+
+.form {
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .formGroup {
@@ -112,145 +205,53 @@
 }
 
 .formGroup label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.formGroup label {
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 8px;
-  display: flex;
-  flex-direction: column;
-  font-weight: 500;
-}
-
-.formGroup input,
-.formGroup select {
-  width: 100%;
-  padding: 6px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  outline: none;
-  transition: border-color 0.3s ease;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #444;
 }
 
 .formGroup input {
-  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
 }
 
-.formGroup input:focus,
-.formGroup select:focus {
-  border-color: #007bff;
+.formGroup input:focus {
+  border-color: var(--primary-color);
+  outline: none;
 }
 
-.formGroup select {
-  appearance: none;
-  background-color: #fff;
-}
-
-.formGroup input[type="date"] {
-  padding-left: 10px;
-}
-
-.button {
-  padding: 12px 20px;
-  background-color: #007bff;
-  color: white;
-  font-size: 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  align-self: center;
-  width: 100%;
-  font-weight: 600;
-}
-
-.modalContent button:hover {
-  background-color: #0056b3;
-}
-
-.formGroup:focus::placeholder,
-select:focus::placeholder {
-  color: #007bff;
-}
-
-.adminCard .adminActions button:hover {
+/* =========================
+   Buttons
+========================= */
+.button,
+.form button {
+  padding: 10px 16px;
   background-color: var(--primary-color);
-  transition: background-color 0.3s;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
+.form button:hover {
+  background-color: var(--primary-color-dark);
+}
+
+/* =========================
+   States
+========================= */
 .loading,
 .error,
-.noadmins {
+.noAdmins {
   text-align: center;
-  color: #666;
-  font-size: 16px;
+  font-size: 14px;
   padding: 10px;
 }
 
 .error {
   color: #d9534f;
-}
-
-.noadmins {
-  color: #888;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.pagination button {
-  padding: 8px 16px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin: 0 5px;
-  cursor: pointer;
-}
-
-.pagination button:hover {
-  background-color: #f0f0f0;
-  transition: background-color 0.3s;
-}
-
-.pagination button:disabled {
-  cursor: not-allowed;
-  background-color: #e0e0e0;
-}
-
-.modalContent {
-  padding: 20px;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.modalContent table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.modalContent table th,
-.modalContent table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.modalContent table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-.profileImage {
-  width: 150px;
-  height: 150px;
-  object-fit: cover;
-  margin-top: 15px;
 }

@@ -80,24 +80,28 @@ export const SidebarData = [
     heading: "Users",
     url: "/profile/admin/users",
     role: "admin",
+    permission: "userManagement",
   },
   {
     icon: UilClipboardAlt,
     heading: "Appointments",
     url: "/profile/admin/appointments",
     role: "admin",
+    permission: "appointmentManagement",
   },
   {
     icon: UilUsersAlt,
     heading: "Doctors",
     url: "/profile/admin/doctors",
     role: "admin",
+    permission: "doctorManagement",
   },
   {
     icon: UilUsersAlt,
     heading: "Admins",
     url: "/profile/admin/admins",
     role: "admin",
+    permission: "adminManagement",
   },
   // {
   //   icon: Settings,
