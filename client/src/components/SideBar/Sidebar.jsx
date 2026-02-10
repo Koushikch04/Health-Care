@@ -34,12 +34,16 @@ const Sidebar = () => {
     return Boolean(permissions[key]);
   };
 
-  const logoutHandler = () => {
+  const logoutHandler = async () => {
     if (logoutInProgressRef.current) return;
     logoutInProgressRef.current = true;
 
-    dispatch(logoutUser(alert));
-    navigate("/", { replace: true });
+    try {
+      await dispatch(logoutUser(alert));
+      navigate("/", { replace: true });
+    } finally {
+      logoutInProgressRef.current = false;
+    }
   };
 
   const sidebarVariants = {

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 import FormPage from "./FormPage";
@@ -14,6 +15,7 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const { alert } = useAlert();
+  const navigate = useNavigate();
 
   const {
     value: email,
@@ -41,7 +43,10 @@ const SignIn = () => {
 
     setLoading(true);
     try {
-      await dispatch(loginAccount({ email, password }, alert));
+      const success = await dispatch(loginAccount({ email, password }, alert));
+      if (success) {
+        navigate("/", { replace: true });
+      }
     } catch (error) {
       console.error("Error during login:", error);
     } finally {
