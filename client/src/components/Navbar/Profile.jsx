@@ -12,13 +12,8 @@ function Profile() {
   const userInfo = useSelector((state) => state.auth.userInfo);
   const name = userInfo?.name;
   const profileImage = userInfo?.profileImage;
-  const userInfo = useSelector((state) => state.auth.userInfo);
-  const name = userInfo?.name;
-  const profileImage = userInfo?.profileImage;
 
   const { alert } = useAlert();
-  const navigate = useNavigate();
-  const logoutInProgressRef = useRef(false);
   const navigate = useNavigate();
   const logoutInProgressRef = useRef(false);
 
