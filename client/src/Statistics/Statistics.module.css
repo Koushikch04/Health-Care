@@ -35,6 +35,19 @@
   flex-direction: column;
 }
 
+.notice {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 120px;
+  width: 100%;
+  padding: 12px 16px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+}
+
 @media screen and (max-width: 1200px) {
   .statistics {
     flex-direction: column;

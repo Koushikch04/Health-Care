@@ -13,8 +13,10 @@ import AdminChart from "../Charts/AdminChart.jsx";
 import StatisticsSpinner from "../components/Spinners/StatisticsSpinner.jsx";
 
 const transformDataToCards = (responseData) => {
-  const { userCount, doctorCount, appointmentCount, revenue } =
-    responseData.data;
+  const data = responseData?.data;
+  if (!data) return [];
+
+  const { userCount, doctorCount, appointmentCount, revenue } = data;
 
   const expectedMaxRevenue = 12400;
 
@@ -65,14 +67,36 @@ const transformDataToCards = (responseData) => {
   return cardsData;
 };
 
+const getPermissionValue = (permissions, key) => {
+  if (!permissions) return false;
+  if (permissions instanceof Map) return Boolean(permissions.get(key));
+  if (Array.isArray(permissions)) {
+    const entry = permissions.find(
+      (perm) => perm?.[0] === key || perm?.key === key,
+    );
+    return Boolean(entry?.[1] ?? entry?.value);
+  }
+  return Boolean(permissions[key]);
+};
+
 const AdminStatistics = () => {
   const [cardsData, setCardsData] = useState([]);
   const [loading, setLoading] = useState(true); // Add loading state
+  const [error, setError] = useState(null);
   const { userInfo } = useSelector((state) => state.auth);
   const { userToken: token } = useSelector((state) => state.auth);
+  const canViewAnalytics = getPermissionValue(userInfo?.permissions, "analytics");
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!token) return;
+      if (!canViewAnalytics) {
+        setCardsData([]);
+        setError("You do not have permission to view analytics.");
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(`${baseURL}/admin/analytics`, {
           method: "GET",
@@ -82,20 +106,35 @@ const AdminStatistics = () => {
         });
 
         const statistics = await response.json();
+        if (!response.ok) {
+          setError(statistics?.message || "Failed to load analytics.");
+          setCardsData([]);
+          return;
+        }
+
         setCardsData(transformDataToCards(statistics));
       } catch (error) {
         console.error(error.message);
+        setError("Failed to load analytics.");
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [userInfo._id]);
+  }, [canViewAnalytics, token]);
 
   if (loading) {
     return (
       <div className={styles.spinnerContainer}>
         <StatisticsSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.notice}>
+        <p>{error}</p>
       </div>
     );
   }

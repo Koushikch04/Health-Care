@@ -2,6 +2,22 @@ import { createSlice } from "@reduxjs/toolkit";
 
 // const TOKEN_EXPIRATION_DURATION = 24184287;
 
+const normalizePermissions = (permissions) => {
+  if (!permissions) return permissions;
+  if (permissions instanceof Map) return Object.fromEntries(permissions);
+  if (Array.isArray(permissions)) {
+    if (permissions.length === 0) return {};
+    if (Array.isArray(permissions[0])) return Object.fromEntries(permissions);
+    return permissions.reduce((acc, item) => {
+      if (item?.key) acc[item.key] = item.value;
+      else if (item?.[0]) acc[item[0]] = item[1];
+      return acc;
+    }, {});
+  }
+  if (typeof permissions === "object") return { ...permissions };
+  return permissions;
+};
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -15,8 +31,15 @@ const authSlice = createSlice({
   },
   reducers: {
     login(state, action) {
+      const normalizedPermissions = normalizePermissions(
+        action.payload.person?.permissions,
+      );
+      const normalizedPerson = action.payload.person
+        ? { ...action.payload.person, permissions: normalizedPermissions }
+        : action.payload.person;
+
       state.userLoggedIn = true;
-      state.userInfo = action.payload.person;
+      state.userInfo = normalizedPerson;
       state.userToken = action.payload.token;
       console.log(action.payload.person);
       state.expirationTime = action.payload.expiresAt;
@@ -25,7 +48,7 @@ const authSlice = createSlice({
       localStorage.setItem("token", action.payload.token);
       localStorage.setItem("lastLoggedIn", Date.now());
       localStorage.setItem("expirationTime", action.payload.expiresAt);
-      localStorage.setItem("userInfo", JSON.stringify(action.payload.person));
+      localStorage.setItem("userInfo", JSON.stringify(normalizedPerson));
       localStorage.setItem("userRole", action.payload.role);
     },
     logout(state) {
@@ -89,7 +112,13 @@ const authSlice = createSlice({
         if (currentTime < expirationTimeInMillis) {
           state.userLoggedIn = true;
           state.userToken = token;
-          state.userInfo = JSON.parse(userInfo);
+          const parsedUserInfo = userInfo ? JSON.parse(userInfo) : null;
+          state.userInfo = parsedUserInfo
+            ? {
+                ...parsedUserInfo,
+                permissions: normalizePermissions(parsedUserInfo.permissions),
+              }
+            : null;
           state.userRole = userRole;
         } else {
           // Token expired, clean up

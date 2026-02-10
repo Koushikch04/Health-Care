@@ -18,9 +18,21 @@ const Sidebar = () => {
   const dispatch = useDispatch();
   const logoutInProgressRef = useRef(false);
 
-  const { userRole: role } = useSelector((state) => state.auth);
+  const { userRole: role, userInfo } = useSelector((state) => state.auth);
   const isAdminRole = role === "admin" || role === "superadmin";
   console.log(role);
+
+  const getPermissionValue = (permissions, key) => {
+    if (!permissions) return false;
+    if (permissions instanceof Map) return Boolean(permissions.get(key));
+    if (Array.isArray(permissions)) {
+      const entry = permissions.find(
+        (perm) => perm?.[0] === key || perm?.key === key,
+      );
+      return Boolean(entry?.[1] ?? entry?.value);
+    }
+    return Boolean(permissions[key]);
+  };
 
   const logoutHandler = () => {
     if (logoutInProgressRef.current) return;
@@ -62,12 +74,18 @@ const Sidebar = () => {
         </div>
 
         <div className={classes.menu}>
-          {SidebarData.filter(
-            (item) =>
+          {SidebarData.filter((item) => {
+            const roleAllowed =
               !item.role ||
               item.role === role ||
-              (item.role === "admin" && isAdminRole),
-          ).map((item, index) => (
+              (item.role === "admin" && isAdminRole);
+
+            if (!roleAllowed) return false;
+            if (item.role === "admin" && item.permission) {
+              return getPermissionValue(userInfo?.permissions, item.permission);
+            }
+            return true;
+          }).map((item, index) => (
             <div
               className={
                 selected === index

@@ -4,15 +4,40 @@ import { baseURL } from "../api/api";
 import { useSelector } from "react-redux";
 import styles from "./DoctorChart.module.css"; // Assuming you are using CSS modules
 
+const getPermissionValue = (permissions, key) => {
+  if (!permissions) return false;
+  if (permissions instanceof Map) return Boolean(permissions.get(key));
+  if (Array.isArray(permissions)) {
+    const entry = permissions.find(
+      (perm) => perm?.[0] === key || perm?.key === key
+    );
+    return Boolean(entry?.[1] ?? entry?.value);
+  }
+  return Boolean(permissions[key]);
+};
+
 const AdminChart = () => {
-  const { userToken: token } = useSelector((state) => state.auth);
+  const { userToken: token, userInfo } = useSelector((state) => state.auth);
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState("week");
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
+  const [error, setError] = useState(null);
+  const canViewAppointments = getPermissionValue(
+    userInfo?.permissions,
+    "appointmentManagement"
+  );
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!token) return;
+      if (!canViewAppointments) {
+        setData(null);
+        setError("You do not have permission to view appointment analytics.");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         const response = await fetch(
@@ -26,16 +51,24 @@ const AdminChart = () => {
         );
         const result = await response.json();
 
+        if (!response.ok) {
+          setError(result?.message || "Failed to load chart data.");
+          setData(null);
+          return;
+        }
+
+        setError(null);
         setData(result);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setError("Failed to load chart data.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [filter]);
+  }, [filter, token, canViewAppointments]);
 
   const formatChartData = () => {
     if (!data?.data) return { dataset: [], labels: [] };
@@ -74,8 +107,16 @@ const AdminChart = () => {
     my: 30,
   };
 
-  if (loading || !data) {
+  if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className={styles.notice}>{error}</div>;
+  }
+
+  if (!data) {
+    return null;
   }
 
   return (
