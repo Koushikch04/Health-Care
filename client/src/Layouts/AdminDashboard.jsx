@@ -6,6 +6,7 @@ import styles from "./AdminDashboard.module.css";
 import { useSelector } from "react-redux";
 import { baseURL } from "../api/api.js";
 import AdminStatistics from "../Statistics/AdminStatistics.jsx";
+import { ContinuousColorLegend } from "@mui/x-charts";
 
 const AdminDashboard = () => {
   const [appointments, setAppointments] = useState([]);

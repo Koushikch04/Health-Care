@@ -18,9 +18,8 @@ function Profile() {
   const logoutInProgressRef = useRef(false);
 
   const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
-  const [uploadedImage, setUploadedImage] = useState(
-    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png",
-  );
+  const uploadedImage =
+    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png";
 
   const menuRef = useRef(null);
   const dispatch = useDispatch();
@@ -32,9 +31,11 @@ function Profile() {
   ];
 
   const handleLogout = () => {
-    if (logoutInProgressRef.current) return; // Prevent multiple logout attempts
+    if (logoutInProgressRef.current) return;
     logoutInProgressRef.current = true;
+
     dispatch(logoutUser(alert));
+    navigate("/", { replace: true });
     navigate("/", { replace: true });
   };
 
