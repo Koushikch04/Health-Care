@@ -4,6 +4,7 @@ import styles from "./Appointments.module.css";
 import { baseURL } from "../../api/api";
 import AppointmentDetails from "./AppointmentDetails";
 import TableSpinner from "../Spinners/TableSpinner";
+import Pagination from "../DoctorListPagination/Pagination";
 
 function Appointments() {
   const token = useSelector((state) => state.auth.userToken);
@@ -15,6 +16,8 @@ function Appointments() {
     direction: "ascending",
   });
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 8;
 
   useEffect(() => {
     const getAppointments = async () => {
@@ -54,6 +57,7 @@ function Appointments() {
       direction = "descending";
     }
     setSortConfig({ key, direction });
+    setCurrentPage(1);
   };
 
   const getSortIndicator = (key) => {
@@ -80,6 +84,13 @@ function Appointments() {
   const closeDetailsModal = () => {
     setSelectedAppointment(null);
   };
+
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentAppointments = sortedAppointments.slice(
+    indexOfFirstPost,
+    indexOfLastPost
+  );
 
   if (loading)
     return (
@@ -117,7 +128,7 @@ function Appointments() {
           <div className={styles.scrollableTbody}>
             <table className={styles.appointmentsTable}>
               <tbody>
-                {sortedAppointments.map((appointment) => (
+                {currentAppointments.map((appointment) => (
                   <tr key={appointment._id}>
                     <td>{new Date(appointment.date).toLocaleDateString()}</td>
                     <td>{appointment.time}</td>
@@ -146,6 +157,12 @@ function Appointments() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            totalPosts={sortedAppointments.length}
+            postsPerPage={postsPerPage}
+            setCurrentPage={setCurrentPage}
+            currentPage={currentPage}
+          />
         </div>
       ) : (
         <p>No appointments found.</p>
