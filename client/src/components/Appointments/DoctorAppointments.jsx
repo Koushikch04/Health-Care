@@ -4,6 +4,7 @@ import styles from "./Appointments.module.css";
 import { baseURL } from "../../api/api";
 import DoctorAppointmentDetails from "./DoctorAppointmentDetails.jsx";
 import TableSpinner from "../Spinners/TableSpinner.jsx";
+import Pagination from "../DoctorListPagination/Pagination.jsx";
 
 function DoctorAppointments() {
   const token = useSelector((state) => state.auth.userToken);
@@ -17,6 +18,8 @@ function DoctorAppointments() {
     direction: "ascending",
   });
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 8;
 
   let url = `${baseURL}/doctor/appointment`;
 
@@ -60,6 +63,7 @@ function DoctorAppointments() {
       direction = "descending";
     }
     setSortConfig({ key, direction });
+    setCurrentPage(1);
   };
 
   const getSortIndicator = (key) => {
@@ -86,6 +90,13 @@ function DoctorAppointments() {
   const closeDetailsModal = () => {
     setSelectedAppointment(null);
   };
+
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentAppointments = sortedAppointments.slice(
+    indexOfFirstPost,
+    indexOfLastPost
+  );
 
   if (loading)
     return (
@@ -125,7 +136,7 @@ function DoctorAppointments() {
           <div className={styles.scrollableTbody}>
             <table className={styles.appointmentsTable}>
               <tbody>
-                {sortedAppointments.map((appointment) => (
+                {currentAppointments.map((appointment) => (
                   <tr key={appointment._id}>
                     <td>{new Date(appointment.date).toLocaleDateString()}</td>
                     <td>{appointment.time}</td>
@@ -156,6 +167,12 @@ function DoctorAppointments() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            totalPosts={sortedAppointments.length}
+            postsPerPage={postsPerPage}
+            setCurrentPage={setCurrentPage}
+            currentPage={currentPage}
+          />
         </div>
       ) : (
         <p>No appointments found.</p>
