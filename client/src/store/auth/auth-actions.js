@@ -47,7 +47,7 @@ export const loginAccount = (userData, alert) => async (dispatch) => {
         message: errorData.msg || "Login failed",
         title: "Login failed",
       });
-      return;
+      return { ok: false };
     }
 
     const data = await response.json();
@@ -74,6 +74,7 @@ export const loginAccount = (userData, alert) => async (dispatch) => {
         role: data.role,
       }),
     );
+    return { ok: true, role: data.role };
     // dispatch(loginSuccess(data.token));
     // alert("Sign-In Successful");
   } catch (error) {
@@ -83,6 +84,7 @@ export const loginAccount = (userData, alert) => async (dispatch) => {
       message: error.msg || "An unexpected error occurred",
       title: "Login failed",
     });
+    return { ok: false };
   }
 };
 
