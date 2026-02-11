@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import FormPage from "./FormPage";
 import CircularSpinner from "../Spinners/CircularSpinner.jsx";
@@ -13,6 +14,8 @@ const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { alert } = useAlert();
 
   const {
@@ -41,7 +44,22 @@ const SignIn = () => {
 
     setLoading(true);
     try {
-      await dispatch(loginAccount({ email, password }, alert));
+      const result = await dispatch(loginAccount({ email, password }, alert));
+      if (result?.ok) {
+        const redirectParam = new URLSearchParams(location.search).get("redirect");
+
+        if (result.role === "doctor") {
+          navigate("/profile/doctor/dashboard");
+          return;
+        }
+
+        if (result.role === "admin" || result.role === "superadmin") {
+          navigate("/profile/admin/dashboard");
+          return;
+        }
+
+        navigate(redirectParam || "/");
+      }
     } catch (error) {
       console.error("Error during login:", error);
     } finally {

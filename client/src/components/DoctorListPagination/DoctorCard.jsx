@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import Modal from "../UI/Modal/Modal";
 import styles from "./DoctorCard.module.css";
 import AppointmentForm from "../AppointmentForm/AppointmentForm";
@@ -13,8 +15,14 @@ const DoctorCard = ({
   cost,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const userLoggedIn = useSelector((state) => state.auth.userLoggedIn);
 
   const openModalHandler = () => {
+    if (!userLoggedIn) {
+      navigate("/auth/login?redirect=/appointments");
+      return;
+    }
     setIsModalOpen(true);
   };
 
@@ -35,8 +43,8 @@ const DoctorCard = ({
       </div>
       <div className={styles.card_button}>
         <button onClick={openModalHandler}>
-          <p>Book Appointment</p>
-          <span>No Booking Fee</span>
+          <p>{userLoggedIn ? "Book Appointment" : "Login to Book"}</p>
+          <span>{userLoggedIn ? "No Booking Fee" : "Secure booking"}</span>
         </button>
       </div>
       {isModalOpen && (
