@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 import FormPage from "./FormPage";
@@ -14,6 +15,7 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const { alert } = useAlert();
+  const navigate = useNavigate();
 
   const {
     value: email,
@@ -31,6 +33,13 @@ const SignIn = () => {
     inputBlurHandler: passwordBlurHandler,
   } = useInput((value) => value.trim().length > 6);
 
+  const getPostLoginPath = (role) => {
+    if (role === "doctor") return "/profile/doctor/dashboard";
+    if (role === "admin" || role === "superadmin")
+      return "/profile/admin/dashboard";
+    return "/";
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -41,7 +50,10 @@ const SignIn = () => {
 
     setLoading(true);
     try {
-      await dispatch(loginAccount({ email, password }, alert));
+      const result = await dispatch(loginAccount({ email, password }, alert));
+      if (result?.ok) {
+        navigate(getPostLoginPath(result.role), { replace: true });
+      }
     } catch (error) {
       console.error("Error during login:", error);
     } finally {

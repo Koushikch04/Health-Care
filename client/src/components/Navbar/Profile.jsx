@@ -30,13 +30,16 @@ function Profile() {
     { label: "Logout", link: "#" },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (logoutInProgressRef.current) return;
     logoutInProgressRef.current = true;
 
-    dispatch(logoutUser(alert));
-    navigate("/", { replace: true });
-    navigate("/", { replace: true });
+    try {
+      await dispatch(logoutUser(alert));
+      navigate("/", { replace: true });
+    } finally {
+      logoutInProgressRef.current = false;
+    }
   };
 
   useEffect(() => {
