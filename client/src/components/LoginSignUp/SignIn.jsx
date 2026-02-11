@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -15,7 +14,6 @@ const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
   const { alert } = useAlert();
   const navigate = useNavigate();
@@ -35,13 +33,6 @@ const SignIn = () => {
     valueChangeHandler: passwordChangeHandler,
     inputBlurHandler: passwordBlurHandler,
   } = useInput((value) => value.trim().length > 6);
-
-  const getPostLoginPath = (role) => {
-    if (role === "doctor") return "/profile/doctor/dashboard";
-    if (role === "admin" || role === "superadmin")
-      return "/profile/admin/dashboard";
-    return "/";
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
