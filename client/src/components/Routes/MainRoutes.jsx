@@ -7,6 +7,13 @@ import ProtectedRoute from "./ProtectedRoute.jsx";
 
 const isAdminRole = (role) => role === "admin" || role === "superadmin";
 
+const getRoleHome = (role) => {
+  if (role === "doctor") return "/profile/doctor/dashboard";
+  if (isAdminRole(role)) return "/profile/admin/dashboard";
+  if (role === "user") return "/profile/details";
+  return "/";
+};
+
 const roleMatches = (requiredRole, userRole) => {
   if (!requiredRole) return true;
   if (requiredRole === "admin") {
@@ -30,7 +37,7 @@ function MainRoutes() {
             <Route
               key={index}
               path={route.path}
-              element={<Navigate to="/" />}
+              element={<Navigate to={getRoleHome(role)} replace />}
             />
           );
         }

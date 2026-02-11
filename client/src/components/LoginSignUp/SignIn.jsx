@@ -33,6 +33,13 @@ const SignIn = () => {
     inputBlurHandler: passwordBlurHandler,
   } = useInput((value) => value.trim().length > 6);
 
+  const getPostLoginPath = (role) => {
+    if (role === "doctor") return "/profile/doctor/dashboard";
+    if (role === "admin" || role === "superadmin")
+      return "/profile/admin/dashboard";
+    return "/";
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -43,9 +50,9 @@ const SignIn = () => {
 
     setLoading(true);
     try {
-      const success = await dispatch(loginAccount({ email, password }, alert));
-      if (success) {
-        navigate("/", { replace: true });
+      const result = await dispatch(loginAccount({ email, password }, alert));
+      if (result?.ok) {
+        navigate(getPostLoginPath(result.role), { replace: true });
       }
     } catch (error) {
       console.error("Error during login:", error);
