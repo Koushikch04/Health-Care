@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import FormPage from "./FormPage";
 import CircularSpinner from "../Spinners/CircularSpinner.jsx";
@@ -14,6 +14,7 @@ const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const location = useLocation();
   const { alert } = useAlert();
   const navigate = useNavigate();
 
@@ -33,13 +34,6 @@ const SignIn = () => {
     inputBlurHandler: passwordBlurHandler,
   } = useInput((value) => value.trim().length > 6);
 
-  const getPostLoginPath = (role) => {
-    if (role === "doctor") return "/profile/doctor/dashboard";
-    if (role === "admin" || role === "superadmin")
-      return "/profile/admin/dashboard";
-    return "/";
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -52,7 +46,21 @@ const SignIn = () => {
     try {
       const result = await dispatch(loginAccount({ email, password }, alert));
       if (result?.ok) {
-        navigate(getPostLoginPath(result.role), { replace: true });
+        const redirectParam = new URLSearchParams(location.search).get(
+          "redirect",
+        );
+
+        if (result.role === "doctor") {
+          navigate("/profile/doctor/dashboard");
+          return;
+        }
+
+        if (result.role === "admin" || result.role === "superadmin") {
+          navigate("/profile/admin/dashboard");
+          return;
+        }
+
+        navigate(redirectParam || "/");
       }
     } catch (error) {
       console.error("Error during login:", error);
