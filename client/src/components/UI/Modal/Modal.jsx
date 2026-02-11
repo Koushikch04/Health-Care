@@ -24,9 +24,15 @@ const portalElement = document.getElementById("overlays");
 const Modal = (props) => {
   useEffect(() => {
     document.body.classList.add("no-scroll");
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
 
     return () => {
       document.body.classList.remove("no-scroll");
+      document.body.style.paddingRight = "";
     };
   }, []);
 
@@ -34,11 +40,11 @@ const Modal = (props) => {
     <Fragment>
       {ReactDOM.createPortal(
         <Backdrop onClose={props.onClose} />,
-        portalElement
+        portalElement,
       )}
       {ReactDOM.createPortal(
         <ModalOverlay onClose={props.onClose}>{props.children}</ModalOverlay>,
-        portalElement
+        portalElement,
       )}
     </Fragment>
   );

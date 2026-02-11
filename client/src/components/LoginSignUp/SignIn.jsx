@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -17,6 +18,7 @@ const SignIn = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { alert } = useAlert();
+  const navigate = useNavigate();
 
   const {
     value: email,
@@ -34,6 +36,13 @@ const SignIn = () => {
     inputBlurHandler: passwordBlurHandler,
   } = useInput((value) => value.trim().length > 6);
 
+  const getPostLoginPath = (role) => {
+    if (role === "doctor") return "/profile/doctor/dashboard";
+    if (role === "admin" || role === "superadmin")
+      return "/profile/admin/dashboard";
+    return "/";
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -46,7 +55,9 @@ const SignIn = () => {
     try {
       const result = await dispatch(loginAccount({ email, password }, alert));
       if (result?.ok) {
-        const redirectParam = new URLSearchParams(location.search).get("redirect");
+        const redirectParam = new URLSearchParams(location.search).get(
+          "redirect",
+        );
 
         if (result.role === "doctor") {
           navigate("/profile/doctor/dashboard");
