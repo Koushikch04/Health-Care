@@ -75,8 +75,19 @@ function Appointments() {
       prevAppointments.map((appointment) =>
         appointment._id === id
           ? { ...appointment, status: "canceled" }
-          : appointment
-      )
+          : appointment,
+      ),
+    );
+  };
+
+  const handleRescheduleAppointment = (updatedAppointment) => {
+    console.log("Updated appointment:", updatedAppointment);
+    setAppointments((prevAppointments) =>
+      prevAppointments.map((appointment) =>
+        appointment._id === updatedAppointment._id
+          ? { ...appointment, ...updatedAppointment }
+          : appointment,
+      ),
     );
   };
 
@@ -92,7 +103,7 @@ function Appointments() {
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentAppointments = sortedAppointments.slice(
     indexOfFirstPost,
-    indexOfLastPost
+    indexOfLastPost,
   );
 
   if (loading)
@@ -176,6 +187,7 @@ function Appointments() {
           appointment={selectedAppointment}
           onClose={closeDetailsModal}
           onCancel={handleCancelAppointment}
+          onReschedule={handleRescheduleAppointment}
         />
       )}
     </div>
