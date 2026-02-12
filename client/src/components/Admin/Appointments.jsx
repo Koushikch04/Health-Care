@@ -4,6 +4,7 @@ import styles from "./Appointments.module.css";
 import { baseURL } from "../../api/api";
 import AppointmentDetails from "./AppointmentDetails.jsx";
 import TableSpinner from "../Spinners/TableSpinner.jsx";
+import Pagination from "../DoctorListPagination/Pagination.jsx";
 
 function Appointments() {
   const token = useSelector((state) => state.auth.userToken);
@@ -15,6 +16,8 @@ function Appointments() {
     direction: "ascending",
   });
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 8;
 
   useEffect(() => {
     const getAppointments = async () => {
@@ -57,6 +60,7 @@ function Appointments() {
       direction = "descending";
     }
     setSortConfig({ key, direction });
+    setCurrentPage(1);
   };
 
   const getSortIndicator = (key) => {
@@ -138,7 +142,7 @@ function Appointments() {
           <div className={styles.scrollableTbody}>
             <table className={styles.appointmentsTable}>
               <tbody>
-                {sortedAppointments.map((appointment) => (
+                {currentAppointments.map((appointment) => (
                   <tr key={appointment._id}>
                     <td>{new Date(appointment.date).toLocaleDateString()}</td>
                     <td>{appointment.time}</td>
@@ -167,6 +171,12 @@ function Appointments() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            totalPosts={sortedAppointments.length}
+            postsPerPage={postsPerPage}
+            setCurrentPage={setCurrentPage}
+            currentPage={currentPage}
+          />
         </div>
       ) : (
         <p>No appointments found.</p>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styles from "./Pagination.module.css";
 
 const Pagination = ({
@@ -7,12 +7,32 @@ const Pagination = ({
   setCurrentPage,
   currentPage,
 }) => {
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+      return;
+    }
+
+    if (currentPage < 1) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, setCurrentPage, totalPages]);
+
+  if (totalPages <= 1) {
+    return null;
+  }
+
   const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(totalPosts / postsPerPage); i++) {
+  for (let i = 1; i <= totalPages; i++) {
     pageNumbers.push(i);
   }
 
   const handlePageChange = (pageNumber) => {
+    if (pageNumber < 1 || pageNumber > totalPages) {
+      return;
+    }
     setCurrentPage(pageNumber);
   };
 
@@ -29,7 +49,7 @@ const Pagination = ({
     }
 
     if (endPage >= pageNumbers.length) {
-      startPage = pageNumbers.length - totalPageNumbersToShow;
+      startPage = Math.max(0, pageNumbers.length - totalPageNumbersToShow);
       endPage = pageNumbers.length - 1;
     }
 
@@ -39,35 +59,38 @@ const Pagination = ({
       <>
         {startPage > 0 && (
           <>
-            <span
+            <button
+              type="button"
               onClick={() => handlePageChange(1)}
               className={styles.pagination_item}
             >
               1
-            </span>
-            <span className={styles.pagination_ellipsis}>...</span>
+            </button>
+            <span className={styles.paginationEllipsis}>...</span>
           </>
         )}
         {displayedPageNumbers.map((number) => (
-          <span
+          <button
+            type="button"
             key={number}
             onClick={() => handlePageChange(number)}
             className={`${styles.pagination_item} ${
-              number === currentPage ? "active" : ""
+              number === currentPage ? styles.active : ""
             }`}
           >
             {number}
-          </span>
+          </button>
         ))}
         {endPage < pageNumbers.length - 1 && (
           <>
-            <span className={styles.pagination_ellipsis}>...</span>
-            <span
+            <span className={styles.paginationEllipsis}>...</span>
+            <button
+              type="button"
               onClick={() => handlePageChange(pageNumbers.length)}
               className={styles.pagination_item}
             >
               {pageNumbers.length}
-            </span>
+            </button>
           </>
         )}
       </>
@@ -77,6 +100,7 @@ const Pagination = ({
   return (
     <div className={styles.pagination}>
       <button
+        type="button"
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage === 1}
         className={styles.pagination_button}
@@ -85,6 +109,7 @@ const Pagination = ({
       </button>
       {renderPageNumbers()}
       <button
+        type="button"
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage === pageNumbers.length}
         className={styles.pagination_button}
