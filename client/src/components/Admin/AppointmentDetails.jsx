@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Modal from "../UI/Modal/Modal";
 import styles from "./AppointmentDetails.module.css";
 import useAlert from "../../hooks/useAlert";
 import { baseURL } from "../../api/api";
-import { useDispatch, useSelector } from "react-redux";
-import { cancelAppointment } from "../../store/auth/auth-actions";
+import { useSelector } from "react-redux";
 
-const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
+const AppointmentDetails = ({
+  appointment,
+  onClose,
+  onCancel,
+  onReschedule,
+}) => {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [newDate, setNewDate] = useState("");
-  const [newTime, setNewTime] = useState("");
-  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
   const { alert } = useAlert();
   const token = useSelector((state) => state.auth.userToken);
-  const dispatch = useDispatch();
   const canCancel =
     appointment.status !== "canceled" && appointment.status !== "completed";
+  const canReschedule = canCancel;
 
   const handleCancel = async () => {
     try {
@@ -27,13 +29,28 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
         return;
       }
 
-      await dispatch(
-        cancelAppointment(appointment.id, alert, "admin", appointment.status)
+      const response = await fetch(
+        `${baseURL}/admin/appointment/${appointment._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: "canceled" }),
+        },
       );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to cancel appointment");
+      }
+
       alert.success({
         message: "Appointment canceled successfully.",
         title: "Canceled",
       });
+      onCancel(appointment._id);
       onClose();
     } catch (error) {
       alert.error({
@@ -43,51 +60,48 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
     }
   };
 
-  const fetchAvailableTimeSlots = async (selectedDate) => {
-    if (!selectedDate) return;
-
-    try {
-      const response = await fetch(
-        `${baseURL}/appointment/available-slots/doctor/${appointment.doctor._id}/date/${selectedDate}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch available time slots");
-      }
-
-      const slots = await response.json();
-      setAvailableTimeSlots(slots);
-    } catch (error) {
-      alert.error({
-        message: `Error fetching time slots: ${error.message}`,
-        title: "Error",
-      });
-    }
-  };
-
   const handleRescheduleSubmit = async (e) => {
     e.preventDefault();
-    if (!newDate || !newTime) {
+    if (!newDate) {
       alert.info({
-        message: "Please select both a date and time to reschedule.",
+        message: "Please select a new date to reschedule.",
         title: "Incomplete Form",
       });
       return;
     }
 
     try {
-      await dispatch(rescheduleAppointment(appointment.id, newDate, newTime)); // Assuming rescheduleAppointment is defined in your actions
+      const response = await fetch(
+        `${baseURL}/admin/appointment/${appointment._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: "rescheduled",
+            newDate,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to reschedule appointment");
+      }
+
+      const updatedAppointment = await response.json();
+      console.log("Success");
+      console.log(updatedAppointment);
+
       alert.success({
         message: "Appointment rescheduled successfully.",
         title: "Rescheduled",
       });
+      if (onReschedule) {
+        onReschedule(updatedAppointment);
+      }
       setIsRescheduling(false);
       onClose();
     } catch (error) {
@@ -131,33 +145,10 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
               id="date"
               name="date"
               value={newDate}
-              onChange={(e) => {
-                setNewDate(e.target.value);
-                fetchAvailableTimeSlots(e.target.value); // Fetch time slots based on the selected date
-              }}
+              onChange={(e) => setNewDate(e.target.value)}
               min={new Date().toISOString().split("T")[0]}
               required
             />
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="time">Select New Time:</label>
-            <select
-              id="time"
-              name="time"
-              value={newTime}
-              onChange={(e) => setNewTime(e.target.value)}
-              required
-            >
-              <option value="" disabled>
-                Select a time
-              </option>
-              {availableTimeSlots.map((slot) => (
-                <option key={slot} value={slot}>
-                  {slot}
-                </option>
-              ))}
-            </select>
           </div>
 
           <button type="submit" className={styles.rescheduleButton}>
@@ -178,12 +169,14 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
               Cancel Appointment
             </button>
           )}
-          <button
-            className={styles.rescheduleButton}
-            onClick={() => setIsRescheduling(true)}
-          >
-            Reschedule Appointment
-          </button>
+          {canReschedule && (
+            <button
+              className={styles.rescheduleButton}
+              onClick={() => setIsRescheduling(true)}
+            >
+              Reschedule Appointment
+            </button>
+          )}
         </div>
       )}
     </Modal>

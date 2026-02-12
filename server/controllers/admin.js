@@ -389,26 +389,46 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
   const { id } = req.params;
   const { status, newDate } = req.body; // 'status' can be 'cancelled', 'rescheduled'
   try {
-    let appointment;
+    let updateData = null;
+
     if (status === "canceled") {
-      appointment = await Appointment.findByIdAndUpdate(
-        id,
-        { status: "canceled" },
-        { new: true },
-      );
+      updateData = { status: "canceled" };
     } else if (status === "rescheduled") {
-      appointment = await Appointment.findByIdAndUpdate(
-        id,
-        { date: newDate },
-        { new: true },
-      );
+      updateData = { date: newDate };
+    } else {
+      return res.status(400).json({ error: "Invalid appointment action" });
     }
+
+    const appointment = await Appointment.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    })
+      .populate({
+        path: "doctor",
+        select: "name experience rating specialty",
+        populate: {
+          path: "specialty",
+          model: "Specialty",
+          select: "name",
+        },
+      })
+      .lean();
 
     if (!appointment) {
       return res.status(404).json({ error: "Appointment not found" });
     }
 
-    res.status(200).json(appointment);
+    const response = {
+      ...appointment,
+      doctor: appointment.doctor
+        ? {
+            ...appointment.doctor,
+            rating: appointment.doctor.rating?.average ?? 0,
+          }
+        : appointment.doctor,
+    };
+
+    res.status(200).json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
