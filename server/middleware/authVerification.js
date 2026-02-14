@@ -24,7 +24,15 @@ export const verifyToken = async (req, res, next) => {
 
     next();
   } catch (err) {
-    res.status(500).json({ msg: err.message });
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ msg: "Access Denied: Token expired" });
+    }
+
+    if (err.name === "JsonWebTokenError") {
+      return res.status(401).json({ msg: "Access Denied: Invalid token" });
+    }
+
+    return res.status(500).json({ msg: err.message });
   }
 };
 
