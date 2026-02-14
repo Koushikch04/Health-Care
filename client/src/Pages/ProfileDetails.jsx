@@ -204,7 +204,7 @@ const ProfileDetails = () => {
         <div className={styles.text_right}>
           <button
             type="button"
-            className={`${styles.btn} ${styles.btn_primary}`}
+            className={`${styles.btn} ${styles.btn_primary} ${styles.saveBtn}`}
             onClick={handleSaveChanges}
             disabled={loading}
           >

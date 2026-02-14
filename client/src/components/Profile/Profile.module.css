@@ -6,8 +6,7 @@
   align-items: stretch;
   justify-content: flex-start;
   padding: 1.5rem 1rem 1.5rem 0.5rem;
-  overflow-y: auto;
-  scrollbar-gutter: stable both-edges;
+  overflow: hidden;
 }
 
 .PageContent {
@@ -15,7 +14,9 @@
   justify-content: center;
   align-items: flex-start;
   min-height: calc(100vh - 3rem);
+  max-height: calc(100vh - 3rem);
   padding: 0.75rem 0;
+  overflow: hidden;
 }
 
 .ProfileClass {
@@ -34,7 +35,12 @@
 .ContentTransition {
   width: 100%;
   max-width: 980px;
-  min-height: calc(100vh - 4.5rem);
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.2rem;
+  scrollbar-gutter: stable;
 }
 
 @media screen and (max-width: 1200px) {

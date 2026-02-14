@@ -20,7 +20,7 @@ const AdminChart = () => {
   const { userToken: token, userInfo } = useSelector((state) => state.auth);
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState("week");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState(null);
   const canViewAppointments = getPermissionValue(
@@ -53,7 +53,6 @@ const AdminChart = () => {
 
         if (!response.ok) {
           setError(result?.message || "Failed to load chart data.");
-          setData(null);
           return;
         }
 
@@ -99,52 +98,48 @@ const AdminChart = () => {
   };
 
   const chartData = formatChartData();
+  const chartWidth = Math.min(800, Math.max(320, window.innerWidth - 140));
 
   const chartSettings = {
-    width: 800,
+    width: chartWidth,
     height: 400,
     mx: 60,
     my: 30,
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
+  if (error && !data) {
     return <div className={styles.notice}>{error}</div>;
-  }
-
-  if (!data) {
-    return null;
   }
 
   return (
     <div className={styles.dashboardContainer}>
       <div
         className={expanded ? styles.expandedCard : styles.compactCard}
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => data && setExpanded(!expanded)}
       >
-        <div className={styles.filterContainer}>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className={styles.filterSelect}
-            onClick={(e) => e.stopPropagation()} // Prevent event from propagating to the card
-          >
-            <option value="week">Week</option>
-            <option value="month">Month</option>
-            <option value="year">Year</option>
-          </select>
+        <div className={styles.compactContent}>
+          <h4>View Analytics</h4>
+          <p>{data ? `Total: ${data.summary.total}` : "Loading analytics..."}</p>
         </div>
 
-        <div className={styles.compactContent}>
-          <h4>View All</h4>
-          <p>Total: {data.summary.total}</p>
+        <div className={styles.compactActions}>
+          {loading && data && <span className={styles.updating}>Updating...</span>}
+          <div className={styles.filterContainer}>
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className={styles.filterSelect}
+              onClick={(e) => e.stopPropagation()} // Prevent event from propagating to the card
+            >
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+              <option value="year">Year</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {expanded && (
+      {expanded && data && (
         <div className={styles.overlay} onClick={() => setExpanded(false)}>
           <div
             className={styles.overlayContent}

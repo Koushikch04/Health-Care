@@ -71,7 +71,7 @@ const MainDash = () => {
           <h1>Good Morning, {name}</h1>
           <span>Have a nice day.</span>
           <div className={styles.rating}>
-            <span>Your Rating: {rating} ⭐</span>
+            <span>Your Rating: {rating}</span>
           </div>
         </div>
         <div className={styles.date}>
@@ -100,12 +100,14 @@ const MainDash = () => {
           headers={["patientName", "date", "time", "reasonForVisit", "status"]}
           rows={upcomingAppointments}
           loading={loading}
+          emptyMessage="No upcoming appointments."
         />
         <DynamicTable
           title="Recent Appointments"
           headers={["patientName", "date", "time", "reasonForVisit", "status"]}
           rows={recentAppointments}
           loading={loading}
+          emptyMessage="No recent appointments."
         />
       </div>
     </div>

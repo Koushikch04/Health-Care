@@ -154,7 +154,9 @@ const AdminStatistics = () => {
           />
         </div>
       ))}
-      <AdminChart />
+      <div className={styles.parentContainer}>
+        <AdminChart />
+      </div>
     </div>
   );
 };

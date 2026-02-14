@@ -1,11 +1,13 @@
 .statistics {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 2rem;
-  align-items: center;
+  align-items: stretch;
 }
 .parentContainer {
-  width: 100%;
+  flex: 1 1 200px;
+  min-width: 0;
 }
 
 .CompactCard {
@@ -50,15 +52,12 @@
 
 @media screen and (max-width: 1200px) {
   .statistics {
-    flex-direction: column;
-  }
-  .parentContainer {
-    height: 9rem;
+    gap: 10px;
   }
 }
 
 @media screen and (max-width: 768px) {
   .statistics {
-    width: 90%;
+    width: 100%;
   }
 }

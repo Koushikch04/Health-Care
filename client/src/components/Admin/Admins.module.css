@@ -10,12 +10,13 @@
 
 .AdminsContainer {
   padding: 24px;
-  background: linear-gradient(180deg, #ffffff, #f6f8fb);
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
   border-radius: 14px;
-  width: 85%;
-  max-width: 1200px;
-  margin: 24px auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  box-shadow: var(--surface-shadow);
   font-family: "Inter", Arial, sans-serif;
   display: flex;
   flex-direction: column;
@@ -25,10 +26,10 @@
    Header & Filters
 ========================= */
 .title {
-  font-size: 26px;
+  font-size: 1.4rem;
   font-weight: 700;
   margin-bottom: 20px;
-  color: #222;
+  color: var(--text-dark);
 }
 
 .filterSection {
@@ -43,7 +44,7 @@
   width: 220px;
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--surface-border);
   font-size: 14px;
 }
 
@@ -70,7 +71,7 @@
   gap: 14px;
   overflow-y: auto;
   padding-right: 6px;
-  max-height: 420px;
+  max-height: 58vh;
 }
 
 /* =========================
@@ -80,9 +81,10 @@
   display: flex;
   align-items: center;
   padding: 16px 18px;
-  background-color: #ffffff;
+  background-color: var(--surface-bg);
   border-radius: 12px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 4px 12px rgba(52, 88, 152, 0.1);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -100,12 +102,12 @@
 .adminInfo .name {
   font-weight: 600;
   font-size: 16px;
-  color: #222;
+  color: var(--text-dark);
 }
 
 .adminInfo .email {
   font-size: 14px;
-  color: #666;
+  color: var(--text-muted);
 }
 
 /* =========================
@@ -119,16 +121,16 @@
 .adminActions button {
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid #ddd;
-  background-color: #f7f7f7;
+  border: 1px solid var(--surface-border);
+  background-color: #fff;
   font-size: 13px;
   cursor: pointer;
 }
 
 .adminActions button:hover {
-  background-color: var(--primary-color);
+  background-color: var(--primary-color-dark);
   color: #fff;
-  border-color: var(--primary-color);
+  border-color: var(--primary-color-dark);
 }
 
 /* =========================
@@ -176,7 +178,7 @@
 }
 
 .modalContent th {
-  background-color: #f7f9fc;
+  background-color: var(--surface-bg);
   font-weight: 600;
 }
 

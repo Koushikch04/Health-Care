@@ -134,7 +134,9 @@ const DoctorStatistics = () => {
           </div>
         );
       })}
-      <DoctorChart />
+      <div className={styles.parentContainer}>
+        <DoctorChart />
+      </div>
     </div>
   );
 };

@@ -84,6 +84,14 @@ button:focus-visible {
   --primary-color: #4070e4;
   --primary-color-light: #fcfdff;
   --primary-color-dark: #2c50a1;
+  --surface-bg: #f4f8ff;
+  --surface-card: #ffffff;
+  --surface-border: #d9e5f7;
+  --surface-shadow: 0 10px 28px rgba(42, 73, 133, 0.12);
+  --text-muted: #5e6b82;
+  --success-bg: #e8f8ef;
+  --warning-bg: #fff6dd;
+  --danger-bg: #ffe7e7;
   --text-dark: #18181b;
   --text-light: #6b7280;
   --white: #fff;
