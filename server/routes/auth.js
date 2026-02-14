@@ -8,6 +8,8 @@ import {
   validateOtp,
 } from "../controllers/resetPassword.js";
 import { verifyToken } from "../middleware/authVerification.js";
+import { validateRequest } from "../middleware/requestValidation.js";
+import { authSchemas } from "../validation/schemas.js";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -28,11 +30,31 @@ const passwordResetLimiter = rateLimit({
 });
 
 const router = express.Router();
-router.post("/register/user", authLimiter, registerUser);
-router.post("/login", authLimiter, login);
-router.post("/forgotPassword", passwordResetLimiter, validateAndOtpSender);
-router.post("/validateOtp", passwordResetLimiter, validateOtp);
-router.put("/changePassword", verifyToken, changePassword);
+router.post(
+  "/register/user",
+  authLimiter,
+  validateRequest(authSchemas.registerUser),
+  registerUser
+);
+router.post("/login", authLimiter, validateRequest(authSchemas.login), login);
+router.post(
+  "/forgotPassword",
+  passwordResetLimiter,
+  validateRequest(authSchemas.forgotPassword),
+  validateAndOtpSender
+);
+router.post(
+  "/validateOtp",
+  passwordResetLimiter,
+  validateRequest(authSchemas.validateOtp),
+  validateOtp
+);
+router.put(
+  "/changePassword",
+  verifyToken,
+  validateRequest(authSchemas.changePassword),
+  changePassword
+);
 // router.put("/resetPassword", resetPassword);
 
 export default router;
