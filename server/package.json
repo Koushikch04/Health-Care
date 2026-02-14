@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "start": "nodemon index"
   },
   "keywords": [],
@@ -30,5 +30,10 @@
     "nodemailer": "^6.9.15",
     "nodemon": "^3.1.7",
     "otp-generator": "^4.0.1"
+  },
+  "devDependencies": {
+    "jest": "^30.0.5",
+    "mongodb-memory-server": "^10.2.1",
+    "supertest": "^7.1.4"
   }
 }
