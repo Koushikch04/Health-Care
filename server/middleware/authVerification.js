@@ -1,20 +1,25 @@
 import jwt from "jsonwebtoken";
 import AdminProfile from "../models/AdminProfile.js";
+import { createAppError } from "../utils/appError.js";
 
 export const verifyToken = async (req, res, next) => {
   try {
     let token = req.header("Authorization");
 
     if (!token) {
-      return res.status(403).json({ msg: "Access Denied" });
+      return next(
+        createAppError(403, "Access denied", { code: "AUTH_MISSING_TOKEN" }),
+      );
     }
 
     if (token.startsWith("Bearer ")) {
       token = token.slice(7, token.length).trimLeft();
     } else {
-      return res
-        .status(403)
-        .json({ msg: "Access Denied: Invalid token format" });
+      return next(
+        createAppError(403, "Access denied: invalid token format", {
+          code: "AUTH_INVALID_TOKEN_FORMAT",
+        }),
+      );
     }
 
     const verified = jwt.verify(token, process.env.JWT_SECRET);
@@ -25,14 +30,22 @@ export const verifyToken = async (req, res, next) => {
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
-      return res.status(401).json({ msg: "Access Denied: Token expired" });
+      return next(
+        createAppError(401, "Access denied: token expired", {
+          code: "AUTH_TOKEN_EXPIRED",
+        }),
+      );
     }
 
     if (err.name === "JsonWebTokenError") {
-      return res.status(401).json({ msg: "Access Denied: Invalid token" });
+      return next(
+        createAppError(401, "Access denied: invalid token", {
+          code: "AUTH_INVALID_TOKEN",
+        }),
+      );
     }
 
-    return res.status(500).json({ msg: err.message });
+    return next(err);
   }
 };
 
@@ -40,9 +53,11 @@ export const isAdmin = async (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
 
   if (!token) {
-    return res
-      .status(401)
-      .json({ message: "Access denied. No token provided." });
+    return next(
+      createAppError(401, "Access denied. No token provided.", {
+        code: "AUTH_MISSING_TOKEN",
+      }),
+    );
   }
 
   try {
@@ -51,7 +66,11 @@ export const isAdmin = async (req, res, next) => {
     const isAdminRole = roles.includes("admin") || roles.includes("superadmin");
 
     if (!isAdminRole) {
-      return res.status(403).json({ message: "Access denied. Admin only." });
+      return next(
+        createAppError(403, "Access denied. Admin only.", {
+          code: "AUTH_ADMIN_REQUIRED",
+        }),
+      );
     }
 
     const adminProfile = await AdminProfile.findOne({
@@ -66,7 +85,23 @@ export const isAdmin = async (req, res, next) => {
     };
     next();
   } catch (err) {
-    res.status(400).json({ message: "Invalid token" });
+    if (err.name === "TokenExpiredError") {
+      return next(
+        createAppError(401, "Access denied: token expired", {
+          code: "AUTH_TOKEN_EXPIRED",
+        }),
+      );
+    }
+
+    if (err.name === "JsonWebTokenError") {
+      return next(
+        createAppError(401, "Access denied: invalid token", {
+          code: "AUTH_INVALID_TOKEN",
+        }),
+      );
+    }
+
+    return next(err);
   }
 };
 
@@ -81,7 +116,11 @@ export const authorizeAdmin = (action) => (req, res, next) => {
   );
 
   if (!permissions.get(action)) {
-    return res.status(403).json({ message: "Unauthorized: Permission denied" });
+    return next(
+      createAppError(403, "Unauthorized: Permission denied", {
+        code: "AUTH_PERMISSION_DENIED",
+      }),
+    );
   }
 
   next();
@@ -91,6 +130,10 @@ export const verifySuperAdmin = (req, res, next) => {
   if (req.admin && req.admin.roles?.includes("superadmin")) {
     next();
   } else {
-    return res.status(403).json({ message: "Access denied. Superadmin only." });
+    return next(
+      createAppError(403, "Access denied. Superadmin only.", {
+        code: "AUTH_SUPERADMIN_REQUIRED",
+      }),
+    );
   }
 };

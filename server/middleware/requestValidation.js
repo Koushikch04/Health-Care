@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { createAppError } from "../utils/appError.js";
 
 const defaultJoiOptions = {
   abortEarly: false,
@@ -48,10 +49,12 @@ export const validateRequest = (schemas = {}) => {
     }
 
     if (errors.length) {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors,
-      });
+      return next(
+        createAppError(400, "Validation failed", {
+          code: "VALIDATION_ERROR",
+          details: errors,
+        })
+      );
     }
 
     return next();

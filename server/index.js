@@ -24,6 +24,8 @@ import reviewRoutes from "./routes/review.js";
 import adminRoutes from "./routes/admin.js";
 
 import { verifyToken } from "./middleware/authVerification.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { createAppError } from "./utils/appError.js";
 const allowedOrigins = [
   "http://localhost:3000",
   "https://health-care-red-five.vercel.app",
@@ -59,7 +61,11 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      return callback(
+        createAppError(403, "Not allowed by CORS", {
+          code: "CORS_ORIGIN_DENIED",
+        }),
+      );
     },
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
@@ -96,6 +102,9 @@ app.get("/", verifyToken, (req, res) => {
 app.get("/test", (req, res) => {
   res.send("Hello");
 });
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 mongoose
