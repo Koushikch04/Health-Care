@@ -24,6 +24,15 @@ const userProfileSchema = new Schema(
       enum: ["Male", "Female", "Other"],
     },
     profileImage: String,
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

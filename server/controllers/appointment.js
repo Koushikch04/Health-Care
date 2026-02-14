@@ -50,6 +50,14 @@ export const createAppointment = async (req, res) => {
       return res.status(400).json({ message: "Invalid appointment date." });
     }
 
+    const doctorExists = await DoctorProfile.exists({
+      _id: doctorId,
+      isDeleted: { $ne: true },
+    });
+    if (!doctorExists) {
+      return res.status(404).json({ message: "Doctor not found." });
+    }
+
     const newAppointment = new Appointment({
       doctor: doctorId,
       user: userProfileId,

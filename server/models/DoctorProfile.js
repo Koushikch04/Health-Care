@@ -36,6 +36,15 @@ const doctorProfileSchema = new Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
