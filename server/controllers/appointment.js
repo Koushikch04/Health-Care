@@ -179,7 +179,18 @@ export const getAvailableTimeSlots = async (req, res) => {
 
 export const cancelAppointment = async (req, res) => {
   const { appointmentId } = req.params;
-  const role = req.query.role || req.params.role || req.user.role;
+  const roles = req.user?.roles || [];
+  const tokenRole = req.user?.role;
+  const isAdmin =
+    roles.includes("admin") ||
+    roles.includes("superadmin") ||
+    tokenRole === "admin" ||
+    tokenRole === "superadmin";
+  const effectiveRole = isAdmin
+    ? "admin"
+    : roles.includes("doctor") || tokenRole === "doctor"
+      ? "doctor"
+      : "user";
 
   try {
     const appointment = await Appointment.findById(appointmentId);
@@ -193,9 +204,9 @@ export const cancelAppointment = async (req, res) => {
     const doctorProfileId = await getDoctorProfileId(req);
 
     if (
-      (role === "user" &&
+      (effectiveRole === "user" &&
         appointment.user.toString() !== userProfileId?.toString()) ||
-      (role === "doctor" &&
+      (effectiveRole === "doctor" &&
         appointment.doctor.toString() !== doctorProfileId?.toString())
     ) {
       return res
