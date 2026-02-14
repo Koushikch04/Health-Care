@@ -4,6 +4,7 @@ import moment from "moment";
 import Appointment from "../models/Appointment.js";
 import UserProfile from "../models/UserProfile.js";
 import DoctorProfile from "../models/DoctorProfile.js";
+import { getUtcDayBounds } from "../utils/date.js";
 
 const getUserProfileId = async (req) => {
   if (req.user?.profileId) return req.user.profileId;
@@ -38,13 +39,18 @@ export const createAppointment = async (req, res) => {
   }
 
   try {
+    const dayBounds = getUtcDayBounds(date);
+    if (!dayBounds) {
+      return res.status(400).json({ message: "Invalid appointment date." });
+    }
+
     const newAppointment = new Appointment({
       doctor: doctorId,
       user: userProfileId,
       patientName,
       reasonForVisit,
       additionalNotes,
-      date,
+      date: dayBounds.start,
       time,
     });
 
@@ -160,10 +166,18 @@ export const getAvailableTimeSlots = async (req, res) => {
   const { doctorId, date } = req.params;
 
   try {
+    const dayBounds = getUtcDayBounds(date);
+    if (!dayBounds) {
+      return res.status(400).json({ message: "Invalid date." });
+    }
+
     // Fetch appointments for the specified doctor and date
     const appointments = await Appointment.find({
       doctor: doctorId,
-      date: new Date(date),
+      date: {
+        $gte: dayBounds.start,
+        $lte: dayBounds.end,
+      },
       status: "scheduled",
     }).select("time");
 

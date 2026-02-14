@@ -7,6 +7,7 @@ import DoctorProfile from "../models/DoctorProfile.js";
 import Appointment from "../models/Appointment.js";
 import Review from "../models/Review.js";
 import AdminProfile from "../models/AdminProfile.js";
+import { normalizeToUtcDayStart } from "../utils/date.js";
 // import SupportTicket from "../models/"; // Assuming you have a SupportTicket model
 
 // User Management Controllers
@@ -394,7 +395,11 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
     if (status === "canceled") {
       updateData = { status: "canceled" };
     } else if (status === "rescheduled") {
-      updateData = { date: newDate };
+      const normalizedDate = normalizeToUtcDayStart(newDate);
+      if (!normalizedDate) {
+        return res.status(400).json({ error: "Invalid date for reschedule." });
+      }
+      updateData = { date: normalizedDate };
     } else {
       return res.status(400).json({ error: "Invalid appointment action" });
     }

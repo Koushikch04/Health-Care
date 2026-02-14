@@ -5,6 +5,7 @@ import Appointment from "../models/Appointment.js";
 import Account from "../models/Account.js";
 import DoctorProfile from "../models/DoctorProfile.js";
 import Specialty from "../models/Specialty.js";
+import { getUtcDayBounds } from "../utils/date.js";
 
 //Get all doctors
 export const getDoctors = async (req, res) => {
@@ -112,7 +113,11 @@ export const getDoctorAppointments = async (req, res) => {
     const query = { doctor: req.user.profileId };
 
     if (date) {
-      query.date = new Date(date);
+      const dayBounds = getUtcDayBounds(date);
+      if (!dayBounds) {
+        return res.status(400).json({ message: "Invalid date." });
+      }
+      query.date = { $gte: dayBounds.start, $lte: dayBounds.end };
     }
 
     const appointments = await Appointment.find(query);
