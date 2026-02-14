@@ -113,7 +113,10 @@ const Sidebar = () => {
               key={index}
               onClick={() => {
                 if (item.url) {
-                  navigate(resolveItemPath(item.url));
+                  const targetPath = resolveItemPath(item.url);
+                  if (!isItemActive(item.url)) {
+                    navigate(targetPath);
+                  }
                 }
               }}
             >
