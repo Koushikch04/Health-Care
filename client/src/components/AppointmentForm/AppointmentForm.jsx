@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import useAlert from "../../hooks/useAlert";
 import styles from "./AppointmentForm.module.css";
 import cardStyles from "../DoctorListPagination/DoctorCard.module.css";
@@ -16,8 +16,11 @@ const AppointmentForm = ({
   onSubmit,
   cost,
 }) => {
+  const CACHE_TTL_MS = 60 * 1000;
   const token = useSelector((state) => state.auth.userToken);
   const dispatch = useDispatch();
+  const slotsCacheRef = useRef(new Map());
+  const inFlightControllerRef = useRef(null);
 
   const [formData, setFormData] = useState({
     doctorId,
@@ -35,16 +38,22 @@ const AppointmentForm = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+      ...(name === "date" ? { time: "" } : {}),
+    }));
 
     if (name === "time" && !isDateSelected) {
       return;
     }
+
     if (name === "date") {
       setIsDateSelected(!!value);
+      if (!value) {
+        setAvailableTimeSlots([]);
+      }
     }
   };
 
@@ -58,10 +67,24 @@ const AppointmentForm = ({
   };
 
   const fetchAvailableTimeSlots = async (selectedDate) => {
-    if (!selectedDate) {
+    if (!selectedDate || !token) {
       return;
     }
-    console.log(token);
+
+    const cacheKey = `${doctorId}:${selectedDate}`;
+    const cachedEntry = slotsCacheRef.current.get(cacheKey);
+
+    if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
+      setAvailableTimeSlots(cachedEntry.slots);
+      return;
+    }
+
+    if (inFlightControllerRef.current) {
+      inFlightControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    inFlightControllerRef.current = controller;
 
     try {
       const response = await fetch(
@@ -72,7 +95,8 @@ const AppointmentForm = ({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+          signal: controller.signal,
+        },
       );
 
       if (!response.ok) {
@@ -80,13 +104,24 @@ const AppointmentForm = ({
       }
 
       const slots = await response.json();
+      slotsCacheRef.current.set(cacheKey, {
+        slots,
+        timestamp: Date.now(),
+      });
       setAvailableTimeSlots(slots);
     } catch (error) {
-      console.log("error" + error.message);
+      if (error.name === "AbortError") {
+        return;
+      }
+
       alert.error({
         message: `Error fetching time slots: ${error.message}`,
         title: "Error",
       });
+    } finally {
+      if (inFlightControllerRef.current === controller) {
+        inFlightControllerRef.current = null;
+      }
     }
   };
 
@@ -119,9 +154,8 @@ const AppointmentForm = ({
         time: data.createdAt,
       };
 
-      console.log(newUpdate);
-
       dispatch(authActions.addUpdate(newUpdate));
+      slotsCacheRef.current.delete(`${doctorId}:${formData.date}`);
 
       alert.success({
         message: "Appointment booked successfully!",
@@ -140,7 +174,15 @@ const AppointmentForm = ({
     if (isDateSelected && formData.date) {
       fetchAvailableTimeSlots(formData.date);
     }
-  }, [isDateSelected, formData.date]);
+  }, [isDateSelected, formData.date, doctorId, token]);
+
+  useEffect(() => {
+    return () => {
+      if (inFlightControllerRef.current) {
+        inFlightControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return (
     <div className={styles.appointment_form}>
