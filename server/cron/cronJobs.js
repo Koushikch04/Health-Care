@@ -8,6 +8,52 @@ import {
 
 let isRunning = false;
 
+export const processOverdueAppointments = async ({
+  now = new Date(),
+  batchSize = 100,
+} = {}) => {
+  // Fetch scheduled appointments only
+  const appointments = await Appointment.find({
+    status: APPOINTMENT_STATUSES.SCHEDULED,
+  }).limit(batchSize);
+
+  const overdueAppointments = [];
+
+  for (const appointment of appointments) {
+    // Combine date + time into a single Date object
+    const appointmentDateTime = new Date(appointment.date);
+
+    const [hours, minutes] = appointment.time.split(":").map(Number);
+
+    appointmentDateTime.setUTCHours(hours, minutes, 0, 0);
+    if (appointmentDateTime < now) {
+      overdueAppointments.push(appointment);
+    }
+  }
+
+  if (!overdueAppointments.length) {
+    return { matchedCount: 0, modifiedCount: 0 };
+  }
+
+  const overdueIds = overdueAppointments.map((a) => a._id);
+
+  // Mark appointments as completed (bulk update)
+  const result = await Appointment.updateMany(
+    {
+      _id: { $in: overdueIds },
+      status: {
+        $in: getAllowedFromStatuses(APPOINTMENT_ACTIONS.COMPLETE),
+      },
+    },
+    { $set: { status: APPOINTMENT_STATUSES.COMPLETED } },
+  );
+
+  return {
+    matchedCount: result.matchedCount,
+    modifiedCount: result.modifiedCount,
+  };
+};
+
 const scheduleJobs = () => {
   console.log("schedule file running");
 
@@ -19,51 +65,8 @@ const scheduleJobs = () => {
     console.log("cron file running");
 
     try {
-      const now = new Date();
-      const batchSize = 100;
-
-      // Fetch scheduled appointments only
-      const appointments = await Appointment.find({
-        status: APPOINTMENT_STATUSES.SCHEDULED,
-      }).limit(batchSize);
-
-      const overdueAppointments = [];
-
-      for (const appointment of appointments) {
-        // Combine date + time into a single Date object
-        const appointmentDateTime = new Date(appointment.date);
-
-        const [hours, minutes] = appointment.time.split(":").map(Number);
-
-        appointmentDateTime.setUTCHours(hours, minutes, 0, 0);
-        console.log(
-          `Checking appointment ${appointment._id} at ${appointmentDateTime} against now ${now}`,
-        );
-
-        if (appointmentDateTime < now) {
-          overdueAppointments.push(appointment);
-        }
-      }
-
-      if (!overdueAppointments.length) {
-        console.log("No overdue appointments");
-        return;
-      }
-
-      const overdueIds = overdueAppointments.map((a) => a._id);
-
-      // Mark appointments as completed (bulk update)
-      await Appointment.updateMany(
-        {
-          _id: { $in: overdueIds },
-          status: {
-            $in: getAllowedFromStatuses(APPOINTMENT_ACTIONS.COMPLETE),
-          },
-        },
-        { $set: { status: APPOINTMENT_STATUSES.COMPLETED } },
-      );
-
-      console.log(`${overdueAppointments.length} appointments completed`);
+      const result = await processOverdueAppointments();
+      console.log(`${result.modifiedCount} appointments completed`);
     } catch (error) {
       console.error("Error processing cron job:", error);
     } finally {
