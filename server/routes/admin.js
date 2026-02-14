@@ -92,7 +92,12 @@ router.put(
 
 router.get("/analytics", isAdmin, authorizeAdmin("analytics"), viewReports);
 
-router.get("/top-doctors", isAdmin, getTopPerformingDoctors);
+router.get(
+  "/top-doctors",
+  isAdmin,
+  authorizeAdmin("analytics"),
+  getTopPerformingDoctors
+);
 
 // router.get(
 //   "/support",

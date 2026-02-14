@@ -181,12 +181,38 @@ export const deleteDoctor = async (req, res) => {
 };
 
 export const getDoctorAppointmentStatistics = async (req, res) => {
-  const doctorId = req.query.doctorId;
+  const roles = req.user?.roles || [];
+  const tokenRole = req.user?.role;
+  const isAdmin =
+    roles.includes("admin") ||
+    roles.includes("superadmin") ||
+    tokenRole === "admin" ||
+    tokenRole === "superadmin";
+
+  let doctorId = req.query.doctorId;
+  if (!doctorId) {
+    doctorId = req.user?.profileId;
+  }
 
   if (!doctorId) {
     return res.status(400).json({
       success: false,
       message: "Doctor ID is required",
+    });
+  }
+
+  const isDoctor = roles.includes("doctor") || tokenRole === "doctor";
+  if (isDoctor && doctorId.toString() !== req.user?.profileId?.toString()) {
+    return res.status(403).json({
+      success: false,
+      msg: "Not authorized to view another doctor's statistics.",
+    });
+  }
+
+  if (!isDoctor && !isAdmin) {
+    return res.status(403).json({
+      success: false,
+      msg: "Not authorized to view doctor statistics.",
     });
   }
 
