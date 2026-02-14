@@ -7,12 +7,19 @@ import { useSelector } from "react-redux";
 
 function Profile() {
   const userRole = useSelector((state) => state.auth.userRole);
+  const profileClassName =
+    userRole === "user"
+      ? `${styles.ProfileClass} ${styles.withRightSide}`
+      : styles.ProfileClass;
+
   return (
     <div className={styles.Profile}>
-      <div className={styles.ProfileClass}>
+      <div className={profileClassName}>
         <Sidebar />
         <div className={styles.PageContent}>
-          <Outlet />
+          <div className={styles.ContentTransition}>
+            <Outlet />
+          </div>
         </div>
         {userRole == "user" && <RightSide />}
       </div>

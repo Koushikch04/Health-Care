@@ -21,7 +21,7 @@ function App() {
   return (
     // <BrowserRouter>
     <Layout navbarPresent={!isProfileRoute}>
-      <div className="route-fade" key={location.pathname}>
+      <div className="route-fade">
         <MainRoutes />
       </div>
     </Layout>

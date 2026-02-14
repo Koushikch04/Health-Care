@@ -6,14 +6,20 @@ import { useSelector } from "react-redux";
 
 const RightSide = () => {
   const updates = useSelector((state) => state.auth.updates);
+  const hasUpdates = updates.length > 0;
+
   return (
     <div className={styles.RightSide}>
-      {updates.length === 0 ? (
-        <h3 style={{ textAlign: "center" }}>No updates </h3>
+      {!hasUpdates ? (
+        <div className={styles.Panel}>
+          <h3>No updates</h3>
+        </div>
       ) : (
-        <div>
+        <div className={styles.Panel}>
           <h3>Recent Updates</h3>
-          <Updates updates={updates} />
+          <div className={styles.UpdatesWrap}>
+            <Updates updates={updates} />
+          </div>
         </div>
       )}
     </div>
