@@ -88,6 +88,10 @@ export const login = async (req, res, next) => {
       return res.status(400).json({ msg: "User does not exist." });
     }
 
+    if (account.isDeleted) {
+      return res.status(403).json({ msg: "Account is deleted." });
+    }
+
     if (account.status === "blocked") {
       return res.status(403).json({ msg: "Account is blocked." });
     }

@@ -23,6 +23,11 @@ export const getAllUsers = async (req, res) => {
   try {
     const users = await UserProfile.aggregate([
       {
+        $match: {
+          isDeleted: { $ne: true },
+        },
+      },
+      {
         $lookup: {
           from: "accounts",
           localField: "accountId",
@@ -31,6 +36,11 @@ export const getAllUsers = async (req, res) => {
         },
       },
       { $unwind: { path: "$account", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          "account.isDeleted": { $ne: true },
+        },
+      },
       {
         $lookup: {
           from: "appointments",
@@ -142,11 +152,28 @@ export const editUserProfile = async (req, res) => {
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await UserProfile.findByIdAndDelete(id);
+    const user = await UserProfile.findById(id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    await Account.findByIdAndDelete(user.accountId);
+    if (user.isDeleted) {
+      return res.status(200).json({ message: "User already deleted" });
+    }
+
+    const deletedAt = new Date();
+    await Promise.all([
+      UserProfile.findByIdAndUpdate(
+        id,
+        { isDeleted: true, deletedAt },
+        { new: true },
+      ),
+      Account.findByIdAndUpdate(user.accountId, {
+        isDeleted: true,
+        deletedAt,
+        status: "blocked",
+      }),
+    ]);
+
     res.status(200).json({ message: "User deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -159,7 +186,7 @@ export const deleteUser = async (req, res) => {
 export const getAllDoctors = async (req, res) => {
   try {
     // Step 1: Fetch all doctors with populated specialty name
-    const doctors = await DoctorProfile.find()
+    const doctors = await DoctorProfile.find({ isDeleted: { $ne: true } })
       .populate("specialty", "name") // Populate only the `name` field of the specialty
       .lean(); // Use .lean() to return plain JavaScript objects
 

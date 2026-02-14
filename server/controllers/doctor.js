@@ -10,7 +10,9 @@ import { getUtcDayBounds } from "../utils/date.js";
 //Get all doctors
 export const getDoctors = async (req, res) => {
   try {
-    const doctors = await DoctorProfile.find().populate("specialty");
+    const doctors = await DoctorProfile.find({
+      isDeleted: { $ne: true },
+    }).populate("specialty");
     const response = doctors.map((doctor) => ({
       ...doctor.toObject(),
       rating: doctor.rating?.average ?? 0,
@@ -33,6 +35,7 @@ export const getDoctorsBySpecialty = async (req, res) => {
 
     const doctors = await DoctorProfile.find({
       specialty: specialtyId,
+      isDeleted: { $ne: true },
     }).populate(
       "specialty"
     );
@@ -169,11 +172,28 @@ export const deleteDoctor = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedDoctor = await DoctorProfile.findByIdAndDelete(id);
-    if (!deletedDoctor) {
+    const doctor = await DoctorProfile.findById(id);
+    if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
-    await Account.findByIdAndDelete(deletedDoctor.accountId);
+    if (doctor.isDeleted) {
+      return res.status(200).json({ message: "Doctor already deleted" });
+    }
+
+    const deletedAt = new Date();
+    await Promise.all([
+      DoctorProfile.findByIdAndUpdate(
+        id,
+        { isDeleted: true, deletedAt },
+        { new: true },
+      ),
+      Account.findByIdAndUpdate(doctor.accountId, {
+        isDeleted: true,
+        deletedAt,
+        status: "blocked",
+      }),
+    ]);
+
     res.status(200).json({ message: "Doctor deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting doctor", error });

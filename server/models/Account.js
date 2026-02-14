@@ -25,6 +25,15 @@ const accountSchema = new Schema(
       enum: ["active", "blocked"],
       default: "active",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
     lastLogin: Date,
   },
   { timestamps: true }
