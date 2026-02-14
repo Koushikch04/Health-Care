@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import classes from "./Sidebar.module.css";
 import { UilSignOutAlt } from "@iconscout/react-unicons";
 import { SidebarData } from "../../Data/Data";
@@ -10,17 +10,31 @@ import useAlert from "../../hooks/useAlert";
 import { logoutUser } from "../../store/auth/auth-actions";
 
 const Sidebar = () => {
-  const [selected, setSelected] = useState(0);
   const [expanded, setExpanded] = useState(true);
 
   const { alert } = useAlert();
+  const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const logoutInProgressRef = useRef(false);
 
   const { userRole: role, userInfo } = useSelector((state) => state.auth);
   const isAdminRole = role === "admin" || role === "superadmin";
-  console.log(role);
+
+  const resolveItemPath = (url) => {
+    if (!url) return "";
+    if (url.startsWith("/")) return url;
+    return `/profile/${url}`;
+  };
+
+  const isItemActive = (itemUrl) => {
+    const targetPath = resolveItemPath(itemUrl);
+    if (!targetPath) return false;
+    return (
+      location.pathname === targetPath ||
+      location.pathname.startsWith(`${targetPath}/`)
+    );
+  };
 
   const getPermissionValue = (permissions, key) => {
     if (!permissions) return false;
@@ -92,15 +106,14 @@ const Sidebar = () => {
           }).map((item, index) => (
             <div
               className={
-                selected === index
+                isItemActive(item.url)
                   ? `${classes.menuItem} ${classes.active}`
                   : classes.menuItem
               }
               key={index}
               onClick={() => {
-                setSelected(index);
                 if (item.url) {
-                  navigate(item.url);
+                  navigate(resolveItemPath(item.url));
                 }
               }}
             >
