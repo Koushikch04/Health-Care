@@ -430,6 +430,12 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
 
     res.status(200).json(response);
   } catch (err) {
+    if (err?.code === 11000) {
+      return res.status(409).json({
+        error: "Selected time slot is already booked for this doctor.",
+      });
+    }
+
     res.status(500).json({ error: err.message });
   }
 };

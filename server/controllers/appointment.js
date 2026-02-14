@@ -51,6 +51,12 @@ export const createAppointment = async (req, res) => {
     const savedAppointment = await newAppointment.save();
     return res.status(201).json(savedAppointment);
   } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({
+        message: "Selected time slot is already booked for this doctor.",
+      });
+    }
+
     return res
       .status(500)
       .json({ message: "Error creating appointment", error });

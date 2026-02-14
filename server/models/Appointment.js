@@ -42,5 +42,17 @@ const appointmentSchema = new Schema(
   { timestamps: true }
 );
 
+// Enforce one active appointment per doctor/date/time.
+// Canceled appointments are excluded so the same slot can be rebooked.
+appointmentSchema.index(
+  { doctor: 1, date: 1, time: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ["scheduled", "completed"] },
+    },
+  }
+);
+
 const Appointment = mongoose.model("Appointment", appointmentSchema);
 export default Appointment;
