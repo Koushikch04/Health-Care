@@ -2,17 +2,22 @@ import Account from "../models/Account.js";
 import UserProfile from "../models/UserProfile.js";
 
 export const updateProfile = async (req, res) => {
-  const { firstName, lastName, email } = req.body;
+  const { firstName, lastName } = req.body;
+  const accountId = req.user?.accountId;
 
   console.log("Received profile update request:", {
     firstName,
     lastName,
-    email,
+    accountId,
     hasFile: !!req.file,
   });
 
   try {
-    const account = await Account.findOne({ email: email.toLowerCase() });
+    if (!accountId) {
+      return res.status(401).json({ msg: "Unauthorized" });
+    }
+
+    const account = await Account.findById(accountId);
 
     if (!account) {
       return res.status(404).json({ msg: "User not found" });
