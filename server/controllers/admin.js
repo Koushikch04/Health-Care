@@ -8,6 +8,12 @@ import Appointment from "../models/Appointment.js";
 import Review from "../models/Review.js";
 import AdminProfile from "../models/AdminProfile.js";
 import { normalizeToUtcDayStart } from "../utils/date.js";
+import {
+  APPOINTMENT_ACTIONS,
+  APPOINTMENT_STATUSES,
+  assertActionAllowed,
+  getAllowedFromStatuses,
+} from "../utils/appointmentStateMachine.js";
 // import SupportTicket from "../models/"; // Assuming you have a SupportTicket model
 
 // User Management Controllers
@@ -391,10 +397,13 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
   const { status, newDate } = req.body; // 'status' can be 'cancelled', 'rescheduled'
   try {
     let updateData = null;
+    let action = null;
 
-    if (status === "canceled") {
-      updateData = { status: "canceled" };
+    if (status === APPOINTMENT_STATUSES.CANCELED) {
+      action = APPOINTMENT_ACTIONS.CANCEL;
+      updateData = { status: APPOINTMENT_STATUSES.CANCELED };
     } else if (status === "rescheduled") {
+      action = APPOINTMENT_ACTIONS.RESCHEDULE;
       const normalizedDate = normalizeToUtcDayStart(newDate);
       if (!normalizedDate) {
         return res.status(400).json({ error: "Invalid date for reschedule." });
@@ -404,10 +413,28 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
       return res.status(400).json({ error: "Invalid appointment action" });
     }
 
-    const appointment = await Appointment.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    })
+    const currentAppointment = await Appointment.findById(id).select("status");
+    if (!currentAppointment) {
+      return res.status(404).json({ error: "Appointment not found" });
+    }
+
+    try {
+      assertActionAllowed(currentAppointment.status, action);
+    } catch (stateError) {
+      return res.status(409).json({ error: stateError.message });
+    }
+
+    const appointment = await Appointment.findOneAndUpdate(
+      {
+        _id: id,
+        status: { $in: getAllowedFromStatuses(action) },
+      },
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    )
       .populate({
         path: "doctor",
         select: "name experience rating specialty",
@@ -420,7 +447,9 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
       .lean();
 
     if (!appointment) {
-      return res.status(404).json({ error: "Appointment not found" });
+      return res.status(409).json({
+        error: "Appointment state changed and requested action is no longer valid.",
+      });
     }
 
     const response = {

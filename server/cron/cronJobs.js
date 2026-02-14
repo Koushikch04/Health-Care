@@ -1,7 +1,10 @@
 import cron from "node-cron";
 import Appointment from "../models/Appointment.js";
-import Review from "../models/Review.js";
-import DoctorProfile from "../models/DoctorProfile.js";
+import {
+  APPOINTMENT_ACTIONS,
+  APPOINTMENT_STATUSES,
+  getAllowedFromStatuses,
+} from "../utils/appointmentStateMachine.js";
 
 let isRunning = false;
 
@@ -21,7 +24,7 @@ const scheduleJobs = () => {
 
       // Fetch scheduled appointments only
       const appointments = await Appointment.find({
-        status: "scheduled",
+        status: APPOINTMENT_STATUSES.SCHEDULED,
       }).limit(batchSize);
 
       const overdueAppointments = [];
@@ -51,36 +54,14 @@ const scheduleJobs = () => {
 
       // Mark appointments as completed (bulk update)
       await Appointment.updateMany(
-        { _id: { $in: overdueIds } },
-        { $set: { status: "completed" } },
+        {
+          _id: { $in: overdueIds },
+          status: {
+            $in: getAllowedFromStatuses(APPOINTMENT_ACTIONS.COMPLETE),
+          },
+        },
+        { $set: { status: APPOINTMENT_STATUSES.COMPLETED } },
       );
-
-      // Create reviews safely
-      for (const appointment of overdueAppointments) {
-        if (appointment.reviewed) continue;
-
-        const doctor = await DoctorProfile.findById(appointment.doctor);
-        if (!doctor) continue;
-
-        const reviewExists = await Review.exists({
-          appointment: appointment._id,
-        });
-
-        if (!reviewExists) {
-          await Review.create({
-            doctor: appointment.doctor,
-            user: appointment.user,
-            appointment: appointment._id,
-            specialty: doctor.specialty,
-            rating: 5,
-          });
-        }
-
-        await Appointment.updateOne(
-          { _id: appointment._id },
-          { $set: { reviewed: true } },
-        );
-      }
 
       console.log(`${overdueAppointments.length} appointments completed`);
     } catch (error) {

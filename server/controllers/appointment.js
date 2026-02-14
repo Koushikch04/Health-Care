@@ -5,6 +5,12 @@ import Appointment from "../models/Appointment.js";
 import UserProfile from "../models/UserProfile.js";
 import DoctorProfile from "../models/DoctorProfile.js";
 import { getUtcDayBounds } from "../utils/date.js";
+import {
+  APPOINTMENT_ACTIONS,
+  APPOINTMENT_STATUSES,
+  assertActionAllowed,
+  getAllowedFromStatuses,
+} from "../utils/appointmentStateMachine.js";
 
 const getUserProfileId = async (req) => {
   if (req.user?.profileId) return req.user.profileId;
@@ -71,7 +77,11 @@ export const createAppointment = async (req, res) => {
 
 export const getUserAppointments = async (req, res) => {
   const { status } = req.query;
-  const validStatuses = ["scheduled", "completed", "canceled"];
+  const validStatuses = [
+    APPOINTMENT_STATUSES.SCHEDULED,
+    APPOINTMENT_STATUSES.COMPLETED,
+    APPOINTMENT_STATUSES.CANCELED,
+  ];
   try {
     const userProfileId = await getUserProfileId(req);
     let query = { user: userProfileId };
@@ -234,12 +244,34 @@ export const cancelAppointment = async (req, res) => {
         .json({ message: "Not authorized to cancel this appointment." });
     }
 
-    appointment.status = "canceled";
-    await appointment.save();
+    try {
+      assertActionAllowed(appointment.status, APPOINTMENT_ACTIONS.CANCEL);
+    } catch (stateError) {
+      return res.status(409).json({ message: stateError.message });
+    }
+
+    const updatedAppointment = await Appointment.findOneAndUpdate(
+      {
+        _id: appointmentId,
+        status: { $in: getAllowedFromStatuses(APPOINTMENT_ACTIONS.CANCEL) },
+      },
+      { $set: { status: APPOINTMENT_STATUSES.CANCELED } },
+      { new: true }
+    );
+
+    if (!updatedAppointment) {
+      return res.status(409).json({
+        message:
+          "Appointment state changed and can no longer be canceled.",
+      });
+    }
 
     return res
       .status(200)
-      .json({ message: "Appointment canceled successfully.", appointment });
+      .json({
+        message: "Appointment canceled successfully.",
+        appointment: updatedAppointment,
+      });
   } catch (error) {
     console.error(error.message);
     return res
