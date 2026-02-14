@@ -1,81 +1,87 @@
+.reviewShell {
+  width: 100%;
+  min-height: calc(100vh - 210px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .doctorReviewContainer {
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  width: 600px;
-  /* height: ; */
-  margin: 20px auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--surface-shadow);
 }
 
 .filterSection {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
 }
 
 .filterSection label {
-  font-weight: bold;
-  margin-right: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .filterSection select {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: #fff;
 }
 
 .review {
-  padding: 15px;
-  margin-bottom: 15px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  padding: 0.85rem;
+  margin-bottom: 0.7rem;
+  background: var(--surface-bg);
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
 }
 
 .review p {
-  margin: 5px 0;
-  color: #333;
+  margin: 0.25rem 0;
+  color: var(--text-dark);
 }
 
 .review strong {
-  font-weight: 600;
-  color: #444;
+  font-weight: 700;
 }
 
-.review .rating {
-  color: #ffb400;
-  font-weight: bold;
-  margin-top: 5px;
+.rating {
+  color: #b17b0f;
+  font-weight: 700;
+}
+
+.comment {
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.comment:hover {
+  color: var(--primary-color-dark);
 }
 
 .loading,
 .error,
 .noReviews {
   text-align: center;
-  color: #666;
-  font-size: 16px;
-  padding: 10px;
+  font-size: 0.95rem;
+  padding: 1rem;
 }
 
 .error {
-  color: #d9534f;
-}
-
-.noReviews {
-  color: #888;
+  color: #be2f2f;
 }
 
 .spinnerContainer {
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 50vh;
-}
-
-.review:hover {
-  background-color: #f3f3f3;
-  border-color: #d0d0d0;
-  transition: background-color 0.3s, border-color 0.3s;
+  width: 100%;
+  padding: 2.5rem 0;
 }

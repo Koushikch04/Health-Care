@@ -1,13 +1,11 @@
 .circularSpinner {
   position: relative;
-  width: 27px;
-  height: 27px;
+  width: 18px;
+  height: 18px;
   display: inline-block;
-  /* background: #74a6f2; */
-  padding: 10px;
-  border-radius: 10px;
   vertical-align: middle;
   margin: 0;
+  flex-shrink: 0;
 }
 
 .circularSpinner div {

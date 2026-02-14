@@ -5,7 +5,6 @@ import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx"; // Import the Modal component
 import styles from "./DoctorReview.module.css";
 import TableSpinner from "../Spinners/TableSpinner.jsx";
-import { ContinuousColorLegend } from "@mui/x-charts";
 
 function DoctorReview() {
   const { userInfo, userToken: token } = useSelector((state) => state.auth);
@@ -83,77 +82,82 @@ function DoctorReview() {
     setIsModalOpen(true);
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <div className={styles.spinnerContainer}>
-        <TableSpinner message="loading reviews..." />
+      <div className={styles.reviewShell}>
+        <div className={styles.spinnerContainer}>
+          <TableSpinner message="loading reviews..." />
+        </div>
       </div>
     );
+  }
 
   return (
-    <div className={styles.doctorReviewContainer}>
-      <div className={styles.filterSection}>
-        <label>Filter by Rating: </label>
-        <select
-          value={selectedRating}
-          onChange={(e) => handleFilterChange(e.target.value)}
-        >
-          <option value="All">All</option>
-          <option value="5">5 Stars</option>
-          <option value="4">4 Stars</option>
-          <option value="3">3 Stars</option>
-          <option value="2">2 Stars</option>
-          <option value="1">1 Star</option>
-        </select>
-      </div>
-
-      {loading && <p className={styles.loading}>Loading reviews...</p>}
-      {error && <p className={styles.error}>{error}</p>}
-      {!loading && !error && (
-        <div>
-          {currentReviews.length > 0 ? (
-            currentReviews.map((review) => (
-              <div key={review._id} className={styles.review}>
-                <p>
-                  <strong>
-                    {review.user.name.firstName +
-                      " " +
-                      review.user.name.lastName}
-                    :
-                  </strong>{" "}
-                  <span
-                    className={styles.comment}
-                    onClick={() => handleCommentClick(review.comment)}
-                    title="Click to view full comment"
-                  >
-                    {review.comment.length > 100
-                      ? review.comment.substring(0, 100) + "..."
-                      : review.comment}
-                  </span>
-                </p>
-                <p className={styles.rating}>Rating: {review.rating}</p>
-              </div>
-            ))
-          ) : (
-            <p className={styles.noReviews}>
-              No reviews available for this doctor.
-            </p>
-          )}
-          <Pagination
-            totalPosts={filteredReviews.length}
-            postsPerPage={postsPerPage}
-            setCurrentPage={setCurrentPage}
-            currentPage={currentPage}
-          />
+    <div className={styles.reviewShell}>
+      <div className={styles.doctorReviewContainer}>
+        <div className={styles.filterSection}>
+          <label>Filter by Rating: </label>
+          <select
+            value={selectedRating}
+            onChange={(e) => handleFilterChange(e.target.value)}
+          >
+            <option value="All">All</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+          </select>
         </div>
-      )}
 
-      {/* Modal to display the full comment */}
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
-          <p>{selectedComment}</p>
-        </Modal>
-      )}
+        {loading && <p className={styles.loading}>Loading reviews...</p>}
+        {error && <p className={styles.error}>{error}</p>}
+        {!loading && !error && (
+          <div>
+            {currentReviews.length > 0 ? (
+              currentReviews.map((review) => (
+                <div key={review._id} className={styles.review}>
+                  <p>
+                    <strong>
+                      {review.user.name.firstName +
+                        " " +
+                        review.user.name.lastName}
+                      :
+                    </strong>{" "}
+                    <span
+                      className={styles.comment}
+                      onClick={() => handleCommentClick(review.comment)}
+                      title="Click to view full comment"
+                    >
+                      {review.comment.length > 100
+                        ? review.comment.substring(0, 100) + "..."
+                        : review.comment}
+                    </span>
+                  </p>
+                  <p className={styles.rating}>Rating: {review.rating}</p>
+                </div>
+              ))
+            ) : (
+              <p className={styles.noReviews}>
+                No reviews available for this doctor.
+              </p>
+            )}
+            <Pagination
+              totalPosts={filteredReviews.length}
+              postsPerPage={postsPerPage}
+              setCurrentPage={setCurrentPage}
+              currentPage={currentPage}
+            />
+          </div>
+        )}
+
+        {/* Modal to display the full comment */}
+        {isModalOpen && (
+          <Modal onClose={() => setIsModalOpen(false)}>
+            <p>{selectedComment}</p>
+          </Modal>
+        )}
+      </div>
     </div>
   );
 }

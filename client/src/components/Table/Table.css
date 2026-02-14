@@ -2,7 +2,7 @@
   padding: 10px;
 }
 .MuiTable-root {
-  min-height: 400px;
+  min-height: 0;
 }
 
 .MuiTableRow-root.MuiTableRow-head > * {
@@ -10,7 +10,7 @@
 }
 
 .Table td,
-th {
+.Table th {
   border: none !important;
 }
 
@@ -26,10 +26,46 @@ th {
   color: #00b5ff !important;
 }
 
+.Table {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow: var(--surface-shadow);
+  padding: 0.75rem;
+}
+
+.tableTitle {
+  margin: 0 0 0.65rem;
+  color: var(--text-dark);
+  font-size: 1rem;
+}
+
+.tableBodyShell {
+  min-height: 240px;
+  display: flex;
+}
+
+.tableState {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tablePaper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 @media screen and (max-width: 1200px) {
   .Table {
-    width: 170%;
-    margin-top: 2rem;
+    width: 100%;
+    margin-top: 1rem;
   }
 }
 
@@ -38,7 +74,11 @@ th {
     position: relative;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 23rem;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .tableBodyShell {
+    min-height: 220px;
   }
 }

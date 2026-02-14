@@ -65,6 +65,10 @@
   margin-left: 10px;
   cursor: pointer;
   transition: background-color 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
 }
 
 .btn_primary {
@@ -134,6 +138,10 @@ hr {
 .text_right {
   text-align: right;
   margin-top: 1rem;
+}
+
+.saveBtn {
+  min-width: 138px;
 }
 
 @media screen and (max-width: 1200px) {

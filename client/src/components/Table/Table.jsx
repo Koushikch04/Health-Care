@@ -21,80 +21,98 @@ const formatString = (str) => {
     .replace(/^./, (match) => match.toUpperCase());
 };
 
-const DynamicTable = ({ title, headers, rows, loading = true }) => {
+const DynamicTable = ({
+  title,
+  headers,
+  rows,
+  loading = true,
+  emptyMessage = "No records found.",
+}) => {
   console.log(loading);
   return (
     <div className="Table">
-      <h3>{title}</h3>
-      {loading ? (
-        <TableSpinner />
-      ) : (
-        <TableContainer
-          component={Paper}
-          style={{ boxShadow: "0px 13px 20px 0px #80808029" }}
-        >
-          <Table sx={{ minWidth: 200 }} aria-label="dynamic table">
-            <TableHead>
-              <TableRow>
-                {headers.map((header, index) => (
-                  <TableCell
-                    key={index}
-                    align="left"
-                    style={{ fontWeight: "bold" }}
-                  >
-                    {formatString(header)}
-                  </TableCell>
-                ))}
-                <TableCell align="left"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((row, rowIndex) => (
-                <TableRow
-                  key={rowIndex}
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  {headers.map((header, headerIndex) => {
-                    // Access the dynamic value from the row based on header name
-                    const cellValue = row[header]; // Dynamically get value from row
-
-                    // Special handling for 'Status' column
-                    if (header.toLowerCase() === "status" && cellValue) {
-                      return (
-                        <TableCell key={headerIndex} align="left">
-                          <span className="status" style={makeStyle(cellValue)}>
-                            {cellValue}
-                          </span>
-                        </TableCell>
-                      );
-                    }
-
-                    // Special handling for 'Date' column
-                    if (header.toLowerCase() === "date" && cellValue) {
-                      return (
-                        <TableCell key={headerIndex} align="left">
-                          {new Date(cellValue).toLocaleDateString("en-US")}
-                        </TableCell>
-                      );
-                    }
-
-                    // For other columns, just display the value
-                    return (
-                      <TableCell key={headerIndex} align="left">
-                        {typeof cellValue !== "undefined"
-                          ? cellValue === ""
-                            ? "-"
-                            : cellValue
-                          : ""}
-                      </TableCell>
-                    );
-                  })}
+      <h3 className="tableTitle">{title}</h3>
+      <div className="tableBodyShell">
+        {loading ? (
+          <div className="tableState">
+            <TableSpinner />
+          </div>
+        ) : (
+          <TableContainer
+            component={Paper}
+            className="tablePaper"
+            style={{ boxShadow: "0px 13px 20px 0px #80808029" }}
+          >
+            <Table sx={{ minWidth: 200 }} aria-label="dynamic table">
+              <TableHead>
+                <TableRow>
+                  {headers.map((header, index) => (
+                    <TableCell
+                      key={index}
+                      align="left"
+                      style={{ fontWeight: "bold" }}
+                    >
+                      {formatString(header)}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+              </TableHead>
+              <TableBody>
+                {rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell align="center" colSpan={headers.length}>
+                      {emptyMessage}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  rows.map((row, rowIndex) => (
+                    <TableRow
+                      key={rowIndex}
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    >
+                      {headers.map((header, headerIndex) => {
+                        // Access the dynamic value from the row based on header name
+                        const cellValue = row[header]; // Dynamically get value from row
+
+                        // Special handling for 'Status' column
+                        if (header.toLowerCase() === "status" && cellValue) {
+                          return (
+                            <TableCell key={headerIndex} align="left">
+                              <span className="status" style={makeStyle(cellValue)}>
+                                {cellValue}
+                              </span>
+                            </TableCell>
+                          );
+                        }
+
+                        // Special handling for 'Date' column
+                        if (header.toLowerCase() === "date" && cellValue) {
+                          return (
+                            <TableCell key={headerIndex} align="left">
+                              {new Date(cellValue).toLocaleDateString("en-US")}
+                            </TableCell>
+                          );
+                        }
+
+                        // For other columns, just display the value
+                        return (
+                          <TableCell key={headerIndex} align="left">
+                            {typeof cellValue !== "undefined"
+                              ? cellValue === ""
+                                ? "-"
+                                : cellValue
+                              : ""}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </div>
     </div>
   );
 };
