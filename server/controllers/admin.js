@@ -707,6 +707,6 @@ export const deleteAdmin = async (req, res) => {
     await Account.findByIdAndDelete(admin.accountId);
     return res.status(200).json({ message: "Admin deleted Successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.nessage });
+    res.status(500).json({ message: error.message });
   }
 };

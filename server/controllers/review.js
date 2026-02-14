@@ -130,32 +130,38 @@ const getReviewsByDoctor = async (req, res) => {
 };
 
 const getReviewsByUser = async (req, res) => {
-  const { userId } = req.params;
+  try {
+    const { userId } = req.params;
 
-  const userProfileId = await getUserProfileId(req);
-  if (userProfileId?.toString() !== userId.toString()) {
-    res.status(401);
-    throw new Error("Not authorized to view these reviews.");
+    const userProfileId = await getUserProfileId(req);
+    if (userProfileId?.toString() !== userId.toString()) {
+      return res
+        .status(401)
+        .json({ error: "Not authorized to view these reviews." });
+    }
+
+    const reviews = await Review.find({ user: userId })
+      .populate("doctor", "name")
+      .populate("user", "name email")
+      .populate("appointment", "date time reviewed")
+      .populate("specialty", "name")
+      .sort({ createdAt: -1 });
+
+    const transformedReviews = reviews.map((review) => {
+      const reviewObj = review.toObject();
+
+      reviewObj.reviewed = review.appointment
+        ? review.appointment.reviewed
+        : false;
+
+      return reviewObj;
+    });
+
+    return res.json(transformedReviews);
+  } catch (error) {
+    console.error("Error fetching reviews by user:", error);
+    return res.status(500).json({ error: "Failed to retrieve reviews" });
   }
-
-  const reviews = await Review.find({ user: userId })
-    .populate("doctor", "name")
-    .populate("user", "name email")
-    .populate("appointment", "date time reviewed")
-    .populate("specialty", "name")
-    .sort({ createdAt: -1 });
-
-  const transformedReviews = reviews.map((review) => {
-    const reviewObj = review.toObject();
-
-    reviewObj.reviewed = review.appointment
-      ? review.appointment.reviewed
-      : false;
-
-    return reviewObj;
-  });
-
-  res.json(transformedReviews);
 };
 
 export {

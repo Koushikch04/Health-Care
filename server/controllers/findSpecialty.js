@@ -113,7 +113,7 @@ export const getSpecializations = async (req, res) => {
 export const getAllSpecialties = async (req, res) => {
   console.log("got request");
 
-  const token = getAuthToken();
+  const token = await getAuthToken();
   try {
     const response = await fetch(
       `${PRIAID_API_URL}/specialisations?token=${token}&language=en-gb`
