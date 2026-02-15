@@ -1,14 +1,10 @@
 .reviewShell {
   width: 100%;
-  min-height: calc(100vh - 210px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .doctorReviewContainer {
   width: 100%;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 1rem;
   border: 1px solid var(--surface-border);
@@ -17,28 +13,48 @@
   box-shadow: var(--surface-shadow);
 }
 
+.title {
+  margin: 0 0 1rem;
+  font-size: 1.35rem;
+  color: var(--text-dark);
+}
+
 .filterSection {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-end;
   gap: 0.65rem;
   margin-bottom: 1rem;
 }
 
 .filterSection label {
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-muted);
 }
 
 .filterSection select {
-  padding: 0.45rem 0.6rem;
+  padding: 0.5rem 0.6rem;
   border: 1px solid var(--surface-border);
   border-radius: 8px;
   background: #fff;
 }
 
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 360px;
+  height: 58vh;
+  max-height: 58vh;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
 .review {
-  padding: 0.85rem;
-  margin-bottom: 0.7rem;
+  margin: 0;
+  min-height: 88px;
+  padding: 0.75rem;
   background: var(--surface-bg);
   border-radius: 10px;
   border: 1px solid var(--surface-border);
@@ -84,4 +100,16 @@
   justify-content: center;
   width: 100%;
   padding: 2.5rem 0;
+}
+
+@media (max-width: 768px) {
+  .doctorReviewContainer {
+    padding: 0.75rem;
+  }
+
+  .reviewList {
+    min-height: 260px;
+    height: auto;
+    max-height: none;
+  }
 }

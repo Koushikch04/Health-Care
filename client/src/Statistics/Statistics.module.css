@@ -1,12 +1,12 @@
 .statistics {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 0;
   align-items: stretch;
 }
 .parentContainer {
-  flex: 1 1 200px;
+  flex: 1 1 220px;
   min-width: 0;
 }
 
@@ -31,9 +31,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 200px; /* Full screen height */
-  width: 100%; /* Ensures it takes the full width of its parent */
-  margin: auto; /* Centers it horizontally in the parent container */
+  min-height: 180px;
+  width: 100%;
+  margin: auto;
   flex-direction: column;
 }
 
@@ -43,11 +43,11 @@
   align-items: center;
   min-height: 120px;
   width: 100%;
-  padding: 12px 16px;
-  background: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeeba;
-  border-radius: 8px;
+  padding: 1rem;
+  background: var(--warning-bg);
+  color: #8a6a1f;
+  border: 1px solid #f0dca4;
+  border-radius: 12px;
 }
 
 @media screen and (max-width: 1200px) {

@@ -39,7 +39,7 @@ function Users() {
 
   const years = Array.from(
     { length: currentYear - 2024 + 1 },
-    (_, i) => 2024 + i
+    (_, i) => 2024 + i,
   );
 
   const calculateAge = (dob) => {
@@ -262,20 +262,6 @@ function Users() {
             <option value="All">All</option>
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
-          </select>
-        </div>
-        <div className={styles.filterItem}>
-          <label>Registration Year:</label>
-          <select
-            value={registrationDate}
-            onChange={(e) => setRegistrationDate(e.target.value)}
-          >
-            <option value="All">All</option>
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
           </select>
         </div>
         <button className={styles.applyButton} onClick={handleFilterChange}>

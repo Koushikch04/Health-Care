@@ -196,6 +196,7 @@ function Doctors() {
 
   return (
     <div className={styles.DoctorsContainer}>
+      <h2 className={styles.title}>Doctors Management</h2>
       <div className={styles.filterSection}>
         <div className={styles.filterItem}>
           <input

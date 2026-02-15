@@ -156,8 +156,6 @@ const AdminDashboard = () => {
       </div>
       {/* <h3>Have a nice day.</h3> */}
       <AdminStatistics />
-      {/* <Cards /> */}
-      <div className={styles.tables1}></div>
       <div className={styles.tables1}>
         {canManageDoctors ? (
           <DynamicTable

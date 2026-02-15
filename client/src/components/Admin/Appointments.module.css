@@ -37,6 +37,10 @@
   background: var(--surface-card);
 }
 
+.paginationWrap {
+  margin-top: 0.65rem;
+}
+
 .appointmentsTable {
   width: 100%;
   border-collapse: collapse;

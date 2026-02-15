@@ -24,7 +24,6 @@ const MainDash = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const today = new Date();
         const response = await fetch(`${baseURL}/doctor/appointment`, {
           method: "GET",
           headers: {
@@ -34,8 +33,6 @@ const MainDash = () => {
         });
         const result = await response.json();
         setAppointments(result);
-        console.log("success");
-        console.log(result);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -60,8 +57,6 @@ const MainDash = () => {
     .filter((appointment) => new Date(appointment.date) <= currentDate)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  console.log(upcomingAppointments, recentAppointments);
-
   return (
     <div className={styles.MainDash}>
       <div className={styles.header}>
@@ -79,19 +74,6 @@ const MainDash = () => {
       </div>
       {/* <h3>Have a nice day.</h3> */}
       <DoctorStatistics />
-      {/* <Cards /> */}
-      <div className={styles.tables1}>
-        {/* <BarChartComponent
-          title="Patient Incoming History"
-          data={patientIncomingData}
-          labels={patientIncomingLabels}
-        />
-        <BarChartComponent
-          title="Rebooking Rate"
-          data={rebookingRatesData}
-          labels={rebookingLabels}
-        /> */}
-      </div>
       <div className={styles.tables1}>
         <DynamicTable
           title="Upcoming Appointments"

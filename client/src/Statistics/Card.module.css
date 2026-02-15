@@ -1,18 +1,17 @@
 .CompactCard {
   display: flex;
   flex: 1;
-  /* height: 7rem; */
-  border-radius: 0.7rem;
+  border-radius: 12px;
   color: white;
-  padding: 1rem;
+  padding: 0.85rem;
   position: relative;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .CompactCard:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(24, 34, 53, 0.2);
 }
 
 /* radial bar */
@@ -29,9 +28,9 @@
 }
 
 .radialBar > span {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 /* sideDetail */
@@ -44,7 +43,7 @@
 }
 
 .detail > span:nth-child(2) {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: bold;
 }
 

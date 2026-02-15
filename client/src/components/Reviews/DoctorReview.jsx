@@ -95,6 +95,7 @@ function DoctorReview() {
   return (
     <div className={styles.reviewShell}>
       <div className={styles.doctorReviewContainer}>
+        <h2 className={styles.title}>Doctor Reviews</h2>
         <div className={styles.filterSection}>
           <label>Filter by Rating: </label>
           <select
@@ -114,34 +115,36 @@ function DoctorReview() {
         {error && <p className={styles.error}>{error}</p>}
         {!loading && !error && (
           <div>
-            {currentReviews.length > 0 ? (
-              currentReviews.map((review) => (
-                <div key={review._id} className={styles.review}>
-                  <p>
-                    <strong>
-                      {review.user.name.firstName +
-                        " " +
-                        review.user.name.lastName}
-                      :
-                    </strong>{" "}
-                    <span
-                      className={styles.comment}
-                      onClick={() => handleCommentClick(review.comment)}
-                      title="Click to view full comment"
-                    >
-                      {review.comment.length > 100
-                        ? review.comment.substring(0, 100) + "..."
-                        : review.comment}
-                    </span>
-                  </p>
-                  <p className={styles.rating}>Rating: {review.rating}</p>
-                </div>
-              ))
-            ) : (
-              <p className={styles.noReviews}>
-                No reviews available for this doctor.
-              </p>
-            )}
+            <div className={styles.reviewList}>
+              {currentReviews.length > 0 ? (
+                currentReviews.map((review) => (
+                  <div key={review._id} className={styles.review}>
+                    <p>
+                      <strong>
+                        {review.user.name.firstName +
+                          " " +
+                          review.user.name.lastName}
+                        :
+                      </strong>{" "}
+                      <span
+                        className={styles.comment}
+                        onClick={() => handleCommentClick(review.comment)}
+                        title="Click to view full comment"
+                      >
+                        {review.comment.length > 100
+                          ? review.comment.substring(0, 100) + "..."
+                          : review.comment}
+                      </span>
+                    </p>
+                    <p className={styles.rating}>Rating: {review.rating}</p>
+                  </div>
+                ))
+              ) : (
+                <p className={styles.noReviews}>
+                  No reviews available for this doctor.
+                </p>
+              )}
+            </div>
             <Pagination
               totalPosts={filteredReviews.length}
               postsPerPage={postsPerPage}

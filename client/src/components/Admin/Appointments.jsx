@@ -118,66 +118,70 @@ function Appointments() {
     <div className={styles.appointmentsContainer}>
       <h1>Appointments</h1>
       {appointments.length > 0 ? (
-        <div className={styles.appointmentsTableContainer}>
-          <table className={styles.appointmentsTable}>
-            <thead>
-              <tr>
-                <th onClick={() => requestSort("date")}>
-                  Date{getSortIndicator("date")}
-                </th>
-                <th onClick={() => requestSort("time")}>
-                  Time{getSortIndicator("time")}
-                </th>
-                <th onClick={() => requestSort("doctor.name")}>
-                  Doctor{getSortIndicator("doctor.name")}
-                </th>
-                <th onClick={() => requestSort("patientName")}>
-                  Patient{getSortIndicator("patientName")}
-                </th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-          </table>
-          <div className={styles.scrollableTbody}>
+        <>
+          <div className={styles.appointmentsTableContainer}>
             <table className={styles.appointmentsTable}>
-              <tbody>
-                {currentAppointments.map((appointment) => (
-                  <tr key={appointment._id}>
-                    <td>{new Date(appointment.date).toLocaleDateString()}</td>
-                    <td>{appointment.time}</td>
-                    <td>
-                      {appointment.doctor.name.firstName +
-                        " " +
-                        appointment.doctor.name.lastName}
-                    </td>
-                    <td>{appointment.patientName}</td>
-                    <td>
-                      <span
-                        className={`${styles.status} ${
-                          styles[appointment.status]
-                        }`}
-                      >
-                        {appointment.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button onClick={() => handleViewDetails(appointment)}>
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              <thead>
+                <tr>
+                  <th onClick={() => requestSort("date")}>
+                    Date{getSortIndicator("date")}
+                  </th>
+                  <th onClick={() => requestSort("time")}>
+                    Time{getSortIndicator("time")}
+                  </th>
+                  <th onClick={() => requestSort("doctor.name")}>
+                    Doctor{getSortIndicator("doctor.name")}
+                  </th>
+                  <th onClick={() => requestSort("patientName")}>
+                    Patient{getSortIndicator("patientName")}
+                  </th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
             </table>
+            <div className={styles.scrollableTbody}>
+              <table className={styles.appointmentsTable}>
+                <tbody>
+                  {currentAppointments.map((appointment) => (
+                    <tr key={appointment._id}>
+                      <td>{new Date(appointment.date).toLocaleDateString()}</td>
+                      <td>{appointment.time}</td>
+                      <td>
+                        {appointment.doctor.name.firstName +
+                          " " +
+                          appointment.doctor.name.lastName}
+                      </td>
+                      <td>{appointment.patientName}</td>
+                      <td>
+                        <span
+                          className={`${styles.status} ${
+                            styles[appointment.status]
+                          }`}
+                        >
+                          {appointment.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button onClick={() => handleViewDetails(appointment)}>
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <Pagination
-            totalPosts={sortedAppointments.length}
-            postsPerPage={postsPerPage}
-            setCurrentPage={setCurrentPage}
-            currentPage={currentPage}
-          />
-        </div>
+          <div className={styles.paginationWrap}>
+            <Pagination
+              totalPosts={sortedAppointments.length}
+              postsPerPage={postsPerPage}
+              setCurrentPage={setCurrentPage}
+              currentPage={currentPage}
+            />
+          </div>
+        </>
       ) : (
         <p>No appointments found.</p>
       )}
