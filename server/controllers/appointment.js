@@ -59,6 +59,17 @@ export const createAppointment = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found." });
     }
 
+    const availableSlots = await getAvailableSlots(doctorId, date);
+    if (!availableSlots) {
+      return res.status(400).json({ message: "Invalid appointment date." });
+    }
+    if (!availableSlots.includes(time)) {
+      return res.status(409).json({
+        message:
+          "Selected time slot is not available for this doctor on the chosen date.",
+      });
+    }
+
     const newAppointment = new Appointment({
       doctor: doctorId,
       user: userProfileId,
@@ -143,6 +154,14 @@ export const getAvailableTimeSlots = async (req, res) => {
   const { doctorId, date } = req.params;
 
   try {
+    const doctorExists = await DoctorProfile.exists({
+      _id: doctorId,
+      isDeleted: { $ne: true },
+    });
+    if (!doctorExists) {
+      return res.status(404).json({ message: "Doctor not found." });
+    }
+
     const availableSlots = await getAvailableSlots(doctorId, date);
     if (!availableSlots) {
       return res.status(400).json({ message: "Invalid date." });
