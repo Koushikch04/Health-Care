@@ -97,6 +97,52 @@ function Users() {
     }
     return age;
   };
+
+  const hasActiveFilters = () =>
+    searchName.trim() !== "" ||
+    filterGender !== "All" ||
+    ageRange !== "All" ||
+    status !== "All" ||
+    registrationDate !== "All";
+
+  const applyFiltersToUsers = (sourceUsers) =>
+    sourceUsers.filter((user) => {
+      const matchesName = `${user.name.firstName} ${user.name.lastName}`
+        .toLowerCase()
+        .includes(searchName.toLowerCase());
+      const matchesGender =
+        filterGender === "All" || user.gender === filterGender;
+      const userAge = calculateAge(user.dob);
+      let matchesAge = false;
+      if (ageRange === "All") {
+        matchesAge = true;
+      } else {
+        const [minAge, maxAge] = ageRange.split("-").map(Number);
+        matchesAge = userAge >= minAge && (maxAge ? userAge <= maxAge : true);
+      }
+      const userStatus = user.appointmentCount > 0 ? "Active" : "Inactive";
+      const matchesStatus = status === "All" || status === userStatus;
+      const matchesRegistrationDate =
+        registrationDate === "All" ||
+        new Date(user.createdAt).getFullYear() === parseInt(registrationDate);
+
+      return (
+        matchesName &&
+        matchesGender &&
+        matchesAge &&
+        matchesStatus &&
+        matchesRegistrationDate
+      );
+    });
+
+  const syncUserCollections = (nextUsers, { resetPage = false } = {}) => {
+    setUsers(nextUsers);
+    setFilteredUsers(
+      hasActiveFilters() ? applyFiltersToUsers(nextUsers) : nextUsers,
+    );
+    if (resetPage) setCurrentPage(1);
+  };
+
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
@@ -117,8 +163,7 @@ function Users() {
       const data = await response.json();
       console.log(data);
 
-      setUsers(data.users);
-      setFilteredUsers(data.users);
+      syncUserCollections(data.users);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -131,37 +176,7 @@ function Users() {
   }, [token]);
 
   const handleFilterChange = () => {
-    const filtered = users.filter((user) => {
-      const matchesName = `${user.name.firstName} ${user.name.lastName}`
-        .toLowerCase()
-        .includes(searchName.toLowerCase());
-      const matchesGender =
-        filterGender === "All" || user.gender === filterGender;
-      const userAge = calculateAge(user.dob);
-      let matchesAge = false;
-      if (ageRange === "All") {
-        matchesAge = true;
-      } else {
-        const [minAge, maxAge] = ageRange.split("-").map(Number);
-
-        matchesAge = userAge >= minAge && (maxAge ? userAge <= maxAge : true);
-      }
-      const userStatus = user.appointmentCount > 0 ? "Active" : "Inactive";
-
-      const matchesStatus = status === "All" || status === userStatus;
-
-      const matchesRegistrationDate =
-        registrationDate === "All" ||
-        new Date(user.createdAt).getFullYear() === parseInt(registrationDate);
-
-      return (
-        matchesName &&
-        matchesGender &&
-        matchesAge &&
-        matchesStatus &&
-        matchesRegistrationDate
-      );
-    });
+    const filtered = applyFiltersToUsers(users);
     setFilteredUsers(filtered);
     setCurrentPage(1);
   };
@@ -220,7 +235,43 @@ function Users() {
         return;
       }
 
-      await fetchUsers();
+      const responseData = await response.json().catch(() => ({}));
+
+      if (isEditMode) {
+        const nextUsers = users.map((user) =>
+          user._id === selectedUser._id
+            ? {
+                ...user,
+                name: {
+                  firstName: formData.firstName,
+                  lastName: formData.lastName,
+                },
+                email: formData.email,
+                gender: formData.gender,
+                dob: formData.dob,
+              }
+            : user,
+        );
+        syncUserCollections(nextUsers);
+      } else {
+        const createdUser = responseData?.newUser;
+        const optimisticNewUser = {
+          _id: createdUser?._id || `${Date.now()}`,
+          name: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+          },
+          email: formData.email,
+          gender: formData.gender,
+          dob: formData.dob,
+          createdAt: createdUser?.createdAt || new Date().toISOString(),
+          appointmentCount: 0,
+          profileImage: createdUser?.profileImage || "",
+          contact: trimmedPhone ? { phone: Number(trimmedPhone) } : {},
+        };
+        syncUserCollections([optimisticNewUser, ...users], { resetPage: true });
+      }
+
       // setIsModalOpen(false);
       setCreateEditModal(false);
       reset({
@@ -233,6 +284,7 @@ function Users() {
       });
       setIsEditMode(false);
     } catch (error) {
+      await fetchUsers();
       setFormError("root.serverError", {
         type: "server",
         message: error.message || "Failed to save user",
@@ -281,9 +333,15 @@ function Users() {
 
       if (!response.ok) throw new Error("Failed to delete user");
 
-      await fetchUsers();
-      // setCurrentPage(1);
+      const nextUsers = users.filter((user) => user._id !== userId);
+      syncUserCollections(nextUsers);
+
+      const totalPages = Math.max(1, Math.ceil(nextUsers.length / postsPerPage));
+      if (currentPage > totalPages) {
+        setCurrentPage(totalPages);
+      }
     } catch (error) {
+      await fetchUsers();
       setError(error.message);
     }
   };
