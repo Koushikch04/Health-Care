@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import moment from "moment";
 import crypto from "crypto";
+import mongoose from "mongoose";
 
 import Account from "../models/Account.js";
 import UserProfile from "../models/UserProfile.js";
@@ -27,22 +28,40 @@ const createInviteLink = (rawInviteToken) => {
   return `${frontendUrl.replace(/\/$/, "")}/auth/invite-setup?token=${rawInviteToken}`;
 };
 
-const issueInviteToken = async ({ accountId, email }) => {
-  await InviteToken.deleteMany({
+const issueInviteToken = async ({ accountId, email, session = null }) => {
+  const deleteQuery = InviteToken.deleteMany({
     accountId,
     usedAt: null,
   });
+  if (session) {
+    deleteQuery.session(session);
+  }
+  await deleteQuery;
 
   const rawInviteToken = crypto.randomBytes(32).toString("hex");
   const tokenHash = crypto.createHash("sha256").update(rawInviteToken).digest("hex");
   const expiresAt = new Date(Date.now() + INVITE_TOKEN_EXPIRY_MS);
 
-  await InviteToken.create({
-    accountId,
-    email,
-    tokenHash,
-    expiresAt,
-  });
+  if (session) {
+    await InviteToken.create(
+      [
+        {
+          accountId,
+          email,
+          tokenHash,
+          expiresAt,
+        },
+      ],
+      { session }
+    );
+  } else {
+    await InviteToken.create({
+      accountId,
+      email,
+      tokenHash,
+      expiresAt,
+    });
+  }
 
   return rawInviteToken;
 };
@@ -101,6 +120,7 @@ export const getAllUsers = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
+  const session = await mongoose.startSession();
   try {
     console.log(req.body);
 
@@ -151,30 +171,44 @@ export const createUser = async (req, res) => {
         .json({ error: "User with this email already exists." });
     }
 
+    await session.startTransaction();
+
     const randomPlaceholderPassword = crypto.randomBytes(32).toString("hex");
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(randomPlaceholderPassword, saltRounds);
 
-    const account = await Account.create({
-      email: normalizedEmail,
-      password: hashedPassword,
-      roles: ["user"],
-      status: "pending",
-    });
+    const [account] = await Account.create(
+      [
+        {
+          email: normalizedEmail,
+          password: hashedPassword,
+          roles: ["user"],
+          status: "pending",
+        },
+      ],
+      { session }
+    );
 
-    const newUser = await UserProfile.create({
-      accountId: account._id,
-      name: { firstName, lastName },
-      ...(normalizedPhone ? { contact: { phone: normalizedPhone } } : {}),
-      gender,
-      dob,
-    });
+    const [newUser] = await UserProfile.create(
+      [
+        {
+          accountId: account._id,
+          name: { firstName, lastName },
+          ...(normalizedPhone ? { contact: { phone: normalizedPhone } } : {}),
+          gender,
+          dob,
+        },
+      ],
+      { session }
+    );
 
     const rawInviteToken = await issueInviteToken({
       accountId: account._id,
       email: account.email,
+      session,
     });
     const inviteLink = createInviteLink(rawInviteToken);
+    await session.commitTransaction();
 
     try {
       await sendInviteMail({ email: account.email, inviteLink });
@@ -190,8 +224,13 @@ export const createUser = async (req, res) => {
       message: "User created and invite email sent.",
     });
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.log(error);
     res.status(500).json({ error: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
