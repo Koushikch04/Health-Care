@@ -17,13 +17,15 @@ const createUserSchema = z.object({
     errorMap: () => ({ message: "Please select a gender." }),
   }),
   dob: z.string().min(1, "Date of birth is required."),
-  password: z.string().min(7, "Password must be at least 7 characters."),
   phone: z
     .string()
     .trim()
-    .min(7, "Phone number must be at least 7 digits.")
-    .max(15, "Phone number cannot exceed 15 digits.")
-    .regex(/^[0-9]+$/, "Phone number must contain digits only."),
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (value) => !value || (/^[0-9]+$/.test(value) && value.length >= 7 && value.length <= 15),
+      "Phone number must be 7-15 digits.",
+    ),
 });
 
 const editUserSchema = z.object({
@@ -191,7 +193,12 @@ function Users() {
           dob: formData.dob,
         }
       : {
-          ...formData,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          gender: formData.gender,
+          dob: formData.dob,
+          phone: formData.phone,
         };
 
     try {
@@ -382,16 +389,6 @@ function Users() {
 
               {!isEditMode && (
                 <div className={styles.formGroup}>
-                  <label htmlFor="password">Password</label>
-                  <input id="password" type="password" {...register("password")} />
-                  {errors.password && (
-                    <span className={styles.formError}>{errors.password.message}</span>
-                  )}
-                </div>
-              )}
-
-              {!isEditMode && (
-                <div className={styles.formGroup}>
                   <label htmlFor="phone">Phone</label>
                   <input
                     id="phone"
@@ -436,7 +433,7 @@ function Users() {
                 className={styles.button}
                 disabled={!isValid || isSubmitting}
               >
-                {isEditMode ? "Update User" : "Add User"}
+                {isEditMode ? "Update User" : "Create & Send Invite"}
               </button>
             </form>
           </div>

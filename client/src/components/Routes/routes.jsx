@@ -2,6 +2,7 @@ import LandingPage from "../LandingPage/LandingPage";
 import SignUp from "../LoginSignUp/SignUp";
 import SignIn from "../LoginSignUp/SignIn";
 import ForgotPassword from "../LoginSignUp/ForgotPassword";
+import InviteSetup from "../LoginSignUp/InviteSetup";
 import FindDoctorSearch from "../SearchBar/FindDoctorSearch";
 import Review from "../Reviews/UserReview";
 import Profile from "../Profile/Profile";
@@ -26,6 +27,11 @@ const routes = [
   {
     path: "/auth/forgot-password",
     element: <ForgotPassword />,
+    requiresAuth: false,
+  },
+  {
+    path: "/auth/invite-setup",
+    element: <InviteSetup />,
     requiresAuth: false,
   },
   {

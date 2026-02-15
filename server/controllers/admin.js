@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import moment from "moment";
+import crypto from "crypto";
 
 import Account from "../models/Account.js";
 import UserProfile from "../models/UserProfile.js";
@@ -7,7 +8,9 @@ import DoctorProfile from "../models/DoctorProfile.js";
 import Appointment from "../models/Appointment.js";
 import Review from "../models/Review.js";
 import AdminProfile from "../models/AdminProfile.js";
+import InviteToken from "../models/InviteToken.js";
 import { normalizeToUtcDayStart } from "../utils/date.js";
+import sendInviteMail from "../middleware/sendInviteMail.js";
 import {
   APPOINTMENT_ACTIONS,
   APPOINTMENT_STATUSES,
@@ -73,13 +76,12 @@ export const createUser = async (req, res) => {
   try {
     console.log(req.body);
 
-    const { firstName, lastName, email, password, gender, dob, phone } =
-      req.body;
+    const { firstName, lastName, email, gender, dob, phone } = req.body;
 
-    if (!email || !password) {
+    if (!email || !firstName || !lastName) {
       return res
         .status(400)
-        .json({ error: "Email and password are required." });
+        .json({ error: "First name, last name and email are required." });
     }
 
     const existingAccount = await Account.findOne({
@@ -91,13 +93,15 @@ export const createUser = async (req, res) => {
         .json({ error: "User with this email already exists." });
     }
 
+    const randomPlaceholderPassword = crypto.randomBytes(32).toString("hex");
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(randomPlaceholderPassword, saltRounds);
 
     const account = await Account.create({
       email: email.toLowerCase(),
       password: hashedPassword,
       roles: ["user"],
+      status: "pending",
     });
 
     const newUser = await UserProfile.create({
@@ -108,8 +112,36 @@ export const createUser = async (req, res) => {
       dob,
     });
 
+    await InviteToken.deleteMany({
+      accountId: account._id,
+      usedAt: null,
+    });
+
+    const rawInviteToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawInviteToken)
+      .digest("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await InviteToken.create({
+      accountId: account._id,
+      email: account.email,
+      tokenHash,
+      expiresAt,
+    });
+
+    const frontendUrl =
+      process.env.FRONTEND_URL ||
+      process.env.CLIENT_URL ||
+      "http://localhost:5173";
+    const inviteLink = `${frontendUrl.replace(/\/$/, "")}/auth/invite-setup?token=${rawInviteToken}`;
+
+    await sendInviteMail({ email: account.email, inviteLink });
+
     res.status(201).json({
       newUser,
+      message: "User created and invite email sent.",
     });
   } catch (error) {
     console.log(error);

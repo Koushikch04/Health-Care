@@ -22,7 +22,7 @@ const accountSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["active", "blocked"],
+      enum: ["active", "blocked", "pending"],
       default: "active",
     },
     isDeleted: {
