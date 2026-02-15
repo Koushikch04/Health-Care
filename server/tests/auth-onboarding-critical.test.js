@@ -8,9 +8,15 @@ import UserProfile from "../models/UserProfile.js";
 import InviteToken from "../models/InviteToken.js";
 import { app } from "./helpers/fixtures.js";
 
+const TEST_PASSWORD = "testpass-1";
+const TEST_OLD_PASSWORD = "testpass-old";
+const TEST_NEW_PASSWORD = "testpass-new";
+const TEST_REACTIVATED_PASSWORD = "testpass-reactivated";
+const TEST_INVITE_TOKEN = "test-invite-token-nonsecret";
+
 describe("Auth onboarding critical flows", () => {
   test("blocks login for pending accounts", async () => {
-    const passwordHash = await bcrypt.hash("Password123!", 10);
+    const passwordHash = await bcrypt.hash(TEST_PASSWORD, 10);
     await Account.create({
       email: "pending-login@example.com",
       password: passwordHash,
@@ -20,7 +26,7 @@ describe("Auth onboarding critical flows", () => {
 
     const res = await request(app).post("/auth/login").send({
       email: "pending-login@example.com",
-      password: "Password123!",
+      password: TEST_PASSWORD,
     });
 
     expect(res.status).toBe(403);
@@ -28,9 +34,9 @@ describe("Auth onboarding critical flows", () => {
   });
 
   test("completes invite setup and activates account", async () => {
-    const rawToken = "plain-invite-token";
+    const rawToken = TEST_INVITE_TOKEN;
     const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
-    const passwordHash = await bcrypt.hash("OldPassword123!", 10);
+    const passwordHash = await bcrypt.hash(TEST_OLD_PASSWORD, 10);
 
     const account = await Account.create({
       email: "invite-user@example.com",
@@ -48,7 +54,7 @@ describe("Auth onboarding critical flows", () => {
 
     const res = await request(app).post("/auth/invite/complete").send({
       token: rawToken,
-      newPassword: "NewPassword123!",
+      newPassword: TEST_NEW_PASSWORD,
     });
 
     expect(res.status).toBe(200);
@@ -56,14 +62,14 @@ describe("Auth onboarding critical flows", () => {
 
     const updatedAccount = await Account.findById(account._id);
     expect(updatedAccount.status).toBe("active");
-    expect(await bcrypt.compare("NewPassword123!", updatedAccount.password)).toBe(true);
+    expect(await bcrypt.compare(TEST_NEW_PASSWORD, updatedAccount.password)).toBe(true);
 
     const usedInvite = await InviteToken.findOne({ accountId: account._id });
     expect(usedInvite.usedAt).not.toBeNull();
   });
 
   test("reactivates soft-deleted account and profile on register", async () => {
-    const passwordHash = await bcrypt.hash("OldPassword123!", 10);
+    const passwordHash = await bcrypt.hash(TEST_OLD_PASSWORD, 10);
 
     const account = await Account.create({
       email: "reactivate-user@example.com",
@@ -94,7 +100,7 @@ describe("Auth onboarding critical flows", () => {
       lastName: "Name",
       email: "reactivate-user@example.com",
       phone: "8888888888",
-      password: "BrandNew123!",
+      password: TEST_REACTIVATED_PASSWORD,
       dob: "1992-02-02",
       gender: "Female",
     });
@@ -107,7 +113,7 @@ describe("Auth onboarding critical flows", () => {
 
     expect(reloadedAccount.isDeleted).toBe(false);
     expect(reloadedAccount.status).toBe("active");
-    expect(await bcrypt.compare("BrandNew123!", reloadedAccount.password)).toBe(true);
+    expect(await bcrypt.compare(TEST_REACTIVATED_PASSWORD, reloadedAccount.password)).toBe(true);
 
     expect(reloadedProfile.isDeleted).toBe(false);
     expect(reloadedProfile.name.firstName).toBe("New");
@@ -124,7 +130,7 @@ describe("Auth onboarding critical flows", () => {
       lastName: "Rollback",
       email: "txn-rollback@example.com",
       phone: "7777777777",
-      password: "Password123!",
+      password: TEST_PASSWORD,
       dob: "1993-03-03",
       gender: "Male",
     });
@@ -137,4 +143,3 @@ describe("Auth onboarding critical flows", () => {
     createSpy.mockRestore();
   });
 });
-
