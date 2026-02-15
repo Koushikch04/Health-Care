@@ -56,9 +56,10 @@
 
 .form_group .field {
   width: 250px;
-  height: 30px;
+  min-height: 30px;
   margin: 20px 0;
   display: flex;
+  flex-direction: column;
   position: relative;
 }
 
@@ -117,4 +118,12 @@
 
 .book_button:hover {
   background-color: #0056b3;
+}
+
+.slotHint {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: #4a5568;
+  text-align: left;
+  line-height: 1.35;
 }

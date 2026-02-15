@@ -1,5 +1,5 @@
 // FindDoctorSearch.js
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { FaSearch } from "react-icons/fa";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -7,6 +7,7 @@ import styles from "./FindDoctorSearch.module.css";
 import SearchBarResults from "./SearchBarResults";
 import AvailableDoctors from "../DoctorListPagination/AvailableDoctors";
 import { baseURL } from "../../api/api";
+import { createTrieIndex, searchPrefix } from "../../utils/trie";
 
 const FindDoctorSearch = () => {
   const [specialties, setSpecialties] = useState([]);
@@ -27,6 +28,38 @@ const FindDoctorSearch = () => {
   });
 
   const searchRef = useRef(null);
+  const specialtiesTrie = useMemo(
+    () => createTrieIndex(specialties, (specialty) => specialty.name),
+    [specialties],
+  );
+
+  const getSearchResults = (value) => {
+    const totalStart = performance.now();
+    const query = value.trim();
+    if (!query) return specialties;
+    const trieStart = performance.now();
+    const prefixMatches = searchPrefix(specialtiesTrie, query, 50);
+    const trieEnd = performance.now();
+    const trieTimeMs = trieEnd - trieStart;
+
+    console.log(`Trie prefix search took ${(trieTimeMs * 1000).toFixed(3)} µs`);
+
+    const seenNames = new Set(prefixMatches.map((specialty) => specialty.name));
+
+    const containsStart = performance.now();
+
+    const containsMatches = specialties.filter(
+      (specialty) =>
+        specialty.name.toLowerCase().includes(query.toLowerCase()) &&
+        !seenNames.has(specialty.name),
+    );
+
+    const containsEnd = performance.now();
+
+    console.log(`Contains search took ${containsEnd - containsStart} ms`);
+
+    return [...prefixMatches, ...containsMatches];
+  };
 
   const handleClose = () => {
     setSearch("");
@@ -49,15 +82,9 @@ const FindDoctorSearch = () => {
   };
 
   const handleChange = (e) => {
-    setSearch(e.target.value);
-    if (e.target.value === "") {
-      setSearchData(specialties);
-    } else {
-      const filteredData = specialties.filter((specialty) =>
-        specialty.name.toLowerCase().includes(e.target.value.toLowerCase())
-      );
-      setSearchData(filteredData);
-    }
+    const value = e.target.value;
+    setSearch(value);
+    setSearchData(getSearchResults(value));
   };
 
   const handleKeyDown = (e) => {
@@ -84,7 +111,7 @@ const FindDoctorSearch = () => {
 
   const handleFocus = () => {
     setShowSuggestions(true);
-    setSearchData(specialties);
+    setSearchData(getSearchResults(search));
   };
 
   const handleBlur = (e) => {
@@ -98,14 +125,14 @@ const FindDoctorSearch = () => {
       (doctor) =>
         doctor.experience >= filters.minExperience &&
         doctor.rating >= filters.minRating &&
-        doctor.cost <= filters.maxCost
+        doctor.cost <= filters.maxCost,
     );
   };
 
   const applyFilters = () => {
     if (selectedSpecialty) {
       const specialty = specialties.find(
-        (spec) => spec.name === selectedSpecialty
+        (spec) => spec.name === selectedSpecialty,
       );
       const filteredDoctors = filterDoctors(specialty.doctors);
       setSelectedDoctors(filteredDoctors);
@@ -138,7 +165,7 @@ const FindDoctorSearch = () => {
         if (specialtyName) {
           const selectedSpecialty = data.find(
             (specialty) =>
-              specialty.name.toLowerCase() === specialtyName.toLowerCase()
+              specialty.name.toLowerCase() === specialtyName.toLowerCase(),
           );
           if (selectedSpecialty) {
             handleSpecialtySelect(selectedSpecialty);
