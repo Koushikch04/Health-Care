@@ -166,6 +166,74 @@ export const createUser = async (req, res) => {
         });
       }
 
+      if (existingAccount.isDeleted && existingAccount.roles?.includes("user")) {
+        await session.startTransaction();
+
+        existingAccount.isDeleted = false;
+        existingAccount.deletedAt = null;
+        existingAccount.status = "pending";
+        existingAccount.roles = ["user"];
+        await existingAccount.save({ session });
+
+        let restoredUser = await UserProfile.findOne({
+          accountId: existingAccount._id,
+        }).session(session);
+
+        if (restoredUser) {
+          restoredUser.name = { firstName, lastName };
+          restoredUser.gender = gender ?? restoredUser.gender;
+          restoredUser.dob = dob ?? restoredUser.dob;
+          restoredUser.isDeleted = false;
+          restoredUser.deletedAt = null;
+
+          if (normalizedPhone) {
+            restoredUser.contact = {
+              ...restoredUser.contact,
+              phone: normalizedPhone,
+            };
+          }
+
+          restoredUser = await restoredUser.save({ session });
+        } else {
+          [restoredUser] = await UserProfile.create(
+            [
+              {
+                accountId: existingAccount._id,
+                name: { firstName, lastName },
+                ...(normalizedPhone ? { contact: { phone: normalizedPhone } } : {}),
+                gender,
+                dob,
+                isDeleted: false,
+                deletedAt: null,
+              },
+            ],
+            { session }
+          );
+        }
+
+        const rawInviteToken = await issueInviteToken({
+          accountId: existingAccount._id,
+          email: existingAccount.email,
+          session,
+        });
+        const inviteLink = createInviteLink(rawInviteToken);
+        await session.commitTransaction();
+
+        try {
+          await sendInviteMail({ email: existingAccount.email, inviteLink });
+        } catch (mailError) {
+          return res.status(502).json({
+            error:
+              "User reactivated in pending state, but sending invite email failed. Retry creating the same email to resend invite.",
+          });
+        }
+
+        return res.status(200).json({
+          newUser: restoredUser,
+          message: "Deleted user reactivated and invite email sent.",
+        });
+      }
+
       return res
         .status(400)
         .json({ error: "User with this email already exists." });

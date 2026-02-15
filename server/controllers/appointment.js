@@ -11,12 +11,17 @@ import {
   assertActionAllowed,
   getAllowedFromStatuses,
 } from "../utils/appointmentStateMachine.js";
-import { getAvailableSlots } from "../services/appointmentService.js";
+import {
+  getAvailableSlots,
+  getAvailableSlotsWithContext,
+} from "../services/appointmentService.js";
 
 const getUserProfileId = async (req) => {
   if (req.user?.profileId) return req.user.profileId;
   if (req.user?.accountId) {
-    const profile = await UserProfile.findOne({ accountId: req.user.accountId });
+    const profile = await UserProfile.findOne({
+      accountId: req.user.accountId,
+    });
     return profile?._id;
   }
   return null;
@@ -109,7 +114,7 @@ export const getUserAppointments = async (req, res) => {
       if (!validStatuses.includes(status)) {
         return res.status(400).json({
           msg: `Invalid status filter. Allowed values are: ${validStatuses.join(
-            ", "
+            ", ",
           )}`,
         });
       }
@@ -151,7 +156,10 @@ export const getUserAppointments = async (req, res) => {
 };
 
 export const getAvailableTimeSlots = async (req, res) => {
+  const startTime = performance.now();
   const { doctorId, date } = req.params;
+  const { strategy } = req.query;
+  // const strategy = "array"; // Force bitmask strategy for now
 
   try {
     const doctorExists = await DoctorProfile.exists({
@@ -162,16 +170,24 @@ export const getAvailableTimeSlots = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found." });
     }
 
-    const availableSlots = await getAvailableSlots(doctorId, date);
-    if (!availableSlots) {
+    const availability = await getAvailableSlotsWithContext(doctorId, date, {
+      strategy,
+    });
+    if (!availability?.slots) {
       return res.status(400).json({ message: "Invalid date." });
     }
-
-    return res.status(200).json(availableSlots);
+    res.setHeader("X-Availability-Reason", availability.reason);
+    res.setHeader("X-Availability-Strategy", availability.strategy);
+    return res.status(200).json(availability.slots);
   } catch (error) {
     return res
       .status(500)
       .json({ message: "Error retrieving available time slots", error });
+  } finally {
+    const endTime = performance.now();
+    console.log(
+      `${strategy || "default"} getAvailableTimeSlots execution time: ${(endTime - startTime).toFixed(2)} ms`,
+    );
   }
 };
 
@@ -224,22 +240,19 @@ export const cancelAppointment = async (req, res) => {
         status: { $in: getAllowedFromStatuses(APPOINTMENT_ACTIONS.CANCEL) },
       },
       { $set: { status: APPOINTMENT_STATUSES.CANCELED } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedAppointment) {
       return res.status(409).json({
-        message:
-          "Appointment state changed and can no longer be canceled.",
+        message: "Appointment state changed and can no longer be canceled.",
       });
     }
 
-    return res
-      .status(200)
-      .json({
-        message: "Appointment canceled successfully.",
-        appointment: updatedAppointment,
-      });
+    return res.status(200).json({
+      message: "Appointment canceled successfully.",
+      appointment: updatedAppointment,
+    });
   } catch (error) {
     console.error(error.message);
     return res
@@ -254,7 +267,7 @@ export const getAppointmentDetails = async (req, res) => {
   try {
     const appointment = await Appointment.findById(appointmentId).populate(
       "doctor",
-      "name experience rating"
+      "name experience rating",
     );
 
     if (!appointment) {
