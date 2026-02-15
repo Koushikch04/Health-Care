@@ -150,6 +150,42 @@ function Admins() {
     const payload = isEditMode
       ? { permissions: formAdmin.permissions }
       : formAdmin;
+    const previousAdmins = admins;
+    const previousFilteredAdmins = filteredAdmins;
+
+    if (isEditMode && selectedAdmin) {
+      const optimisticUpdatedAdmin = {
+        ...selectedAdmin,
+        firstName: formAdmin.firstName || selectedAdmin.firstName,
+        lastName: formAdmin.lastName || selectedAdmin.lastName,
+        email: formAdmin.email || selectedAdmin.email,
+        permissions: { ...formAdmin.permissions },
+      };
+
+      setAdmins((prev) =>
+        prev.map((admin) =>
+          admin._id === selectedAdmin._id ? optimisticUpdatedAdmin : admin,
+        ),
+      );
+      setFilteredAdmins((prev) =>
+        prev.map((admin) =>
+          admin._id === selectedAdmin._id ? optimisticUpdatedAdmin : admin,
+        ),
+      );
+    } else if (!isEditMode) {
+      const optimisticAdmin = {
+        _id: `temp-${Date.now()}`,
+        firstName: formAdmin.firstName,
+        lastName: formAdmin.lastName,
+        email: formAdmin.email,
+        permissions: { ...formAdmin.permissions },
+      };
+      setAdmins((prev) => [optimisticAdmin, ...prev]);
+      setFilteredAdmins((prev) => [optimisticAdmin, ...prev]);
+    }
+
+    setIsFormModalOpen(false);
+    setError(null);
 
     try {
       const res = await fetch(url, {
@@ -164,9 +200,9 @@ function Admins() {
       if (!res.ok) throw new Error("Failed to save admin");
 
       await fetchAdmins();
-      setIsFormModalOpen(false);
-      setError(null);
     } catch (err) {
+      setAdmins(previousAdmins);
+      setFilteredAdmins(previousFilteredAdmins);
       setError(err.message);
     }
   };
@@ -178,6 +214,10 @@ function Admins() {
     );
 
     if (!confirmed) return;
+    const previousAdmins = admins;
+    const previousFilteredAdmins = filteredAdmins;
+    setAdmins((prev) => prev.filter((admin) => admin._id !== id));
+    setFilteredAdmins((prev) => prev.filter((admin) => admin._id !== id));
 
     try {
       const res = await fetch(`${baseURL}/admin/delete/${id}`, {
@@ -186,9 +226,9 @@ function Admins() {
       });
 
       if (!res.ok) throw new Error("Failed to delete admin");
-
-      await fetchAdmins();
     } catch (err) {
+      setAdmins(previousAdmins);
+      setFilteredAdmins(previousFilteredAdmins);
       setError(err.message);
     }
   };

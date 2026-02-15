@@ -37,6 +37,7 @@ const AppointmentForm = ({
 
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
   const [isDateSelected, setIsDateSelected] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
 
   const { alert } = useAlert();
 
@@ -138,6 +139,7 @@ const AppointmentForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isBooking) return;
     if (!formData.date) {
       alert.info({
         message: "Please select a valid appointment date.",
@@ -145,6 +147,19 @@ const AppointmentForm = ({
       });
       return;
     }
+    if (!formData.time) {
+      alert.info({
+        message: "Please select an available time slot.",
+        title: "Info",
+      });
+      return;
+    }
+
+    const selectedSlot = formData.time;
+    const previousSlots = availableTimeSlots;
+    setIsBooking(true);
+    setAvailableTimeSlots((prev) => prev.filter((slot) => slot !== selectedSlot));
+    setFormData((prev) => ({ ...prev, time: "" }));
 
     try {
       const response = await fetch(`${baseURL}/appointment`, {
@@ -181,10 +196,14 @@ const AppointmentForm = ({
       });
       onSubmit();
     } catch (error) {
+      setAvailableTimeSlots(previousSlots);
+      setFormData((prev) => ({ ...prev, time: selectedSlot }));
       alert.error({
         message: `Failed to book appointment: ${error.message}`,
         title: "Failed Booking",
       });
+    } finally {
+      setIsBooking(false);
     }
   };
 
@@ -240,6 +259,7 @@ const AppointmentForm = ({
                   value={formData.date ? dayjs(formData.date) : null}
                   onChange={handleDateChange}
                   disablePast
+                  disabled={isBooking}
                   slotProps={{
                     textField: {
                       id: "date",
@@ -262,6 +282,7 @@ const AppointmentForm = ({
               onFocus={handleTimeFocus}
               onChange={handleInputChange}
               className={styles.input}
+              disabled={isBooking}
               required
             >
               <option value="" disabled>
@@ -297,8 +318,8 @@ const AppointmentForm = ({
             />
           </div>
 
-          <button type="submit" className={styles.book_button}>
-            Book Now
+          <button type="submit" className={styles.book_button} disabled={isBooking}>
+            {isBooking ? "Booking..." : "Book Now"}
           </button>
         </form>
       </div>
