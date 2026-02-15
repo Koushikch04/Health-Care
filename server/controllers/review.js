@@ -50,24 +50,22 @@ const createReview = async (req, res) => {
         .json({ error: "Please provide doctor ID, appointment ID, and rating." });
     }
 
-    await session.startTransaction();
-
-    const appointment = await Appointment.findById(appointmentId).session(session);
+    // Run request/permission/state guards before opening a transaction so
+    // invalid requests return correct 4xx responses even in environments
+    // where Mongo transactions are unavailable.
+    const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
-      await session.abortTransaction();
       return res.status(404).json({ error: "Appointment not found." });
     }
 
     // Ensure the appointment belongs to the current user and is completed
     const userProfileId = await getUserProfileId(req);
     if (appointment.user.toString() !== userProfileId?.toString()) {
-      await session.abortTransaction();
       return res
         .status(401)
         .json({ error: "You can only review your own appointments." });
     }
     if (appointment.status !== "completed") {
-      await session.abortTransaction();
       return res
         .status(400)
         .json({ error: "Only completed appointments can be reviewed." });
@@ -76,8 +74,27 @@ const createReview = async (req, res) => {
     // Check if the user has already reviewed this appointment
     const alreadyReviewed = await Review.findOne({
       appointment: appointmentId,
-    }).session(session);
+    });
     if (alreadyReviewed) {
+      return res
+        .status(400)
+        .json({ error: "You have already reviewed this appointment." });
+    }
+
+    await session.startTransaction();
+
+    const appointmentForUpdate = await Appointment.findById(appointmentId).session(session);
+    if (!appointmentForUpdate || appointmentForUpdate.status !== "completed") {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ error: "Only completed appointments can be reviewed." });
+    }
+
+    const existingReview = await Review.findOne({ appointment: appointmentId }).session(
+      session
+    );
+    if (existingReview) {
       await session.abortTransaction();
       return res
         .status(400)
@@ -97,7 +114,7 @@ const createReview = async (req, res) => {
       ],
       { session }
     );
-    appointment.reviewed = true;
+    appointmentForUpdate.reviewed = true;
 
     // Update doctor's average rating
     const doctor = await DoctorProfile.findById(doctorId).session(session);
@@ -107,11 +124,11 @@ const createReview = async (req, res) => {
       const averageRating = reviews.length ? total / reviews.length : 0;
       doctor.rating = { average: averageRating, count: reviews.length };
       await doctor.save({ session });
-      await appointment.save({ session });
+      await appointmentForUpdate.save({ session });
     }
 
     await session.commitTransaction();
-    return res.status(201).json({ message: "Review added successfully.", appointment });
+    return res.status(201).json({ message: "Review added successfully.", appointment: appointmentForUpdate });
   } catch (error) {
     if (session.inTransaction()) {
       await session.abortTransaction();
