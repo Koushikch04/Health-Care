@@ -1,15 +1,17 @@
 import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 
-let mongoServer;
+let mongoReplSet;
 
 beforeAll(async () => {
   process.env.NODE_ENV = "test";
   process.env.JWT_SECRET = process.env.JWT_SECRET || "test-jwt-secret";
   process.env.OTP_LENGTH = process.env.OTP_LENGTH || "6";
 
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
+  mongoReplSet = await MongoMemoryReplSet.create({
+    replSet: { count: 1, storageEngine: "wiredTiger" },
+  });
+  const mongoUri = mongoReplSet.getUri();
 
   await mongoose.connect(mongoUri);
 
@@ -27,8 +29,8 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await mongoose.disconnect();
-  if (mongoServer) {
-    await mongoServer.stop();
+  if (mongoReplSet) {
+    await mongoReplSet.stop();
   }
 });
 

@@ -44,6 +44,7 @@ export const registerUser = async (req, res, next) => {
     const existingAccount = await Account.findOne({
       email: email.toLowerCase(),
     }).session(session);
+    const isReactivation = Boolean(existingAccount?.isDeleted);
 
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
@@ -56,7 +57,7 @@ export const registerUser = async (req, res, next) => {
     let account;
     let profile;
 
-    if (existingAccount?.isDeleted) {
+    if (isReactivation) {
       existingAccount.password = passwordHash;
       existingAccount.roles = ["user"];
       existingAccount.status = "active";
@@ -120,8 +121,8 @@ export const registerUser = async (req, res, next) => {
 
     await session.commitTransaction();
 
-    res.status(existingAccount?.isDeleted ? 200 : 201).json({
-      msg: existingAccount?.isDeleted
+    res.status(isReactivation ? 200 : 201).json({
+      msg: isReactivation
         ? "Account reactivated successfully"
         : "User registered successfully",
       person: profile,
