@@ -115,6 +115,24 @@ export const changePassword = async (req, res) => {
     //     status: "failure",
     //   });
     // }
+    const existingUser = await Account.findOne({ email: email.toLowerCase() });
+    if (!existingUser) {
+      return res.status(404).json({
+        title: "User Not Found",
+        message: "User not found for this email!",
+        status: "failure",
+      });
+    }
+
+    const isSamePassword = await bcrypt.compare(newPassword, existingUser.password);
+    if (isSamePassword) {
+      return res.status(400).json({
+        title: "Invalid Password",
+        message: "New password must be different from the current password.",
+        status: "failure",
+      });
+    }
+
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(newPassword, salt);
 
@@ -158,6 +176,13 @@ export const resetPassword = async (req, res) => {
     person = await Account.findOne({ email: email.toLowerCase() });
     console.log(person, email);
     if (bcrypt.compareSync(oldPassword, person.password)) {
+      if (bcrypt.compareSync(newPassword, person.password)) {
+        return res.status(400).json({
+          title: "Failure!",
+          message: "New password must be different from the old password.",
+          status: "failure",
+        });
+      }
       matched = true;
       person = await Account.findOneAndUpdate(
         { email: email.toLowerCase() },

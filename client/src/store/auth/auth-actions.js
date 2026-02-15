@@ -1,6 +1,24 @@
 import { baseURL } from "../../api/api";
 import { authActions } from "./auth-slice";
 
+const getRetryAfterSeconds = (response) => {
+  const retryAfter = response.headers.get("retry-after");
+  if (!retryAfter) return 300;
+
+  const asNumber = Number(retryAfter);
+  if (!Number.isNaN(asNumber) && asNumber > 0) {
+    return asNumber;
+  }
+
+  const retryDate = new Date(retryAfter);
+  if (!Number.isNaN(retryDate.getTime())) {
+    const seconds = Math.ceil((retryDate.getTime() - Date.now()) / 1000);
+    return seconds > 0 ? seconds : 300;
+  }
+
+  return 300;
+};
+
 export const registerUser = (userData, alert) => async (dispatch) => {
   try {
     const response = await fetch(`${baseURL}/auth/register/user`, {
@@ -41,13 +59,15 @@ export const loginAccount = (userData, alert) => async (dispatch) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
+      const retryAfterSeconds =
+        response.status === 429 ? getRetryAfterSeconds(response) : null;
       // dispatch(errorData.msg || "Login failed");
       alert.error({
         message: errorData.msg || "Login failed",
         title: "Login failed",
       });
-      return { ok: false };
+      return { ok: false, status: response.status, retryAfterSeconds };
     }
 
     const data = await response.json();

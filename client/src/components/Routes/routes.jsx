@@ -1,6 +1,7 @@
 import LandingPage from "../LandingPage/LandingPage";
 import SignUp from "../LoginSignUp/SignUp";
 import SignIn from "../LoginSignUp/SignIn";
+import ForgotPassword from "../LoginSignUp/ForgotPassword";
 import FindDoctorSearch from "../SearchBar/FindDoctorSearch";
 import Review from "../Reviews/UserReview";
 import Profile from "../Profile/Profile";
@@ -22,6 +23,11 @@ const routes = [
   { path: "/", element: <LandingPage />, requiresAuth: false },
   { path: "/auth/signup", element: <SignUp />, requiresAuth: false },
   { path: "/auth/login", element: <SignIn />, requiresAuth: false },
+  {
+    path: "/auth/forgot-password",
+    element: <ForgotPassword />,
+    requiresAuth: false,
+  },
   {
     path: "/appointments",
     element: <FindDoctorSearch />,

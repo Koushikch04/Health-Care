@@ -14,6 +14,8 @@ import { authSchemas } from "../validation/schemas.js";
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     status: "failure",
     msg: "Too many requests from this IP, please try again later.",
@@ -23,6 +25,8 @@ const authLimiter = rateLimit({
 const passwordResetLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     status: "failure",
     msg: "Too many password reset requests from this IP, please try again later.",
