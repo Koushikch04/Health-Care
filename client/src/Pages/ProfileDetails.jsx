@@ -71,6 +71,22 @@ const ProfileDetails = () => {
 
   const handleSaveChanges = async () => {
     setLoading(true);
+    const previousName = userInfo?.name;
+    const previousProfileImage = userInfo?.profileImage;
+
+    dispatch(
+      authActions.updateUserInfo({
+        name: {
+          firstName,
+          lastName,
+        },
+        profileImage:
+          uploadedImage && uploadedImage !== profileLink
+            ? uploadedImage
+            : profileImage,
+      })
+    );
+
     const formData = new FormData();
     formData.append("firstName", firstName);
     formData.append("lastName", lastName);
@@ -103,10 +119,22 @@ const ProfileDetails = () => {
           })
         );
       } else {
+        dispatch(
+          authActions.updateUserInfo({
+            name: previousName,
+            profileImage: previousProfileImage,
+          })
+        );
         const error = await response.json();
         alert.error({ message: error.msg, title: "Error" });
       }
     } catch (error) {
+      dispatch(
+        authActions.updateUserInfo({
+          name: previousName,
+          profileImage: previousProfileImage,
+        })
+      );
       alert.error({ message: "Something went wrong!", title: "Error" });
     } finally {
       setLoading(false);

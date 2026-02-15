@@ -25,15 +25,17 @@ const AppointmentDetails = ({ appointment, onClose, onCancel }) => {
     }
 
     setLoading(true);
+    onCancel(appointment._id, "canceled");
     try {
       const success = await dispatch(
         cancelAppointment(appointment._id, alert, "user", appointment.status)
       );
-      if (success) {
-        onCancel(appointment._id);
+      if (!success) {
+        onCancel(appointment._id, appointment.status);
       }
     } catch (err) {
       console.error(err);
+      onCancel(appointment._id, appointment.status);
     } finally {
       setLoading(false);
     }

@@ -72,11 +72,11 @@ function Appointments() {
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   };
 
-  const handleCancelAppointment = (id) => {
+  const handleCancelAppointment = (id, nextStatus = "canceled") => {
     setAppointments((prevAppointments) =>
       prevAppointments.map((appointment) =>
         appointment._id === id
-          ? { ...appointment, status: "canceled" }
+          ? { ...appointment, status: nextStatus }
           : appointment
       )
     );

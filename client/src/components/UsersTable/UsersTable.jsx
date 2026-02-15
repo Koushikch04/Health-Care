@@ -108,6 +108,23 @@ const UsersTable = () => {
     );
 
     if (!appointment) return;
+    const previousAppointments = appointments;
+    const optimisticReview = {
+      appointment: selectedAppointmentId,
+      doctor: appointment.doctor,
+      user: appointment.user,
+      rating,
+      comment: reviewText,
+      optimistic: true,
+    };
+    setAppointments((prevAppointments) =>
+      prevAppointments.map((appt) =>
+        appt._id === selectedAppointmentId
+          ? { ...appt, reviewed: true, review: optimisticReview }
+          : appt
+      )
+    );
+
     closeReviewModal();
     setRating(0);
 
@@ -131,16 +148,9 @@ const UsersTable = () => {
         throw new Error("Failed to submit review");
       }
 
-      const newReview = await response.json();
-
-      setAppointments((prevAppointments) =>
-        prevAppointments.map((appt) =>
-          appt._id === selectedAppointmentId
-            ? { ...appt, reviewed: true, review: newReview }
-            : appt
-        )
-      );
+      await response.json();
     } catch (error) {
+      setAppointments(previousAppointments);
       console.error("Failed to submit review:", error);
       alert("Something went wrong while submitting your review.");
     }

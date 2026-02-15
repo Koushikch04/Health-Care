@@ -149,6 +149,12 @@ function Doctors() {
   };
 
   const handleDeleteDoctor = async (doctorId) => {
+    const previousDoctors = doctors;
+    const previousFilteredDoctors = filteredDoctors;
+
+    setDoctors((prev) => prev.filter((doc) => doc._id !== doctorId));
+    setFilteredDoctors((prev) => prev.filter((doc) => doc._id !== doctorId));
+
     try {
       const response = await fetch(`${baseURL}/admin/doctor/${doctorId}`, {
         method: "DELETE",
@@ -158,10 +164,9 @@ function Doctors() {
         },
       });
       if (!response.ok) throw new Error("Failed to delete doctor");
-
-      setDoctors(doctors.filter((doc) => doc._id !== doctorId));
-      setFilteredDoctors(filteredDoctors.filter((doc) => doc._id !== doctorId));
     } catch (error) {
+      setDoctors(previousDoctors);
+      setFilteredDoctors(previousFilteredDoctors);
       setError(error.message);
     }
   };
@@ -172,6 +177,59 @@ function Doctors() {
       : `${baseURL}/admin/doctor`;
 
     const method = isEditMode ? "PUT" : "POST";
+    const previousDoctors = doctors;
+    const previousFilteredDoctors = filteredDoctors;
+
+    const specializationName =
+      uniqueSpecializations.find((spec) => spec._id === newDoctor.specialty)?.name ||
+      selectedDoctor?.specialization ||
+      "";
+
+    if (isEditMode) {
+      const optimisticUpdatedDoctor = {
+        ...selectedDoctor,
+        name: {
+          firstName: newDoctor.firstName,
+          lastName: newDoctor.lastName,
+        },
+        email: newDoctor.email,
+        gender: newDoctor.gender,
+        specialization: specializationName || selectedDoctor?.specialization,
+      };
+
+      setDoctors((prev) =>
+        prev.map((doctor) =>
+          doctor._id === selectedDoctor._id ? optimisticUpdatedDoctor : doctor,
+        ),
+      );
+      setFilteredDoctors((prev) =>
+        prev.map((doctor) =>
+          doctor._id === selectedDoctor._id ? optimisticUpdatedDoctor : doctor,
+        ),
+      );
+    } else {
+      const optimisticDoctor = {
+        _id: `temp-${Date.now()}`,
+        name: {
+          firstName: newDoctor.firstName,
+          lastName: newDoctor.lastName,
+        },
+        email: newDoctor.email,
+        gender: newDoctor.gender,
+        specialization: specializationName,
+        experience: Number(newDoctor.experience || 0),
+        appointmentCount: 0,
+        registrationStatus: "approved",
+      };
+
+      setDoctors((prev) => [optimisticDoctor, ...prev]);
+      setFilteredDoctors((prev) => [optimisticDoctor, ...prev]);
+    }
+
+    setCreateEditModal(false);
+    setNewDoctor(initialDoctorValue);
+    setIsEditMode(false);
+
     try {
       const response = await fetch(url, {
         method,
@@ -185,11 +243,9 @@ function Doctors() {
       if (!response.ok) throw new Error("Failed to save user");
 
       await fetchDoctors();
-      // setIsModalOpen(false);
-      setCreateEditModal(false);
-      setNewDoctor(initialDoctorValue);
-      setIsEditMode(false);
     } catch (error) {
+      setDoctors(previousDoctors);
+      setFilteredDoctors(previousFilteredDoctors);
       setError(error.message);
     }
   };

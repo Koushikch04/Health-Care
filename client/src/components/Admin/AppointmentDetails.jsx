@@ -13,6 +13,7 @@ const AppointmentDetails = ({
 }) => {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [newDate, setNewDate] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const { alert } = useAlert();
   const token = useSelector((state) => state.auth.userToken);
   const canCancel =
@@ -28,6 +29,8 @@ const AppointmentDetails = ({
         });
         return;
       }
+      setIsProcessing(true);
+      onCancel(appointment._id);
 
       const response = await fetch(
         `${baseURL}/admin/appointment/${appointment._id}`,
@@ -50,13 +53,17 @@ const AppointmentDetails = ({
         message: "Appointment canceled successfully.",
         title: "Canceled",
       });
-      onCancel(appointment._id);
       onClose();
     } catch (error) {
+      if (onReschedule) {
+        onReschedule(appointment);
+      }
       alert.error({
         message: error.message,
         title: "Failed to cancel",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -71,6 +78,12 @@ const AppointmentDetails = ({
     }
 
     try {
+      setIsProcessing(true);
+      const optimisticAppointment = { ...appointment, date: newDate };
+      if (onReschedule) {
+        onReschedule(optimisticAppointment);
+      }
+
       const response = await fetch(
         `${baseURL}/admin/appointment/${appointment._id}`,
         {
@@ -105,10 +118,15 @@ const AppointmentDetails = ({
       setIsRescheduling(false);
       onClose();
     } catch (error) {
+      if (onReschedule) {
+        onReschedule(appointment);
+      }
       alert.error({
         message: `Error rescheduling appointment: ${error.message}`,
         title: "Reschedule Failed",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -152,12 +170,13 @@ const AppointmentDetails = ({
           </div>
 
           <button type="submit" className={styles.rescheduleButton}>
-            Reschedule
+            {isProcessing ? "Rescheduling..." : "Reschedule"}
           </button>
           <button
             type="button"
             onClick={() => setIsRescheduling(false)}
             className={styles.cancelButton}
+            disabled={isProcessing}
           >
             Cancel
           </button>
@@ -165,14 +184,19 @@ const AppointmentDetails = ({
       ) : (
         <div className={styles.actions}>
           {canCancel && (
-            <button className={styles.cancelButton} onClick={handleCancel}>
-              Cancel Appointment
+            <button
+              className={styles.cancelButton}
+              onClick={handleCancel}
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Cancelling..." : "Cancel Appointment"}
             </button>
           )}
           {canReschedule && (
             <button
               className={styles.rescheduleButton}
               onClick={() => setIsRescheduling(true)}
+              disabled={isProcessing}
             >
               Reschedule Appointment
             </button>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import Modal from "../UI/Modal/Modal"; // Adjust the path as necessary
@@ -7,6 +7,7 @@ import styles from "./AppointmentDetails.module.css"; // Import the new styles
 import useAlert from "../../hooks/useAlert";
 
 const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
+  const [loading, setLoading] = useState(false);
   const role = useSelector((state) => state.auth.userRole);
   const dispatch = useDispatch();
   const { alert } = useAlert();
@@ -14,15 +15,20 @@ const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
     appointment.status !== "canceled" && appointment.status !== "completed";
 
   const handleCancel = async () => {
+    setLoading(true);
+    onCancel(appointment._id, "canceled");
     try {
       const success = await dispatch(
         cancelAppointment(appointment._id, alert, role, appointment.status)
       );
-      if (success) {
-        onCancel(appointment._id);
+      if (!success) {
+        onCancel(appointment._id, appointment.status);
       }
     } catch (err) {
       console.error(err);
+      onCancel(appointment._id, appointment.status);
+    } finally {
+      setLoading(false);
     }
 
     onClose();
@@ -59,8 +65,12 @@ const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
 
       <div className={styles.actions}>
         {canCancel && (
-          <button className={styles.cancelButton} onClick={handleCancel}>
-            Cancel Appointment
+          <button
+            className={styles.cancelButton}
+            onClick={handleCancel}
+            disabled={loading}
+          >
+            {loading ? "Cancelling..." : "Cancel Appointment"}
           </button>
         )}
       </div>
