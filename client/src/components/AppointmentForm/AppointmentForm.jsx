@@ -1,4 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import useAlert from "../../hooks/useAlert";
 import styles from "./AppointmentForm.module.css";
 import cardStyles from "../DoctorListPagination/DoctorCard.module.css";
@@ -42,18 +46,25 @@ const AppointmentForm = ({
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "date" ? { time: "" } : {}),
     }));
 
     if (name === "time" && !isDateSelected) {
       return;
     }
+  };
 
-    if (name === "date") {
-      setIsDateSelected(!!value);
-      if (!value) {
-        setAvailableTimeSlots([]);
-      }
+  const handleDateChange = (value) => {
+    const nextDate = value?.isValid?.() ? value.format("YYYY-MM-DD") : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      date: nextDate,
+      time: "",
+    }));
+
+    setIsDateSelected(Boolean(nextDate));
+    if (!nextDate) {
+      setAvailableTimeSlots([]);
     }
   };
 
@@ -127,6 +138,13 @@ const AppointmentForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.date) {
+      alert.info({
+        message: "Please select a valid appointment date.",
+        title: "Info",
+      });
+      return;
+    }
 
     try {
       const response = await fetch(`${baseURL}/appointment`, {
@@ -216,15 +234,23 @@ const AppointmentForm = ({
 
           <div className={styles.field}>
             <label htmlFor="date">Date of Appointment:</label>
-            <input
-              type="date"
-              id="date"
-              name="date"
-              value={formData.date}
-              onChange={handleInputChange}
-              min={new Date().toISOString().split("T")[0]}
-              required
-            />
+            <div className={styles.datePicker}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  value={formData.date ? dayjs(formData.date) : null}
+                  onChange={handleDateChange}
+                  disablePast
+                  slotProps={{
+                    textField: {
+                      id: "date",
+                      required: true,
+                      fullWidth: true,
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            </div>
           </div>
 
           <div className={styles.field}>

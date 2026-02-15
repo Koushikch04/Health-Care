@@ -93,6 +93,19 @@
   border-color: #007bff;
 }
 
+.datePicker {
+  width: 100%;
+}
+
+.datePicker :global(.MuiOutlinedInput-root) {
+  height: 30px;
+  font-size: 18px;
+}
+
+.datePicker :global(.MuiOutlinedInput-input) {
+  padding: 4px 14px;
+}
+
 .book_button {
   background-color: #007bff;
   color: white;
