@@ -31,6 +31,14 @@ export const authSchemas = {
     query: Joi.object({}),
     params: Joi.object({}),
   },
+  inviteComplete: {
+    body: Joi.object({
+      token: nonEmptyString.required(),
+      newPassword: nonEmptyString.min(7).required(),
+    }),
+    query: Joi.object({}),
+    params: Joi.object({}),
+  },
   forgotPassword: {
     body: Joi.object({
       email: email.required(),
@@ -261,10 +269,9 @@ export const specialtySchemas = {
 export const adminSchemas = {
   createUser: {
     body: Joi.object({
-      firstName: nonEmptyString.optional(),
-      lastName: nonEmptyString.optional(),
+      firstName: nonEmptyString.required(),
+      lastName: nonEmptyString.required(),
       email: email.required(),
-      password: nonEmptyString.required(),
       gender: nonEmptyString.optional(),
       dob: flexibleDate.optional(),
       phone: Joi.alternatives().try(Joi.string().trim(), Joi.number()).optional(),

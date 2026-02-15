@@ -1,7 +1,7 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
 
-import { login, registerUser } from "../controllers/auth.js";
+import { completeInviteSetup, login, registerUser } from "../controllers/auth.js";
 import {
   changePassword,
   validateAndOtpSender,
@@ -41,6 +41,12 @@ router.post(
   registerUser
 );
 router.post("/login", authLimiter, validateRequest(authSchemas.login), login);
+router.post(
+  "/invite/complete",
+  authLimiter,
+  validateRequest(authSchemas.inviteComplete),
+  completeInviteSetup
+);
 router.post(
   "/forgotPassword",
   passwordResetLimiter,

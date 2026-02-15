@@ -1,9 +1,11 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import Account from "../models/Account.js";
 import UserProfile from "../models/UserProfile.js";
 import DoctorProfile from "../models/DoctorProfile.js";
 import AdminProfile from "../models/AdminProfile.js";
+import InviteToken from "../models/InviteToken.js";
 
 const rolePriority = ["superadmin", "admin", "doctor", "user"];
 
@@ -96,6 +98,12 @@ export const login = async (req, res, next) => {
       return res.status(403).json({ msg: "Account is blocked." });
     }
 
+    if (account.status === "pending") {
+      return res.status(403).json({
+        msg: "Account setup pending. Please use your invite email to set password.",
+      });
+    }
+
     const matched = await bcrypt.compare(password, account.password);
     if (!matched) {
       return res.status(401).json({ msg: "Invalid Credentials" });
@@ -150,4 +158,61 @@ export const login = async (req, res, next) => {
 
 export const logout = (req, res) => {
   res.status(200).json({ message: "Logged out successfully." });
+};
+
+export const completeInviteSetup = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const inviteToken = await InviteToken.findOne({
+      tokenHash,
+      usedAt: null,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!inviteToken) {
+      return res.status(400).json({
+        msg: "Invite link is invalid or expired.",
+      });
+    }
+
+    const account = await Account.findById(inviteToken.accountId);
+    if (!account || account.isDeleted) {
+      return res.status(404).json({ msg: "Account not found." });
+    }
+
+    const isSamePassword = await bcrypt.compare(newPassword, account.password);
+    if (isSamePassword) {
+      return res.status(400).json({
+        msg: "New password must be different from the current password.",
+      });
+    }
+
+    const salt = await bcrypt.genSalt();
+    account.password = await bcrypt.hash(newPassword, salt);
+    account.status = "active";
+    await account.save();
+
+    inviteToken.usedAt = new Date();
+    await inviteToken.save();
+
+    await InviteToken.updateMany(
+      {
+        accountId: account._id,
+        usedAt: null,
+        _id: { $ne: inviteToken._id },
+      },
+      {
+        $set: { usedAt: new Date() },
+      }
+    );
+
+    return res.status(200).json({
+      msg: "Password set successfully. You can now log in.",
+    });
+  } catch (error) {
+    return res.status(500).json({ msg: "An internal server error occurred." });
+  }
 };
