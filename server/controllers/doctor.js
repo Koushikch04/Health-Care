@@ -70,22 +70,31 @@ export const createDoctor = async (req, res) => {
     password,
   } = req.body;
 
+  const session = await mongoose.startSession();
   try {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
+    await session.startTransaction();
+
     const existingAccount = await Account.findOne({
       email: email.toLowerCase(),
-    });
+    }).session(session);
     if (existingAccount) {
+      await session.abortTransaction();
       return res
         .status(400)
         .json({ message: "Doctor with this email already exists." });
     }
-    const account = await Account.create({
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      roles: ["doctor"],
-    });
+    const [account] = await Account.create(
+      [
+        {
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          roles: ["doctor"],
+        },
+      ],
+      { session }
+    );
 
     const newDoctor = new DoctorProfile({
       accountId: account._id,
@@ -99,13 +108,19 @@ export const createDoctor = async (req, res) => {
       image,
     });
 
-    const savedDoctor = await newDoctor.save();
+    const savedDoctor = await newDoctor.save({ session });
+    await session.commitTransaction();
 
     res.status(201).json(savedDoctor);
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.log(error);
 
     res.status(500).json({ message: "Error creating doctor", error });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -147,23 +162,42 @@ export const updateDoctor = async (req, res) => {
     email,
   };
 
+  const session = await mongoose.startSession();
   try {
-    const updatedDoctor = await DoctorProfile.findByIdAndUpdate(id, toUpdate, {
-      new: true,
-    });
+    await session.startTransaction();
+
+    const updatedDoctor = await DoctorProfile.findByIdAndUpdate(
+      id,
+      toUpdate,
+      {
+        new: true,
+        session,
+      }
+    );
     if (!updatedDoctor) {
+      await session.abortTransaction();
       return res.status(404).json({ message: "Doctor not found" });
     }
     if (email) {
-      await Account.findByIdAndUpdate(updatedDoctor.accountId, {
-        email: email.toLowerCase(),
-      });
+      await Account.findByIdAndUpdate(
+        updatedDoctor.accountId,
+        {
+          email: email.toLowerCase(),
+        },
+        { session }
+      );
     }
+    await session.commitTransaction();
     res.status(200).json(updatedDoctor);
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.log(error);
 
     res.status(500).json({ message: "Error updating doctor", error });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -171,12 +205,17 @@ export const updateDoctor = async (req, res) => {
 export const deleteDoctor = async (req, res) => {
   const { id } = req.params;
 
+  const session = await mongoose.startSession();
   try {
-    const doctor = await DoctorProfile.findById(id);
+    await session.startTransaction();
+
+    const doctor = await DoctorProfile.findById(id).session(session);
     if (!doctor) {
+      await session.abortTransaction();
       return res.status(404).json({ message: "Doctor not found" });
     }
     if (doctor.isDeleted) {
+      await session.abortTransaction();
       return res.status(200).json({ message: "Doctor already deleted" });
     }
 
@@ -185,18 +224,24 @@ export const deleteDoctor = async (req, res) => {
       DoctorProfile.findByIdAndUpdate(
         id,
         { isDeleted: true, deletedAt },
-        { new: true },
+        { new: true, session },
       ),
       Account.findByIdAndUpdate(doctor.accountId, {
         isDeleted: true,
         deletedAt,
         status: "blocked",
-      }),
+      }, { session }),
     ]);
 
+    await session.commitTransaction();
     res.status(200).json({ message: "Doctor deleted successfully" });
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     res.status(500).json({ message: "Error deleting doctor", error });
+  } finally {
+    session.endSession();
   }
 };
 

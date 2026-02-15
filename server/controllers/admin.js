@@ -247,33 +247,53 @@ export const editUserProfile = async (req, res) => {
     dob,
   };
 
+  const session = await mongoose.startSession();
   try {
+    await session.startTransaction();
+
     const user = await UserProfile.findByIdAndUpdate(id, toUpdate, {
       new: true,
+      session,
     });
     if (!user) {
+      await session.abortTransaction();
       return res.status(404).json({ error: "User not found" });
     }
     if (email) {
-      await Account.findByIdAndUpdate(user.accountId, {
-        email: email.toLowerCase(),
-      });
+      await Account.findByIdAndUpdate(
+        user.accountId,
+        {
+          email: email.toLowerCase(),
+        },
+        { session }
+      );
     }
+    await session.commitTransaction();
     res.status(200).json(user);
   } catch (err) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     res.status(500).json({ error: err.message });
+  } finally {
+    session.endSession();
   }
 };
 
 // Delete user
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
+  const session = await mongoose.startSession();
   try {
-    const user = await UserProfile.findById(id);
+    await session.startTransaction();
+
+    const user = await UserProfile.findById(id).session(session);
     if (!user) {
+      await session.abortTransaction();
       return res.status(404).json({ error: "User not found" });
     }
     if (user.isDeleted) {
+      await session.abortTransaction();
       return res.status(200).json({ message: "User already deleted" });
     }
 
@@ -282,18 +302,24 @@ export const deleteUser = async (req, res) => {
       UserProfile.findByIdAndUpdate(
         id,
         { isDeleted: true, deletedAt },
-        { new: true },
+        { new: true, session },
       ),
       Account.findByIdAndUpdate(user.accountId, {
         isDeleted: true,
         deletedAt,
         status: "blocked",
-      }),
+      }, { session }),
     ]);
 
+    await session.commitTransaction();
     res.status(200).json({ message: "User deleted successfully" });
   } catch (err) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     res.status(500).json({ error: err.message });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -758,12 +784,16 @@ export const getTopPerformingDoctors = async (req, res) => {
 export const createAdmin = async (req, res) => {
   const { firstName, lastName, email, password, permissions } = req.body;
   console.log(req.body);
+  const session = await mongoose.startSession();
   try {
+    await session.startTransaction();
+
     // Check if an admin with this email already exists
     const existingAccount = await Account.findOne({
       email: email.toLowerCase(),
-    });
+    }).session(session);
     if (existingAccount) {
+      await session.abortTransaction();
       return res
         .status(400)
         .json({ message: "Admin with this email already exists" });
@@ -773,27 +803,44 @@ export const createAdmin = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new admin account
-    const account = await Account.create({
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      roles: ["admin"],
-    });
+    const [account] = await Account.create(
+      [
+        {
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          roles: ["admin"],
+        },
+      ],
+      { session }
+    );
 
-    const newAdmin = await AdminProfile.create({
-      accountId: account._id,
-      name: { firstName, lastName },
-      role: "admin",
-      permissions,
-    });
+    const [newAdmin] = await AdminProfile.create(
+      [
+        {
+          accountId: account._id,
+          name: { firstName, lastName },
+          role: "admin",
+          permissions,
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
 
     res
       .status(201)
       .json({ message: "Admin created successfully", admin: newAdmin });
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.log(error);
     res
       .status(500)
       .json({ message: "Error creating admin", error: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -835,9 +882,13 @@ export const updateAdminPermissions = async (req, res) => {
   const { firstName, lastName, email, permissions } = req.body;
   console.log(req.body);
 
+  const session = await mongoose.startSession();
   try {
-    const admin = await AdminProfile.findById(id);
+    await session.startTransaction();
+
+    const admin = await AdminProfile.findById(id).session(session);
     if (!admin || admin.role !== "admin") {
+      await session.abortTransaction();
       return res.status(404).json({ message: "Admin not found" });
     }
 
@@ -849,37 +900,58 @@ export const updateAdminPermissions = async (req, res) => {
       };
     }
     admin.permissions = permissions;
-    await admin.save();
+    await admin.save({ session });
     if (email) {
-      await Account.findByIdAndUpdate(admin.accountId, {
-        email: email.toLowerCase(),
-      });
+      await Account.findByIdAndUpdate(
+        admin.accountId,
+        {
+          email: email.toLowerCase(),
+        },
+        { session }
+      );
     }
 
+    await session.commitTransaction();
     res.json({ message: "Permissions updated successfully", admin });
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.log(error);
 
     res
       .status(500)
       .json({ message: "Error updating permissions", error: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
 export const deleteAdmin = async (req, res) => {
   const { id } = req.params;
+  const session = await mongoose.startSession();
   try {
-    let admin = await AdminProfile.findById(id);
+    await session.startTransaction();
+
+    let admin = await AdminProfile.findById(id).session(session);
     if (!admin) {
+      await session.abortTransaction();
       return res.status(404).json({ error: "Admin not found" });
     }
     if (admin.role == "superadmin") {
+      await session.abortTransaction();
       return res.status(404).json({ message: "Cannot delete super admin" });
     }
-    admin = await AdminProfile.findByIdAndDelete(id);
-    await Account.findByIdAndDelete(admin.accountId);
+    admin = await AdminProfile.findByIdAndDelete(id, { session });
+    await Account.findByIdAndDelete(admin.accountId, { session });
+    await session.commitTransaction();
     return res.status(200).json({ message: "Admin deleted Successfully" });
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     res.status(500).json({ message: error.message });
+  } finally {
+    session.endSession();
   }
 };
