@@ -73,7 +73,6 @@ function Users() {
       email: "",
       gender: "",
       dob: "",
-      password: "",
       phone: "",
     },
   });
@@ -184,6 +183,9 @@ function Users() {
       : `${baseURL}/admin/user`;
 
     const method = isEditMode ? "PUT" : "POST";
+    const trimmedPhone =
+      typeof formData.phone === "string" ? formData.phone.trim() : formData.phone;
+
     const payload = isEditMode
       ? {
           firstName: formData.firstName,
@@ -198,7 +200,7 @@ function Users() {
           email: formData.email,
           gender: formData.gender,
           dob: formData.dob,
-          phone: formData.phone,
+          ...(trimmedPhone ? { phone: trimmedPhone } : {}),
         };
 
     try {
@@ -228,7 +230,6 @@ function Users() {
         gender: "",
         dob: "",
         phone: "",
-        password: "",
       });
       setIsEditMode(false);
     } catch (error) {
@@ -252,7 +253,6 @@ function Users() {
         gender: user.gender,
         dob: user.dob ? new Date(user.dob).toISOString().split("T")[0] : "",
         phone: "",
-        password: "",
       });
       setIsEditMode(true);
     } else {
@@ -263,7 +263,6 @@ function Users() {
         gender: "",
         dob: "",
         phone: "",
-        password: "",
       });
       setIsEditMode(false);
     }

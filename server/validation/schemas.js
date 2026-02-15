@@ -274,7 +274,13 @@ export const adminSchemas = {
       email: email.required(),
       gender: nonEmptyString.optional(),
       dob: flexibleDate.optional(),
-      phone: Joi.alternatives().try(Joi.string().trim(), Joi.number()).optional(),
+      phone: Joi.alternatives()
+        .try(
+          Joi.string().trim().pattern(/^\d{7,15}$/),
+          Joi.number().integer().min(1000000).max(999999999999999),
+        )
+        .allow("")
+        .optional(),
     }),
     query: Joi.object({}),
     params: Joi.object({}),

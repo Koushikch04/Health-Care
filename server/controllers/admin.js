@@ -19,6 +19,34 @@ import {
 } from "../utils/appointmentStateMachine.js";
 // import SupportTicket from "../models/"; // Assuming you have a SupportTicket model
 
+const INVITE_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
+
+const createInviteLink = (rawInviteToken) => {
+  const frontendUrl =
+    process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:5173";
+  return `${frontendUrl.replace(/\/$/, "")}/auth/invite-setup?token=${rawInviteToken}`;
+};
+
+const issueInviteToken = async ({ accountId, email }) => {
+  await InviteToken.deleteMany({
+    accountId,
+    usedAt: null,
+  });
+
+  const rawInviteToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(rawInviteToken).digest("hex");
+  const expiresAt = new Date(Date.now() + INVITE_TOKEN_EXPIRY_MS);
+
+  await InviteToken.create({
+    accountId,
+    email,
+    tokenHash,
+    expiresAt,
+  });
+
+  return rawInviteToken;
+};
+
 // User Management Controllers
 
 // Get all users
@@ -77,6 +105,11 @@ export const createUser = async (req, res) => {
     console.log(req.body);
 
     const { firstName, lastName, email, gender, dob, phone } = req.body;
+    const normalizedEmail = email?.toLowerCase();
+    const normalizedPhone =
+      phone === undefined || phone === null || `${phone}`.trim() === ""
+        ? undefined
+        : Number(phone);
 
     if (!email || !firstName || !lastName) {
       return res
@@ -85,9 +118,34 @@ export const createUser = async (req, res) => {
     }
 
     const existingAccount = await Account.findOne({
-      email: email.toLowerCase(),
+      email: normalizedEmail,
     });
     if (existingAccount) {
+      if (
+        existingAccount.status === "pending" &&
+        !existingAccount.isDeleted &&
+        existingAccount.roles?.includes("user")
+      ) {
+        const rawInviteToken = await issueInviteToken({
+          accountId: existingAccount._id,
+          email: existingAccount.email,
+        });
+        const inviteLink = createInviteLink(rawInviteToken);
+
+        try {
+          await sendInviteMail({ email: existingAccount.email, inviteLink });
+        } catch (mailError) {
+          return res.status(502).json({
+            error:
+              "Account already exists in pending state, but sending invite failed. Please retry.",
+          });
+        }
+
+        return res.status(200).json({
+          message: "User already exists in pending state. Invite email re-sent.",
+        });
+      }
+
       return res
         .status(400)
         .json({ error: "User with this email already exists." });
@@ -98,7 +156,7 @@ export const createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(randomPlaceholderPassword, saltRounds);
 
     const account = await Account.create({
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       password: hashedPassword,
       roles: ["user"],
       status: "pending",
@@ -107,37 +165,25 @@ export const createUser = async (req, res) => {
     const newUser = await UserProfile.create({
       accountId: account._id,
       name: { firstName, lastName },
-      contact: { phone },
+      ...(normalizedPhone ? { contact: { phone: normalizedPhone } } : {}),
       gender,
       dob,
     });
 
-    await InviteToken.deleteMany({
-      accountId: account._id,
-      usedAt: null,
-    });
-
-    const rawInviteToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawInviteToken)
-      .digest("hex");
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    await InviteToken.create({
+    const rawInviteToken = await issueInviteToken({
       accountId: account._id,
       email: account.email,
-      tokenHash,
-      expiresAt,
     });
+    const inviteLink = createInviteLink(rawInviteToken);
 
-    const frontendUrl =
-      process.env.FRONTEND_URL ||
-      process.env.CLIENT_URL ||
-      "http://localhost:5173";
-    const inviteLink = `${frontendUrl.replace(/\/$/, "")}/auth/invite-setup?token=${rawInviteToken}`;
-
-    await sendInviteMail({ email: account.email, inviteLink });
+    try {
+      await sendInviteMail({ email: account.email, inviteLink });
+    } catch (mailError) {
+      return res.status(502).json({
+        error:
+          "User created in pending state, but sending invite email failed. Retry creating the same email to resend invite.",
+      });
+    }
 
     res.status(201).json({
       newUser,
