@@ -67,6 +67,11 @@ function Appointments() {
     return "";
   };
 
+  const formatStatusLabel = (status) => {
+    const normalized = String(status || "").toLowerCase();
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
+
   const handleCancelAppointment = (id) => {
     setAppointments((prevAppointments) =>
       prevAppointments.map((appointment) =>
@@ -144,7 +149,7 @@ function Appointments() {
                           styles[appointment.status]
                         }`}
                       >
-                        {appointment.status}
+                        {formatStatusLabel(appointment.status)}
                       </span>
                     </td>
                     <td>

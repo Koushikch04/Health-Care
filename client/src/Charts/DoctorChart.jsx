@@ -9,6 +9,7 @@ const DoctorDashboard = ({ doctorId }) => {
   const [filter, setFilter] = useState("week");
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [error, setError] = useState(null);
 
   const { userInfo } = useSelector((state) => state.auth);
 
@@ -16,21 +17,27 @@ const DoctorDashboard = ({ doctorId }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const response = await fetch(
           `${baseURL}/appointment/doctor/${userInfo._id}?filter=${filter}`
         );
         const result = await response.json();
+        if (!response.ok) {
+          setError(result?.message || "Failed to load analytics.");
+          return;
+        }
 
         setData(result);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setError("Failed to load analytics.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [filter, doctorId]);
+  }, [filter, doctorId, userInfo?._id]);
 
   const formatChartData = () => {
     if (!data?.data) return { dataset: [], labels: [] };
@@ -69,6 +76,10 @@ const DoctorDashboard = ({ doctorId }) => {
     mx: 60,
     my: 30,
   };
+
+  if (error && !data) {
+    return <div className={styles.notice}>{error}</div>;
+  }
 
   return (
     <div className={styles.dashboardContainer}>

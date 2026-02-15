@@ -14,6 +14,11 @@
   border: none !important;
 }
 
+.Table .MuiTableCell-root {
+  white-space: normal;
+  word-break: break-word;
+}
+
 .Table:first-child {
   border-radius: 0.7rem !important;
 }

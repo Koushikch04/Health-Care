@@ -140,8 +140,7 @@ const AdminDashboard = () => {
 
   const recentAppointments = appointments
     .filter((appointment) => new Date(appointment.date) <= currentDate)
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
     <div className={styles.AdminDashboard}>
@@ -171,6 +170,7 @@ const AdminDashboard = () => {
             ]}
             rows={topDoctors}
             loading={loadingTopDoctors}
+            rowsPerPage={5}
           />
         ) : (
           <div className={styles.notice}>
@@ -180,10 +180,17 @@ const AdminDashboard = () => {
         {canManageAppointments ? (
           <DynamicTable
             title="Recent Appointments"
-            headers={["patientName", "date", "time", "reasonForVisit", "status"]}
+            headers={[
+              "patientName",
+              "date",
+              "time",
+              "reasonForVisit",
+              "status",
+            ]}
             rows={recentAppointments}
             loading={loadingAppointments}
             emptyMessage="No recent appointments."
+            rowsPerPage={5}
           />
         ) : (
           <div className={styles.notice}>

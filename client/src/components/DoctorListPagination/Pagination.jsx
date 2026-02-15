@@ -7,10 +7,11 @@ const Pagination = ({
   setCurrentPage,
   currentPage,
 }) => {
-  const totalPages = Math.ceil(totalPosts / postsPerPage);
+  const safePostsPerPage = Math.max(1, postsPerPage || 1);
+  const totalPages = Math.max(1, Math.ceil(totalPosts / safePostsPerPage));
 
   useEffect(() => {
-    if (totalPages > 0 && currentPage > totalPages) {
+    if (currentPage > totalPages) {
       setCurrentPage(totalPages);
       return;
     }
@@ -20,14 +21,14 @@ const Pagination = ({
     }
   }, [currentPage, setCurrentPage, totalPages]);
 
-  if (totalPages <= 1) {
-    return null;
-  }
-
   const pageNumbers = [];
   for (let i = 1; i <= totalPages; i++) {
     pageNumbers.push(i);
   }
+
+  const startItem =
+    totalPosts === 0 ? 0 : (currentPage - 1) * safePostsPerPage + 1;
+  const endItem = Math.min(currentPage * safePostsPerPage, totalPosts);
 
   const handlePageChange = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > totalPages) {
@@ -77,6 +78,7 @@ const Pagination = ({
             className={`${styles.pagination_item} ${
               number === currentPage ? styles.active : ""
             }`}
+            aria-current={number === currentPage ? "page" : undefined}
           >
             {number}
           </button>
@@ -99,23 +101,30 @@ const Pagination = ({
 
   return (
     <div className={styles.pagination}>
-      <button
-        type="button"
-        onClick={() => handlePageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className={styles.pagination_button}
-      >
-        &lt;
-      </button>
-      {renderPageNumbers()}
-      <button
-        type="button"
-        onClick={() => handlePageChange(currentPage + 1)}
-        disabled={currentPage === pageNumbers.length}
-        className={styles.pagination_button}
-      >
-        &gt;
-      </button>
+      <p className={styles.paginationMeta}>
+        Showing {startItem}-{endItem} of {totalPosts}
+      </p>
+      <div className={styles.paginationControls}>
+        <button
+          type="button"
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={styles.pagination_button}
+          aria-label="Previous page"
+        >
+          &lt;
+        </button>
+        {renderPageNumbers()}
+        <button
+          type="button"
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={styles.pagination_button}
+          aria-label="Next page"
+        >
+          &gt;
+        </button>
+      </div>
     </div>
   );
 };

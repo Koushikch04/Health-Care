@@ -8,12 +8,32 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import "./Table.css";
 import TableSpinner from "../Spinners/TableSpinner";
+import Pagination from "../DoctorListPagination/Pagination";
 
 // Function to create styles based on the status
 const makeStyle = (status) => {
-  if (status === "Completed") return { background: "#34eb5c", color: "green" };
-  if (status === "Scheduled") return { background: "#FF919D", color: "red" };
-  return { background: "#59bfff", color: "white" };
+  const normalizedStatus = String(status).toLowerCase();
+  if (normalizedStatus === "completed") {
+    return { background: "rgb(145 254 159 / 47%)", color: "green" };
+  }
+  if (normalizedStatus === "scheduled") {
+    return { background: "#59bfff", color: "white" };
+  }
+  if (normalizedStatus === "rescheduled") {
+    return { background: "#ffe59a", color: "#7a5a00" };
+  }
+  if (normalizedStatus === "canceled" || normalizedStatus === "cancelled") {
+    return { background: "#ffadad8f", color: "#b3261e" };
+  }
+  if (normalizedStatus === "expired") {
+    return { background: "#e4e8ef", color: "#4c576a" };
+  }
+  return { background: "#eef2f9", color: "#3f4b63" };
+};
+
+const formatStatusLabel = (status) => {
+  const normalized = String(status).toLowerCase();
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 };
 const formatString = (str) => {
   return str
@@ -27,8 +47,18 @@ const DynamicTable = ({
   rows,
   loading = true,
   emptyMessage = "No records found.",
+  rowsPerPage = 5,
 }) => {
-  console.log(loading);
+  const [currentPage, setCurrentPage] = React.useState(1);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [rows]);
+
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const paginatedRows = rows.slice(indexOfFirstRow, indexOfLastRow);
+
   return (
     <div className="Table">
       <h3 className="tableTitle">{title}</h3>
@@ -65,9 +95,9 @@ const DynamicTable = ({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  rows.map((row, rowIndex) => (
+                  paginatedRows.map((row, rowIndex) => (
                     <TableRow
-                      key={rowIndex}
+                      key={`${indexOfFirstRow + rowIndex}`}
                       sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
                       {headers.map((header, headerIndex) => {
@@ -79,7 +109,7 @@ const DynamicTable = ({
                           return (
                             <TableCell key={headerIndex} align="left">
                               <span className="status" style={makeStyle(cellValue)}>
-                                {cellValue}
+                                {formatStatusLabel(cellValue)}
                               </span>
                             </TableCell>
                           );
@@ -113,6 +143,14 @@ const DynamicTable = ({
           </TableContainer>
         )}
       </div>
+      {!loading && (
+        <Pagination
+          totalPosts={rows.length}
+          postsPerPage={rowsPerPage}
+          setCurrentPage={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )}
     </div>
   );
 };

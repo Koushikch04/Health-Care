@@ -54,13 +54,11 @@ const MainDash = () => {
         appointment.status === "scheduled" &&
         new Date(appointment.date) > currentDate
     )
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .slice(0, 5);
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   const recentAppointments = appointments
     .filter((appointment) => new Date(appointment.date) <= currentDate)
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   console.log(upcomingAppointments, recentAppointments);
 
@@ -101,6 +99,7 @@ const MainDash = () => {
           rows={upcomingAppointments}
           loading={loading}
           emptyMessage="No upcoming appointments."
+          rowsPerPage={5}
         />
         <DynamicTable
           title="Recent Appointments"
@@ -108,6 +107,7 @@ const MainDash = () => {
           rows={recentAppointments}
           loading={loading}
           emptyMessage="No recent appointments."
+          rowsPerPage={5}
         />
       </div>
     </div>

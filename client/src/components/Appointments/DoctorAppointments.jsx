@@ -23,8 +23,6 @@ function DoctorAppointments() {
 
   let url = `${baseURL}/doctor/appointment`;
 
-  console.log(url);
-
   useEffect(() => {
     const getAppointments = async () => {
       if (!token) return;
@@ -71,6 +69,11 @@ function DoctorAppointments() {
       return sortConfig.direction === "ascending" ? " ▲" : " ▼";
     }
     return "";
+  };
+
+  const formatStatusLabel = (status) => {
+    const normalized = String(status || "").toLowerCase();
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   };
 
   const handleCancelAppointment = (id) => {
@@ -154,7 +157,7 @@ function DoctorAppointments() {
                           styles[appointment.status]
                         }`}
                       >
-                        {appointment.status}
+                        {formatStatusLabel(appointment.status)}
                       </span>
                     </td>
                     <td>

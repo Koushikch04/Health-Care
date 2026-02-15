@@ -1,15 +1,19 @@
 .appointmentsContainer {
-  padding: 70px;
-  max-width: 1200px;
-  margin: auto;
-  font-family: Arial, sans-serif;
-  border-radius: 8px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--surface-shadow);
 }
 
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 20px;
+.appointmentsContainer h1 {
+  margin: 0 0 1rem;
+  font-size: 1.35rem;
+  color: var(--text-dark);
+  text-align: left;
 }
 
 .loading,
@@ -27,44 +31,53 @@ h1 {
 }
 
 .appointmentsTableContainer {
-  border: 2px solid var(--primary-color);
-  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
   overflow: hidden;
+  background: var(--surface-card);
 }
 
 .appointmentsTable {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .appointmentsTable thead th {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 8px;
+  background-color: var(--surface-bg);
+  color: var(--text-dark);
+  padding: 0.65rem 0.75rem;
   text-align: left;
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .appointmentsTable th,
 .appointmentsTable td {
-  border: 1px solid #ddd;
-  padding: 8px;
+  border-bottom: 1px solid var(--surface-border);
+  padding: 0.65rem 0.75rem;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .appointmentsTable th {
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.2s ease;
 }
 
 .appointmentsTable th:hover {
-  background-color: var(--primary-color-dark);
+  background-color: #f3f6fc;
 }
 
 /* Scrollable tbody */
 .scrollableTbody {
   display: block;
+  min-height: 360px;
+  height: 58vh;
   max-height: 500px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .scrollableTbody tr {
@@ -74,11 +87,11 @@ h1 {
 }
 
 .appointmentsTable tbody tr:nth-child(even) {
-  background-color: var(--primary-color-light);
+  background-color: var(--surface-bg);
 }
 
 .appointmentsTable tbody tr:hover {
-  background-color: #e9ecef;
+  background-color: #edf3ff;
 }
 
 /* Scrollbar customization */
@@ -87,35 +100,40 @@ h1 {
 }
 
 .scrollableTbody::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #edf1f7;
 }
 
 .scrollableTbody::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
+  background: #c8d3e8;
   border-radius: 4px;
 }
 
 .scrollableTbody::-webkit-scrollbar-thumb:hover {
+  background: #a9b8d8;
+}
+
+.appointmentsContainer button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.appointmentsContainer button:hover {
   background: var(--primary-color-dark);
 }
 
-button {
-  background-color: var(--text-light);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: var(--text-dark);
-}
-
 span.status {
-  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.55rem;
   border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.82rem;
 }
 
 span.status.scheduled {
@@ -137,15 +155,25 @@ span.status.completed {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 50vh;
+  min-height: 40vh;
 }
 
 @media (max-width: 600px) {
+  .appointmentsContainer {
+    padding: 0.75rem;
+  }
+
   .appointmentsTable {
     font-size: 14px;
   }
 
-  button {
+  .appointmentsContainer button {
     padding: 6px 10px;
+  }
+
+  .scrollableTbody {
+    min-height: 260px;
+    height: auto;
+    max-height: none;
   }
 }
