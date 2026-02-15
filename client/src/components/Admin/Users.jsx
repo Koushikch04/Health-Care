@@ -1,10 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { baseURL } from "../../api/api";
 import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx";
 import styles from "./Users.module.css";
 import TableSpinner from "../Spinners/TableSpinner.jsx";
+
+const createUserSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required."),
+  lastName: z.string().trim().min(1, "Last name is required."),
+  email: z.string().trim().email("Enter a valid email."),
+  gender: z.enum(["Male", "Female", "Other"], {
+    errorMap: () => ({ message: "Please select a gender." }),
+  }),
+  dob: z.string().min(1, "Date of birth is required."),
+  password: z.string().min(7, "Password must be at least 7 characters."),
+  phone: z
+    .string()
+    .trim()
+    .min(7, "Phone number must be at least 7 digits.")
+    .max(15, "Phone number cannot exceed 15 digits.")
+    .regex(/^[0-9]+$/, "Phone number must contain digits only."),
+});
+
+const editUserSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required."),
+  lastName: z.string().trim().min(1, "Last name is required."),
+  email: z.string().trim().email("Enter a valid email."),
+  gender: z.enum(["Male", "Female", "Other"], {
+    errorMap: () => ({ message: "Please select a gender." }),
+  }),
+  dob: z.string().min(1, "Date of birth is required."),
+});
 
 function Users() {
   const { userToken: token } = useSelector((state) => state.auth);
@@ -24,16 +54,27 @@ function Users() {
   const [status, setStatus] = useState("All");
   const [registrationDate, setRegistrationDate] = useState("All");
 
-  const [newUser, setNewUser] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    gender: "",
-    dob: "",
-    password: "",
-    phone: "",
-  });
   const [isEditMode, setIsEditMode] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError: setFormError,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm({
+    resolver: zodResolver(isEditMode ? editUserSchema : createUserSchema),
+    mode: "onChange",
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      gender: "",
+      dob: "",
+      password: "",
+      phone: "",
+    },
+  });
 
   const currentYear = new Date().getFullYear();
 
@@ -135,12 +176,24 @@ function Users() {
     setIsModalOpen(true);
   };
 
-  const handleSaveUser = async () => {
+  const handleSaveUser = async (formData) => {
     const url = isEditMode
       ? `${baseURL}/admin/user/${selectedUser._id}`
       : `${baseURL}/admin/user`;
 
     const method = isEditMode ? "PUT" : "POST";
+    const payload = isEditMode
+      ? {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          gender: formData.gender,
+          dob: formData.dob,
+        }
+      : {
+          ...formData,
+        };
+
     try {
       const response = await fetch(url, {
         method,
@@ -148,26 +201,34 @@ function Users() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to save user");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData?.error || "Failed to save user";
+        setFormError("root.serverError", { type: "server", message });
+        return;
+      }
 
       await fetchUsers();
       // setIsModalOpen(false);
       setCreateEditModal(false);
-      setNewUser({
+      reset({
         firstName: "",
         lastName: "",
         email: "",
         gender: "",
         dob: "",
-        contact: "",
+        phone: "",
         password: "",
       });
       setIsEditMode(false);
     } catch (error) {
-      setError(error.message);
+      setFormError("root.serverError", {
+        type: "server",
+        message: error.message || "Failed to save user",
+      });
     }
   };
 
@@ -177,23 +238,25 @@ function Users() {
 
     if (user) {
       setSelectedUser(user);
-      setNewUser({
+      reset({
         firstName: user.name.firstName,
         lastName: user.name.lastName,
         email: user.email,
         gender: user.gender,
-        dob: user.dob,
-        contact: user.contact.phone,
+        dob: user.dob ? new Date(user.dob).toISOString().split("T")[0] : "",
+        phone: "",
+        password: "",
       });
       setIsEditMode(true);
     } else {
-      setNewUser({
+      reset({
         firstName: "",
         lastName: "",
         email: "",
         gender: "",
         dob: "",
-        contact: "",
+        phone: "",
+        password: "",
       });
       setIsEditMode(false);
     }
@@ -280,18 +343,17 @@ function Users() {
         <Modal onClose={() => setCreateEditModal(false)}>
           <div className={styles.modalContent}>
             <h2>{isEditMode ? "Edit User" : "Add New User"}</h2>
-            <form className={styles.form}>
+            <form className={styles.form} onSubmit={handleSubmit(handleSaveUser)}>
               <div className={styles.formGroup}>
                 <label htmlFor="firstName">First Name</label>
                 <input
                   id="firstName"
                   type="text"
-                  // placeholder="First Name"
-                  value={newUser.firstName}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, firstName: e.target.value })
-                  }
+                  {...register("firstName")}
                 />
+                {errors.firstName && (
+                  <span className={styles.formError}>{errors.firstName.message}</span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -299,12 +361,11 @@ function Users() {
                 <input
                   id="lastName"
                   type="text"
-                  // placeholder="Last Name"
-                  value={newUser.lastName}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, lastName: e.target.value })
-                  }
+                  {...register("lastName")}
                 />
+                {errors.lastName && (
+                  <span className={styles.formError}>{errors.lastName.message}</span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -312,56 +373,47 @@ function Users() {
                 <input
                   id="email"
                   type="email"
-                  // placeholder="Email"
-                  value={newUser.email}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, email: e.target.value })
-                  }
+                  {...register("email")}
                 />
+                {errors.email && (
+                  <span className={styles.formError}>{errors.email.message}</span>
+                )}
               </div>
 
               {!isEditMode && (
                 <div className={styles.formGroup}>
                   <label htmlFor="password">Password</label>
-                  <input
-                    id="password"
-                    // placeholder="Email"
-                    value={newUser.password}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, password: e.target.value })
-                    }
-                  />
+                  <input id="password" type="password" {...register("password")} />
+                  {errors.password && (
+                    <span className={styles.formError}>{errors.password.message}</span>
+                  )}
                 </div>
               )}
 
               {!isEditMode && (
                 <div className={styles.formGroup}>
-                  <label htmlFor="phone">phone</label>
+                  <label htmlFor="phone">Phone</label>
                   <input
-                    id="contect"
-                    // placeholder="Email"
-                    value={newUser.phone}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, phone: e.target.value })
-                    }
+                    id="phone"
+                    {...register("phone")}
                   />
+                  {errors.phone && (
+                    <span className={styles.formError}>{errors.phone.message}</span>
+                  )}
                 </div>
               )}
 
               <div className={styles.formGroup}>
                 <label htmlFor="gender">Gender</label>
-                <select
-                  id="gender"
-                  value={newUser.gender}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, gender: e.target.value })
-                  }
-                >
+                <select id="gender" {...register("gender")}>
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
+                {errors.gender && (
+                  <span className={styles.formError}>{errors.gender.message}</span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -369,22 +421,20 @@ function Users() {
                 <input
                   id="dob"
                   type="date"
-                  placeholder="Date of Birth"
-                  value={
-                    newUser.dob
-                      ? new Date(newUser.dob).toISOString().split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, dob: e.target.value })
-                  }
+                  {...register("dob")}
                 />
+                {errors.dob && (
+                  <span className={styles.formError}>{errors.dob.message}</span>
+                )}
               </div>
+              {errors.root?.serverError && (
+                <p className={styles.formError}>{errors.root.serverError.message}</p>
+              )}
 
               <button
-                type="button"
+                type="submit"
                 className={styles.button}
-                onClick={handleSaveUser}
+                disabled={!isValid || isSubmitting}
               >
                 {isEditMode ? "Update User" : "Add User"}
               </button>

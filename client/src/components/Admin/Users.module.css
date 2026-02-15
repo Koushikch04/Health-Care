@@ -171,6 +171,12 @@
   border-radius: 8px;
 }
 
+.formError {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: #be2f2f;
+}
+
 .button {
   grid-column: 1 / -1;
 }
