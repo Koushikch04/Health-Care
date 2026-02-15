@@ -4,6 +4,18 @@ import { getUtcDayBounds } from "../utils/date.js";
 import { APPOINTMENT_STATUSES } from "../utils/appointmentStateMachine.js";
 
 const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+export const AVAILABILITY_STRATEGIES = {
+  ARRAY: "array",
+  BITMASK: "bitmask",
+};
+export const AVAILABILITY_REASONS = {
+  AVAILABLE: "AVAILABLE",
+  INVALID_DATE: "INVALID_DATE",
+  DOCTOR_NOT_FOUND: "DOCTOR_NOT_FOUND",
+  NON_WORKING_DAY: "NON_WORKING_DAY",
+  OUT_OF_SCHEDULE: "OUT_OF_SCHEDULE",
+  FULLY_BOOKED: "FULLY_BOOKED",
+};
 
 const toMinutes = (value) => {
   if (typeof value !== "string" || !HHMM_REGEX.test(value)) {
@@ -32,29 +44,52 @@ const normalizeBreaks = (breaks) => {
       (period) =>
         Number.isInteger(period.start) &&
         Number.isInteger(period.end) &&
-        period.end > period.start
+        period.end > period.start,
     );
 };
 
-const generateTimeSlots = ({ startMinutes, endMinutes, intervalMinutes, breaks }) => {
-  const slots = [];
+const getDefaultAvailabilityStrategy = () => {
+  const configured = String(
+    process.env.APPOINTMENT_AVAILABILITY_STRATEGY ||
+      AVAILABILITY_STRATEGIES.ARRAY,
+  ).toLowerCase();
 
-  for (let time = startMinutes; time + intervalMinutes <= endMinutes; time += intervalMinutes) {
-    const blockedByBreak = breaks.some(
-      (period) => time < period.end && time + intervalMinutes > period.start
-    );
-    if (blockedByBreak) {
-      continue;
-    }
+  return Object.values(AVAILABILITY_STRATEGIES).includes(configured)
+    ? configured
+    : AVAILABILITY_STRATEGIES.ARRAY;
+};
 
-    const hours = Math.floor(time / 60);
-    const minutes = time % 60;
-    slots.push(
-      `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`
-    );
+const resolveAvailabilityStrategy = (override) => {
+  if (!override) {
+    return getDefaultAvailabilityStrategy();
   }
+  const normalizedOverride = String(override).toLowerCase();
+  return Object.values(AVAILABILITY_STRATEGIES).includes(normalizedOverride)
+    ? normalizedOverride
+    : getDefaultAvailabilityStrategy();
+};
 
-  return slots;
+const overlapsBreak = (slotStart, slotEnd, breaks) =>
+  breaks.some((period) => slotStart < period.end && slotEnd > period.start);
+
+const minuteToSlotLabel = (minute) => {
+  const hours = Math.floor(minute / 60);
+  const minutes = minute % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+
+const hasAtLeastOneWorkingSlot = (schedule) => {
+  for (
+    let time = schedule.startMinutes;
+    time + schedule.intervalMinutes <= schedule.endMinutes;
+    time += schedule.intervalMinutes
+  ) {
+    const slotEnd = time + schedule.intervalMinutes;
+    if (!overlapsBreak(time, slotEnd, schedule.breaks)) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const getDoctorSchedule = async (doctorId) => {
@@ -87,11 +122,14 @@ const getDoctorSchedule = async (doctorId) => {
   }
 
   const normalizedInterval =
-    Number.isInteger(intervalMinutes) && intervalMinutes > 0 ? intervalMinutes : 15;
+    Number.isInteger(intervalMinutes) && intervalMinutes > 0
+      ? intervalMinutes
+      : 15;
 
   return {
     workingDays:
-      Array.isArray(availability.workingDays) && availability.workingDays.length > 0
+      Array.isArray(availability.workingDays) &&
+      availability.workingDays.length > 0
         ? availability.workingDays
         : [1, 2, 3, 4, 5],
     startMinutes,
@@ -101,24 +139,45 @@ const getDoctorSchedule = async (doctorId) => {
   };
 };
 
-export const getAvailableSlots = async (doctorId, date) => {
+export const getAvailableSlotsWithContext = async (
+  doctorId,
+  date,
+  options = {},
+) => {
+  const strategy = resolveAvailabilityStrategy(options.strategy);
   const dayBounds = getUtcDayBounds(date);
   if (!dayBounds) {
-    return null;
+    return {
+      slots: null,
+      reason: AVAILABILITY_REASONS.INVALID_DATE,
+      strategy,
+    };
   }
 
   const schedule = await getDoctorSchedule(doctorId);
   if (!schedule) {
-    return [];
+    return {
+      slots: [],
+      reason: AVAILABILITY_REASONS.DOCTOR_NOT_FOUND,
+      strategy,
+    };
   }
 
   const dayOfWeek = getDayOfWeekUTC(dayBounds.start);
   if (dayOfWeek === null) {
-    return null;
+    return {
+      slots: null,
+      reason: AVAILABILITY_REASONS.INVALID_DATE,
+      strategy,
+    };
   }
 
   if (!schedule.workingDays.includes(dayOfWeek)) {
-    return [];
+    return {
+      slots: [],
+      reason: AVAILABILITY_REASONS.NON_WORKING_DAY,
+      strategy,
+    };
   }
 
   const appointments = await Appointment.find({
@@ -130,11 +189,76 @@ export const getAvailableSlots = async (doctorId, date) => {
     status: APPOINTMENT_STATUSES.SCHEDULED,
   }).select("time");
 
-  const bookedTimes = new Set(appointments.map((appointment) => appointment.time));
-  return generateTimeSlots({
-    startMinutes: schedule.startMinutes,
-    endMinutes: schedule.endMinutes,
-    intervalMinutes: schedule.intervalMinutes,
-    breaks: schedule.breaks,
-  }).filter((slot) => !bookedTimes.has(slot));
+  const totalSlots = Math.floor(
+    (schedule.endMinutes - schedule.startMinutes) / schedule.intervalMinutes,
+  );
+
+  let slots = [];
+
+  if (strategy === AVAILABILITY_STRATEGIES.BITMASK) {
+    let workingMask = 0n;
+    for (let index = 0; index < totalSlots; index += 1) {
+      const slotStart =
+        schedule.startMinutes + index * schedule.intervalMinutes;
+      const slotEnd = slotStart + schedule.intervalMinutes;
+      if (!overlapsBreak(slotStart, slotEnd, schedule.breaks)) {
+        workingMask |= 1n << BigInt(index);
+      }
+    }
+
+    let bookedMask = 0n;
+    appointments.forEach((appointment) => {
+      const minutes = toMinutes(appointment.time);
+      if (!Number.isInteger(minutes)) return;
+      const offset = minutes - schedule.startMinutes;
+      if (offset < 0 || offset % schedule.intervalMinutes !== 0) return;
+      const slotIndex = offset / schedule.intervalMinutes;
+      if (slotIndex >= 0 && slotIndex < totalSlots) {
+        bookedMask |= 1n << BigInt(slotIndex);
+      }
+    });
+
+    const availableMask = workingMask & ~bookedMask;
+    for (let index = 0; index < totalSlots; index += 1) {
+      if ((availableMask & (1n << BigInt(index))) !== 0n) {
+        const minute = schedule.startMinutes + index * schedule.intervalMinutes;
+        slots.push(minuteToSlotLabel(minute));
+      }
+    }
+  } else {
+    const bookedTimes = new Set(
+      appointments.map((appointment) => appointment.time),
+    );
+    for (
+      let time = schedule.startMinutes;
+      time + schedule.intervalMinutes <= schedule.endMinutes;
+      time += schedule.intervalMinutes
+    ) {
+      const slotEnd = time + schedule.intervalMinutes;
+      if (overlapsBreak(time, slotEnd, schedule.breaks)) continue;
+      const slotLabel = minuteToSlotLabel(time);
+      if (!bookedTimes.has(slotLabel)) slots.push(slotLabel);
+    }
+  }
+
+  if (slots.length > 0) {
+    return {
+      slots,
+      reason: AVAILABILITY_REASONS.AVAILABLE,
+      strategy,
+    };
+  }
+
+  return {
+    slots: [],
+    reason: hasAtLeastOneWorkingSlot(schedule)
+      ? AVAILABILITY_REASONS.FULLY_BOOKED
+      : AVAILABILITY_REASONS.OUT_OF_SCHEDULE,
+    strategy,
+  };
+};
+
+export const getAvailableSlots = async (doctorId, date, options = {}) => {
+  const result = await getAvailableSlotsWithContext(doctorId, date, options);
+  return result?.slots ?? result;
 };
