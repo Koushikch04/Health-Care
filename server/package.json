@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
-    "start": "nodemon index"
+    "start": "nodemon index",
+    "migrate:doctor-availability": "node migration/doctorAvailabilityMigration.js"
   },
   "keywords": [],
   "author": "",

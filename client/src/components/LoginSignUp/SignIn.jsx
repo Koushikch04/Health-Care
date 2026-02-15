@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 import FormPage from "./FormPage";
 import CircularSpinner from "../Spinners/CircularSpinner.jsx";
@@ -13,6 +15,9 @@ import styles from "./styles/SignUp.module.css";
 const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [blockedUntil, setBlockedUntil] = useState(null);
+  const [countdown, setCountdown] = useState(0);
   const dispatch = useDispatch();
   const location = useLocation();
   const { alert } = useAlert();
@@ -37,6 +42,10 @@ const SignIn = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (blockedUntil && Date.now() < blockedUntil) {
+      return;
+    }
+
     if (!emailIsValid || !passwordIsValid) {
       setErrorMessage("Please enter valid email and password.");
       return;
@@ -45,6 +54,15 @@ const SignIn = () => {
     setLoading(true);
     try {
       const result = await dispatch(loginAccount({ email, password }, alert));
+      if (!result?.ok && result?.status === 429) {
+        const seconds = result.retryAfterSeconds || 300;
+        setBlockedUntil(Date.now() + seconds * 1000);
+        setCountdown(seconds);
+        setErrorMessage(
+          `Too many attempts. Try again in ${Math.ceil(seconds / 60)} minute(s).`,
+        );
+        return;
+      }
       if (result?.ok) {
         const redirectParam = new URLSearchParams(location.search).get(
           "redirect",
@@ -68,6 +86,25 @@ const SignIn = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!blockedUntil) return;
+
+    const interval = setInterval(() => {
+      const secondsLeft = Math.max(
+        0,
+        Math.ceil((blockedUntil - Date.now()) / 1000),
+      );
+      setCountdown(secondsLeft);
+      if (secondsLeft <= 0) {
+        setBlockedUntil(null);
+        setErrorMessage("");
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [blockedUntil]);
 
   return (
     <div className={styles.body}>
@@ -105,27 +142,56 @@ const SignIn = () => {
                 }
               >
                 <div className={styles.label}>Password</div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={passwordChangeHandler}
-                  onBlur={passwordBlurHandler}
-                  required
-                />
+                <div className={styles.passwordInputWrap}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={passwordChangeHandler}
+                    onBlur={passwordBlurHandler}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <VisibilityOffIcon fontSize="small" />
+                    ) : (
+                      <VisibilityIcon fontSize="small" />
+                    )}
+                  </button>
+                </div>
                 {passwordHasError && (
                   <div className={styles.error}>
                     Password must be at least 7 characters.
                   </div>
                 )}
               </div>
+              <div className={styles.authMetaRow}>
+                <Link to="/auth/forgot-password" className={styles.authLink}>
+                  Forgot Password?
+                </Link>
+              </div>
               <button
                 className={styles.signInButton}
-                disabled={!emailIsValid || !passwordIsValid || loading}
+                disabled={
+                  !emailIsValid ||
+                  !passwordIsValid ||
+                  loading ||
+                  Boolean(blockedUntil && Date.now() < blockedUntil)
+                }
                 type="submit"
               >
                 {/* {loading ? <span className={styles.spinner}></span> : "Submit"} */}
                 {loading ? <CircularSpinner /> : "Submit"}
               </button>
+              {blockedUntil && countdown > 0 && (
+                <div className={styles.rateLimitNotice}>
+                  Too many attempts. Try again in {countdown}s.
+                </div>
+              )}
             </FormPage>
           </form>
         </div>

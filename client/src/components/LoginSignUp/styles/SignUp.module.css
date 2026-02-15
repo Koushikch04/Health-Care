@@ -160,6 +160,73 @@ button:disabled {
   background: #344563;
 }
 
+.passwordInputWrap {
+  position: relative;
+  width: 100%;
+}
+
+.passwordInputWrap input {
+  padding-right: 76px !important;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto !important;
+  height: auto !important;
+  margin-top: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--primary-color-dark) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0.15rem;
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 50%;
+}
+
+.passwordToggle:hover {
+  background: rgba(52, 69, 99, 0.08) !important;
+}
+
+.passwordToggle svg {
+  color: var(--primary-color-dark) !important;
+  opacity: 0.9;
+}
+
+.authMetaRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.authLink {
+  color: var(--primary-color-dark);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.authLink:hover {
+  text-decoration: underline;
+}
+
+.rateLimitNotice {
+  margin-top: 0.5rem;
+  font-size: 0.86rem;
+  color: #8a5a10;
+  background: #fff4dc;
+  border: 1px solid #f0d7a4;
+  border-radius: 8px;
+  padding: 0.4rem 0.55rem;
+}
+
 .container .progress_bar {
   display: flex;
   margin: 40px 0;
