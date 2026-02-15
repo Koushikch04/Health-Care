@@ -1,10 +1,11 @@
 // InstantConsultation.js
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { FaSearch } from "react-icons/fa";
 import CloseIcon from "@mui/icons-material/Close";
 import styles from "./InstantConsultation.module.css";
 import SearchBarResults from "../SearchBar/SearchBarResults";
 import AvailableDoctors from "../DoctorListPagination/AvailableDoctors";
+import { createTrieIndex, searchPrefix } from "../../utils/trie";
 
 const specialties = [
   {
@@ -140,6 +141,26 @@ const InstantConsultation = () => {
   const [moveToTop, setMoveToTop] = useState(false);
   const [showImage, setShowImage] = useState(true);
   const searchRef = useRef(null);
+  const specialtiesTrie = useMemo(
+    () => createTrieIndex(specialties, (specialty) => specialty.name),
+    [],
+  );
+
+  const getSearchResults = (value) => {
+    const query = value.trim();
+    if (!query) return specialties;
+
+    const prefixMatches = searchPrefix(specialtiesTrie, query, 50);
+    const seenNames = new Set(prefixMatches.map((specialty) => specialty.name));
+
+    const containsMatches = specialties.filter(
+      (specialty) =>
+        specialty.name.toLowerCase().includes(query.toLowerCase()) &&
+        !seenNames.has(specialty.name),
+    );
+
+    return [...prefixMatches, ...containsMatches];
+  };
 
   const handleClose = () => {
     setSearch("");
@@ -153,15 +174,9 @@ const InstantConsultation = () => {
   };
 
   const handleChange = (e) => {
-    setSearch(e.target.value);
-    if (e.target.value === "") {
-      setSearchData(specialties);
-    } else {
-      const filteredData = specialties.filter((specialty) =>
-        specialty.name.toLowerCase().includes(e.target.value.toLowerCase())
-      );
-      setSearchData(filteredData);
-    }
+    const value = e.target.value;
+    setSearch(value);
+    setSearchData(getSearchResults(value));
   };
 
   const handleKeyDown = (e) => {
@@ -188,7 +203,7 @@ const InstantConsultation = () => {
 
   const handleFocus = () => {
     setShowSuggestions(true);
-    setSearchData(specialties);
+    setSearchData(getSearchResults(search));
   };
 
   const handleBlur = (e) => {

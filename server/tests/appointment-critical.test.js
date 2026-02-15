@@ -100,6 +100,52 @@ describe("Appointment critical flows", () => {
     expect(slotsRes.body).not.toContain("09:30");
   });
 
+  test("availability strategy toggle returns equivalent slots for array and bitmask", async () => {
+    const { token } = await createUserWithToken({
+      email: "strategy-user@example.com",
+    });
+    const { doctor } = await createDoctorFixture({
+      email: "strategy-doctor@example.com",
+    });
+
+    const candidate = new Date();
+    candidate.setUTCDate(candidate.getUTCDate() + 1);
+    while (candidate.getUTCDay() === 0 || candidate.getUTCDay() === 6) {
+      candidate.setUTCDate(candidate.getUTCDate() + 1);
+    }
+    const day = candidate.toISOString().slice(0, 10);
+    const createRes = await request(app)
+      .post("/appointment")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        patientName: "Strategy User",
+        reasonForVisit: "Strategy parity check",
+        additionalNotes: "",
+        date: day,
+        time: "10:15",
+        doctorId: doctor._id.toString(),
+      });
+    expect(createRes.status).toBe(201);
+
+    const [arrayRes, bitmaskRes] = await Promise.all([
+      request(app)
+        .get(
+          `/appointment/available-slots/doctor/${doctor._id.toString()}/date/${day}?strategy=array`
+        )
+        .set("Authorization", `Bearer ${token}`),
+      request(app)
+        .get(
+          `/appointment/available-slots/doctor/${doctor._id.toString()}/date/${day}?strategy=bitmask`
+        )
+        .set("Authorization", `Bearer ${token}`),
+    ]);
+
+    expect(arrayRes.status).toBe(200);
+    expect(bitmaskRes.status).toBe(200);
+    expect(arrayRes.body).toEqual(bitmaskRes.body);
+    expect(arrayRes.body).not.toContain("10:15");
+  });
+
   test("unauthorized user cannot cancel someone else's appointment", async () => {
     const { token: ownerToken } = await createUserWithToken({
       email: "owner-user@example.com",

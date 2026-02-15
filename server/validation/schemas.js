@@ -85,7 +85,9 @@ export const appointmentSchemas = {
   },
   getAvailableTimeSlots: {
     body: Joi.object({}),
-    query: Joi.object({}),
+    query: Joi.object({
+      strategy: Joi.string().valid("array", "bitmask").optional(),
+    }),
     params: Joi.object({
       doctorId: objectId.required(),
       date: flexibleDate.required(),

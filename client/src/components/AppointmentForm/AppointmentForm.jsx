@@ -36,8 +36,10 @@ const AppointmentForm = ({
   });
 
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const [availabilityHint, setAvailabilityHint] = useState("");
   const [isDateSelected, setIsDateSelected] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
   const { alert } = useAlert();
 
@@ -66,6 +68,7 @@ const AppointmentForm = ({
     setIsDateSelected(Boolean(nextDate));
     if (!nextDate) {
       setAvailableTimeSlots([]);
+      setAvailabilityHint("");
     }
   };
 
@@ -88,6 +91,7 @@ const AppointmentForm = ({
 
     if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
       setAvailableTimeSlots(cachedEntry.slots);
+      setAvailabilityHint(cachedEntry.hint || "");
       return;
     }
 
@@ -97,6 +101,8 @@ const AppointmentForm = ({
 
     const controller = new AbortController();
     inFlightControllerRef.current = controller;
+    setIsLoadingSlots(true);
+    setAvailabilityHint("");
 
     try {
       const response = await fetch(
@@ -111,16 +117,33 @@ const AppointmentForm = ({
         },
       );
 
+      console.log(
+        `${baseURL}/appointment/available-slots/doctor/${doctorId}/date/${selectedDate}`,
+      );
+
       if (!response.ok) {
         throw new Error("Failed to fetch available time slots");
       }
 
+      const reason = response.headers.get("X-Availability-Reason");
       const slots = await response.json();
+      let hint = "";
+      if (slots.length === 0) {
+        if (reason === "NON_WORKING_DAY" || reason === "OUT_OF_SCHEDULE") {
+          hint = "Doctor is not available on the selected date. Please choose another day.";
+        } else if (reason === "FULLY_BOOKED") {
+          hint = "All slots are booked for this date. Please choose another day.";
+        } else {
+          hint = "No slots are available for this date.";
+        }
+      }
       slotsCacheRef.current.set(cacheKey, {
         slots,
+        hint,
         timestamp: Date.now(),
       });
       setAvailableTimeSlots(slots);
+      setAvailabilityHint(hint);
     } catch (error) {
       if (error.name === "AbortError") {
         return;
@@ -131,6 +154,7 @@ const AppointmentForm = ({
         title: "Error",
       });
     } finally {
+      setIsLoadingSlots(false);
       if (inFlightControllerRef.current === controller) {
         inFlightControllerRef.current = null;
       }
@@ -158,7 +182,9 @@ const AppointmentForm = ({
     const selectedSlot = formData.time;
     const previousSlots = availableTimeSlots;
     setIsBooking(true);
-    setAvailableTimeSlots((prev) => prev.filter((slot) => slot !== selectedSlot));
+    setAvailableTimeSlots((prev) =>
+      prev.filter((slot) => slot !== selectedSlot),
+    );
     setFormData((prev) => ({ ...prev, time: "" }));
 
     try {
@@ -294,6 +320,12 @@ const AppointmentForm = ({
                 </option>
               ))}
             </select>
+            {isDateSelected && isLoadingSlots && (
+              <p className={styles.slotHint}>Checking slot availability...</p>
+            )}
+            {isDateSelected && !isLoadingSlots && availabilityHint && (
+              <p className={styles.slotHint}>{availabilityHint}</p>
+            )}
           </div>
 
           <div className={styles.field}>
@@ -318,7 +350,11 @@ const AppointmentForm = ({
             />
           </div>
 
-          <button type="submit" className={styles.book_button} disabled={isBooking}>
+          <button
+            type="submit"
+            className={styles.book_button}
+            disabled={isBooking}
+          >
             {isBooking ? "Booking..." : "Book Now"}
           </button>
         </form>
