@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.js";
 import doctorRoutes from "./routes/doctor.js";
@@ -15,19 +16,48 @@ import { verifyToken } from "./middleware/authVerification.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { createAppError } from "./utils/appError.js";
 
-const allowedOrigins = [
+const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:3000",
+  "http://localhost:5173",
   "https://health-care-red-five.vercel.app",
 ];
 
+const getAllowedOrigins = () => {
+  const configuredOrigins = process.env.CORS_ALLOWED_ORIGINS;
+  if (!configuredOrigins) {
+    return DEFAULT_ALLOWED_ORIGINS;
+  }
+
+  const parsedOrigins = configuredOrigins
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return parsedOrigins.length > 0 ? parsedOrigins : DEFAULT_ALLOWED_ORIGINS;
+};
+
 export const createApp = () => {
   const app = express();
+  const allowedOrigins = getAllowedOrigins();
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));
   app.use(express.json());
+
+  const globalApiLimiter = rateLimit({
+    windowMs: Number(process.env.GLOBAL_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+    max: Number(process.env.GLOBAL_RATE_LIMIT_MAX) || 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: "failure",
+      msg: "Too many requests from this IP, please try again later.",
+    },
+  });
+
+  app.use(globalApiLimiter);
 
   app.use(
     cors({

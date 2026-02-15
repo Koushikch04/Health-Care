@@ -11,6 +11,7 @@ import {
   assertActionAllowed,
   getAllowedFromStatuses,
 } from "../utils/appointmentStateMachine.js";
+import { getAvailableSlots } from "../services/appointmentService.js";
 
 const getUserProfileId = async (req) => {
   if (req.user?.profileId) return req.user.profileId;
@@ -138,74 +139,14 @@ export const getUserAppointments = async (req, res) => {
   }
 };
 
-const fetchAvailableTimeSlots = async (doctorId, selectedDate) => {
-  try {
-    const response = await fetch(
-      `http://localhost:8000/appointment/available-slots/doctor/${doctorId}/date/${selectedDate}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${yourToken}`, // Include the token if authentication is required
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch available time slots");
-    }
-
-    const availableSlots = await response.json();
-    console.log("Available Time Slots:", availableSlots);
-    return availableSlots;
-  } catch (error) {
-    console.error("Error fetching available time slots:", error);
-  }
-};
-
-// Function to generate time slots
-const generateTimeSlots = () => {
-  const slots = [];
-  const startTime = 8 * 60; // 8:00 AM in minutes
-  const endTime = 17 * 60; // 5:00 PM in minutes
-
-  for (let time = startTime; time <= endTime; time += 15) {
-    const hours = Math.floor(time / 60);
-    const minutes = time % 60;
-    const formattedTime = `${String(hours).padStart(2, "0")}:${String(
-      minutes
-    ).padStart(2, "0")}`;
-    slots.push(formattedTime);
-  }
-  return slots;
-};
-
 export const getAvailableTimeSlots = async (req, res) => {
   const { doctorId, date } = req.params;
 
   try {
-    const dayBounds = getUtcDayBounds(date);
-    if (!dayBounds) {
+    const availableSlots = await getAvailableSlots(doctorId, date);
+    if (!availableSlots) {
       return res.status(400).json({ message: "Invalid date." });
     }
-
-    // Fetch appointments for the specified doctor and date
-    const appointments = await Appointment.find({
-      doctor: doctorId,
-      date: {
-        $gte: dayBounds.start,
-        $lte: dayBounds.end,
-      },
-      status: "scheduled",
-    }).select("time");
-
-    const bookedTimes = appointments.map((app) => app.time);
-    const allSlots = generateTimeSlots();
-
-    // Filter out booked slots
-    const availableSlots = allSlots.filter(
-      (slot) => !bookedTimes.includes(slot)
-    );
 
     return res.status(200).json(availableSlots);
   } catch (error) {
