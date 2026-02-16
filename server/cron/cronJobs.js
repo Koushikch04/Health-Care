@@ -5,6 +5,7 @@ import {
   APPOINTMENT_STATUSES,
   getAllowedFromStatuses,
 } from "../utils/appointmentStateMachine.js";
+import { rebuildAvailabilitySnapshotsForPairs } from "../services/appointmentService.js";
 
 let isRunning = false;
 
@@ -47,6 +48,20 @@ export const processOverdueAppointments = async ({
     },
     { $set: { status: APPOINTMENT_STATUSES.COMPLETED } },
   );
+
+  try {
+    await rebuildAvailabilitySnapshotsForPairs(
+      overdueAppointments.map((appointment) => ({
+        doctorId: appointment.doctor,
+        date: appointment.date,
+      })),
+    );
+  } catch (snapshotError) {
+    console.error(
+      "Failed to refresh availability snapshots after overdue processing:",
+      snapshotError.message,
+    );
+  }
 
   return {
     matchedCount: result.matchedCount,

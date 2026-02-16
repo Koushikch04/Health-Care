@@ -1,13 +1,16 @@
 import Appointment from "../models/Appointment.js";
 import DoctorProfile from "../models/DoctorProfile.js";
+import AppointmentAvailabilitySnapshot from "../models/AppointmentAvailabilitySnapshot.js";
 import { getUtcDayBounds } from "../utils/date.js";
 import { APPOINTMENT_STATUSES } from "../utils/appointmentStateMachine.js";
 
 const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
 export const AVAILABILITY_STRATEGIES = {
   ARRAY: "array",
   BITMASK: "bitmask",
 };
+
 export const AVAILABILITY_REASONS = {
   AVAILABLE: "AVAILABLE",
   INVALID_DATE: "INVALID_DATE",
@@ -33,6 +36,7 @@ const getDayOfWeekUTC = (dateValue) => {
   return date.getUTCDay();
 };
 
+// Normalize break windows once so later slot math can stay numeric and fast.
 const normalizeBreaks = (breaks) => {
   if (!Array.isArray(breaks)) return [];
   return breaks
@@ -69,6 +73,7 @@ const resolveAvailabilityStrategy = (override) => {
     : getDefaultAvailabilityStrategy();
 };
 
+// A slot is blocked when any overlap exists with a configured break interval.
 const overlapsBreak = (slotStart, slotEnd, breaks) =>
   breaks.some((period) => slotStart < period.end && slotEnd > period.start);
 
@@ -78,20 +83,72 @@ const minuteToSlotLabel = (minute) => {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
-const hasAtLeastOneWorkingSlot = (schedule) => {
-  for (
-    let time = schedule.startMinutes;
-    time + schedule.intervalMinutes <= schedule.endMinutes;
-    time += schedule.intervalMinutes
-  ) {
-    const slotEnd = time + schedule.intervalMinutes;
-    if (!overlapsBreak(time, slotEnd, schedule.breaks)) {
-      return true;
-    }
+const toBigIntMask = (value) => {
+  try {
+    return BigInt(value ?? "0");
+  } catch {
+    return 0n;
   }
-  return false;
 };
 
+// Fingerprint detects schedule drift; if changed, cached daily snapshot must be rebuilt.
+const buildScheduleFingerprint = (schedule) =>
+  JSON.stringify({
+    workingDays: schedule.workingDays,
+    startMinutes: schedule.startMinutes,
+    endMinutes: schedule.endMinutes,
+    slotIntervalMinutes: schedule.intervalMinutes,
+    breaks: schedule.breaks,
+  });
+
+const getTotalSlots = (schedule) =>
+  Math.floor((schedule.endMinutes - schedule.startMinutes) / schedule.intervalMinutes);
+
+// Pre-compute doctor's "possible" slots for the day (ignoring bookings).
+const computeWorkingMask = (schedule) => {
+  const totalSlots = getTotalSlots(schedule);
+  let workingMask = 0n;
+
+  for (let index = 0; index < totalSlots; index += 1) {
+    const slotStart = schedule.startMinutes + index * schedule.intervalMinutes;
+    const slotEnd = slotStart + schedule.intervalMinutes;
+    if (!overlapsBreak(slotStart, slotEnd, schedule.breaks)) {
+      workingMask |= 1n << BigInt(index);
+    }
+  }
+
+  return {
+    totalSlots,
+    workingMask,
+    hasAtLeastOneWorkingSlot: workingMask !== 0n,
+  };
+};
+
+// Convert booked appointments into bit positions so availability can be resolved with bit ops.
+const buildBookedMaskFromAppointments = ({ appointments, schedule, totalSlots }) => {
+  let bookedMask = 0n;
+
+  appointments.forEach((appointment) => {
+    const minutes = toMinutes(appointment.time);
+    if (!Number.isInteger(minutes)) {
+      return;
+    }
+
+    const offset = minutes - schedule.startMinutes;
+    if (offset < 0 || offset % schedule.intervalMinutes !== 0) {
+      return;
+    }
+
+    const slotIndex = offset / schedule.intervalMinutes;
+    if (slotIndex >= 0 && slotIndex < totalSlots) {
+      bookedMask |= 1n << BigInt(slotIndex);
+    }
+  });
+
+  return bookedMask;
+};
+
+// Reads doctor schedule from profile and applies safe defaults if profile data is invalid.
 const getDoctorSchedule = async (doctorId) => {
   const doctor = await DoctorProfile.findOne({
     _id: doctorId,
@@ -139,6 +196,135 @@ const getDoctorSchedule = async (doctorId) => {
   };
 };
 
+// Rebuild one doctor-day snapshot from source-of-truth appointments.
+const rebuildSnapshotWithSchedule = async ({ doctorId, date, schedule }) => {
+  const dayBounds = getUtcDayBounds(date);
+  if (!dayBounds || !schedule) {
+    return null;
+  }
+
+  const { totalSlots, workingMask } = computeWorkingMask(schedule);
+  const appointments = await Appointment.find({
+    doctor: doctorId,
+    date: {
+      $gte: dayBounds.start,
+      $lte: dayBounds.end,
+    },
+    status: APPOINTMENT_STATUSES.SCHEDULED,
+  }).select("time");
+
+  const bookedMask = buildBookedMaskFromAppointments({
+    appointments,
+    schedule,
+    totalSlots,
+  });
+  const scheduleFingerprint = buildScheduleFingerprint(schedule);
+
+  await AppointmentAvailabilitySnapshot.findOneAndUpdate(
+    { doctor: doctorId, date: dayBounds.start },
+    {
+      $set: {
+        startMinutes: schedule.startMinutes,
+        endMinutes: schedule.endMinutes,
+        slotIntervalMinutes: schedule.intervalMinutes,
+        scheduleFingerprint,
+        workingMask: workingMask.toString(),
+        bookedMask: bookedMask.toString(),
+      },
+    },
+    { upsert: true, new: true },
+  );
+
+  return {
+    scheduleFingerprint,
+    workingMask,
+    bookedMask,
+    totalSlots,
+  };
+};
+
+// Snapshot read path: use cached snapshot when valid, otherwise rebuild lazily.
+const getOrBuildSnapshotState = async ({ doctorId, date, schedule }) => {
+  const dayBounds = getUtcDayBounds(date);
+  if (!dayBounds || !schedule) {
+    return null;
+  }
+
+  const { totalSlots, workingMask } = computeWorkingMask(schedule);
+  const scheduleFingerprint = buildScheduleFingerprint(schedule);
+
+  const snapshot = await AppointmentAvailabilitySnapshot.findOne({
+    doctor: doctorId,
+    date: dayBounds.start,
+  }).select(
+    "startMinutes endMinutes slotIntervalMinutes scheduleFingerprint workingMask bookedMask",
+  );
+
+  const snapshotMatchesSchedule =
+    snapshot &&
+    snapshot.startMinutes === schedule.startMinutes &&
+    snapshot.endMinutes === schedule.endMinutes &&
+    snapshot.slotIntervalMinutes === schedule.intervalMinutes &&
+    snapshot.scheduleFingerprint === scheduleFingerprint;
+
+  if (!snapshotMatchesSchedule) {
+    const rebuilt = await rebuildSnapshotWithSchedule({ doctorId, date, schedule });
+    if (!rebuilt) {
+      return null;
+    }
+    return rebuilt;
+  }
+
+  return {
+    scheduleFingerprint,
+    workingMask,
+    bookedMask: toBigIntMask(snapshot.bookedMask),
+    totalSlots,
+  };
+};
+
+// Convert a mask back to API response format (HH:mm list).
+const getSlotsFromMask = ({ availableMask, totalSlots, schedule }) => {
+  const slots = [];
+  for (let index = 0; index < totalSlots; index += 1) {
+    if ((availableMask & (1n << BigInt(index))) !== 0n) {
+      const minute = schedule.startMinutes + index * schedule.intervalMinutes;
+      slots.push(minuteToSlotLabel(minute));
+    }
+  }
+  return slots;
+};
+
+// Public helper for write-path hooks (create/cancel/reschedule/cron).
+export const rebuildAvailabilitySnapshotForDoctorDay = async (doctorId, date) => {
+  const schedule = await getDoctorSchedule(doctorId);
+  if (!schedule) {
+    return null;
+  }
+  return rebuildSnapshotWithSchedule({ doctorId, date, schedule });
+};
+
+// Batch rebuild with dedupe so callers can pass repeated doctor-day pairs safely.
+export const rebuildAvailabilitySnapshotsForPairs = async (pairs = []) => {
+  const uniquePairs = new Map();
+
+  pairs.forEach((pair) => {
+    if (!pair?.doctorId || !pair?.date) return;
+    const dayBounds = getUtcDayBounds(pair.date);
+    if (!dayBounds) return;
+    uniquePairs.set(`${pair.doctorId}:${dayBounds.start.toISOString()}`, {
+      doctorId: pair.doctorId,
+      date: dayBounds.start,
+    });
+  });
+
+  await Promise.all(
+    Array.from(uniquePairs.values()).map(({ doctorId, date }) =>
+      rebuildAvailabilitySnapshotForDoctorDay(doctorId, date),
+    ),
+  );
+};
+
 export const getAvailableSlotsWithContext = async (
   doctorId,
   date,
@@ -180,66 +366,28 @@ export const getAvailableSlotsWithContext = async (
     };
   }
 
-  const appointments = await Appointment.find({
-    doctor: doctorId,
-    date: {
-      $gte: dayBounds.start,
-      $lte: dayBounds.end,
-    },
-    status: APPOINTMENT_STATUSES.SCHEDULED,
-  }).select("time");
+  // Fast path: single snapshot doc read. Falls back to rebuild if missing/stale.
+  const snapshotState = await getOrBuildSnapshotState({
+    doctorId,
+    date: dayBounds.start,
+    schedule,
+  });
 
-  const totalSlots = Math.floor(
-    (schedule.endMinutes - schedule.startMinutes) / schedule.intervalMinutes,
-  );
-
-  let slots = [];
-
-  if (strategy === AVAILABILITY_STRATEGIES.BITMASK) {
-    let workingMask = 0n;
-    for (let index = 0; index < totalSlots; index += 1) {
-      const slotStart =
-        schedule.startMinutes + index * schedule.intervalMinutes;
-      const slotEnd = slotStart + schedule.intervalMinutes;
-      if (!overlapsBreak(slotStart, slotEnd, schedule.breaks)) {
-        workingMask |= 1n << BigInt(index);
-      }
-    }
-
-    let bookedMask = 0n;
-    appointments.forEach((appointment) => {
-      const minutes = toMinutes(appointment.time);
-      if (!Number.isInteger(minutes)) return;
-      const offset = minutes - schedule.startMinutes;
-      if (offset < 0 || offset % schedule.intervalMinutes !== 0) return;
-      const slotIndex = offset / schedule.intervalMinutes;
-      if (slotIndex >= 0 && slotIndex < totalSlots) {
-        bookedMask |= 1n << BigInt(slotIndex);
-      }
-    });
-
-    const availableMask = workingMask & ~bookedMask;
-    for (let index = 0; index < totalSlots; index += 1) {
-      if ((availableMask & (1n << BigInt(index))) !== 0n) {
-        const minute = schedule.startMinutes + index * schedule.intervalMinutes;
-        slots.push(minuteToSlotLabel(minute));
-      }
-    }
-  } else {
-    const bookedTimes = new Set(
-      appointments.map((appointment) => appointment.time),
-    );
-    for (
-      let time = schedule.startMinutes;
-      time + schedule.intervalMinutes <= schedule.endMinutes;
-      time += schedule.intervalMinutes
-    ) {
-      const slotEnd = time + schedule.intervalMinutes;
-      if (overlapsBreak(time, slotEnd, schedule.breaks)) continue;
-      const slotLabel = minuteToSlotLabel(time);
-      if (!bookedTimes.has(slotLabel)) slots.push(slotLabel);
-    }
+  if (!snapshotState) {
+    return {
+      slots: null,
+      reason: AVAILABILITY_REASONS.INVALID_DATE,
+      strategy,
+    };
   }
+
+  // Core availability math: available = working - booked.
+  const availableMask = snapshotState.workingMask & ~snapshotState.bookedMask;
+  const slots = getSlotsFromMask({
+    availableMask,
+    totalSlots: snapshotState.totalSlots,
+    schedule,
+  });
 
   if (slots.length > 0) {
     return {
@@ -251,9 +399,10 @@ export const getAvailableSlotsWithContext = async (
 
   return {
     slots: [],
-    reason: hasAtLeastOneWorkingSlot(schedule)
-      ? AVAILABILITY_REASONS.FULLY_BOOKED
-      : AVAILABILITY_REASONS.OUT_OF_SCHEDULE,
+    reason:
+      snapshotState.workingMask !== 0n
+        ? AVAILABILITY_REASONS.FULLY_BOOKED
+        : AVAILABILITY_REASONS.OUT_OF_SCHEDULE,
     strategy,
   };
 };
