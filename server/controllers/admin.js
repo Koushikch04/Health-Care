@@ -18,6 +18,7 @@ import {
   assertActionAllowed,
   getAllowedFromStatuses,
 } from "../utils/appointmentStateMachine.js";
+import { rebuildAvailabilitySnapshotsForPairs } from "../services/appointmentService.js";
 // import SupportTicket from "../models/"; // Assuming you have a SupportTicket model
 
 const INVITE_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -651,7 +652,9 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
       return res.status(400).json({ error: "Invalid appointment action" });
     }
 
-    const currentAppointment = await Appointment.findById(id).select("status");
+    const currentAppointment = await Appointment.findById(id).select(
+      "status doctor date",
+    );
     if (!currentAppointment) {
       return res.status(404).json({ error: "Appointment not found" });
     }
@@ -688,6 +691,27 @@ export const rescheduleOrCancelAppointment = async (req, res) => {
       return res.status(409).json({
         error: "Appointment state changed and requested action is no longer valid.",
       });
+    }
+
+    try {
+      const rebuildPairs = [
+        {
+          doctorId: currentAppointment.doctor,
+          date: currentAppointment.date,
+        },
+      ];
+      if (status === "rescheduled") {
+        rebuildPairs.push({
+          doctorId: appointment.doctor?._id || appointment.doctor,
+          date: appointment.date,
+        });
+      }
+      await rebuildAvailabilitySnapshotsForPairs(rebuildPairs);
+    } catch (snapshotError) {
+      console.error(
+        "Failed to refresh availability snapshot after admin action:",
+        snapshotError.message,
+      );
     }
 
     const response = {

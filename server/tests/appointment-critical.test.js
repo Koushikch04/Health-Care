@@ -5,6 +5,15 @@ import { app, createDoctorFixture, createUserWithToken } from "./helpers/fixture
 import { getUtcDateStringWithOffset } from "./helpers/time.js";
 
 describe("Appointment critical flows", () => {
+  const getNextWeekdayIsoDate = (daysAhead = 1) => {
+    const candidate = new Date();
+    candidate.setUTCDate(candidate.getUTCDate() + daysAhead);
+    while (candidate.getUTCDay() === 0 || candidate.getUTCDay() === 6) {
+      candidate.setUTCDate(candidate.getUTCDate() + 1);
+    }
+    return candidate.toISOString().slice(0, 10);
+  };
+
   test("state machine rejects illegal double-cancel transition", async () => {
     const { token } = await createUserWithToken({
       email: "state-user@example.com",
@@ -108,12 +117,7 @@ describe("Appointment critical flows", () => {
       email: "strategy-doctor@example.com",
     });
 
-    const candidate = new Date();
-    candidate.setUTCDate(candidate.getUTCDate() + 1);
-    while (candidate.getUTCDay() === 0 || candidate.getUTCDay() === 6) {
-      candidate.setUTCDate(candidate.getUTCDate() + 1);
-    }
-    const day = candidate.toISOString().slice(0, 10);
+    const day = getNextWeekdayIsoDate(1);
     const createRes = await request(app)
       .post("/appointment")
       .set("Authorization", `Bearer ${token}`)
@@ -164,7 +168,7 @@ describe("Appointment critical flows", () => {
         patientName: "Owner User",
         reasonForVisit: "Consultation",
         additionalNotes: "",
-        date: getUtcDateStringWithOffset(5),
+        date: getNextWeekdayIsoDate(5),
         time: "11:15",
         doctorId: doctor._id.toString(),
       });

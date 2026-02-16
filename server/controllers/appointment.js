@@ -14,6 +14,7 @@ import {
 import {
   getAvailableSlots,
   getAvailableSlotsWithContext,
+  rebuildAvailabilitySnapshotForDoctorDay,
 } from "../services/appointmentService.js";
 
 const getUserProfileId = async (req) => {
@@ -86,6 +87,14 @@ export const createAppointment = async (req, res) => {
     });
 
     const savedAppointment = await newAppointment.save();
+    try {
+      await rebuildAvailabilitySnapshotForDoctorDay(doctorId, dayBounds.start);
+    } catch (snapshotError) {
+      console.error(
+        "Failed to refresh availability snapshot after appointment creation:",
+        snapshotError.message,
+      );
+    }
     return res.status(201).json(savedAppointment);
   } catch (error) {
     if (error?.code === 11000) {
@@ -247,6 +256,18 @@ export const cancelAppointment = async (req, res) => {
       return res.status(409).json({
         message: "Appointment state changed and can no longer be canceled.",
       });
+    }
+
+    try {
+      await rebuildAvailabilitySnapshotForDoctorDay(
+        updatedAppointment.doctor,
+        updatedAppointment.date,
+      );
+    } catch (snapshotError) {
+      console.error(
+        "Failed to refresh availability snapshot after cancellation:",
+        snapshotError.message,
+      );
     }
 
     return res.status(200).json({
