@@ -102,7 +102,9 @@ const buildScheduleFingerprint = (schedule) =>
   });
 
 const getTotalSlots = (schedule) =>
-  Math.floor((schedule.endMinutes - schedule.startMinutes) / schedule.intervalMinutes);
+  Math.floor(
+    (schedule.endMinutes - schedule.startMinutes) / schedule.intervalMinutes,
+  );
 
 // Pre-compute doctor's "possible" slots for the day (ignoring bookings).
 const computeWorkingMask = (schedule) => {
@@ -125,7 +127,11 @@ const computeWorkingMask = (schedule) => {
 };
 
 // Convert booked appointments into bit positions so availability can be resolved with bit ops.
-const buildBookedMaskFromAppointments = ({ appointments, schedule, totalSlots }) => {
+const buildBookedMaskFromAppointments = ({
+  appointments,
+  schedule,
+  totalSlots,
+}) => {
   let bookedMask = 0n;
 
   appointments.forEach((appointment) => {
@@ -268,7 +274,11 @@ const getOrBuildSnapshotState = async ({ doctorId, date, schedule }) => {
     snapshot.scheduleFingerprint === scheduleFingerprint;
 
   if (!snapshotMatchesSchedule) {
-    const rebuilt = await rebuildSnapshotWithSchedule({ doctorId, date, schedule });
+    const rebuilt = await rebuildSnapshotWithSchedule({
+      doctorId,
+      date,
+      schedule,
+    });
     if (!rebuilt) {
       return null;
     }
@@ -296,7 +306,10 @@ const getSlotsFromMask = ({ availableMask, totalSlots, schedule }) => {
 };
 
 // Public helper for write-path hooks (create/cancel/reschedule/cron).
-export const rebuildAvailabilitySnapshotForDoctorDay = async (doctorId, date) => {
+export const rebuildAvailabilitySnapshotForDoctorDay = async (
+  doctorId,
+  date,
+) => {
   const schedule = await getDoctorSchedule(doctorId);
   if (!schedule) {
     return null;
