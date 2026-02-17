@@ -315,7 +315,7 @@ function Doctors() {
       </div>
 
       <button
-        style={{ marginBottom: "10px" }}
+        className={styles.addDoctorButton}
         onClick={() => handleEditDoctor()}
       >
         + Add New Doctor
@@ -510,12 +510,14 @@ function Doctors() {
               <p className={styles.noDoctors}>No doctors found.</p>
             )}
           </div>
-          <Pagination
-            totalPosts={filteredDoctors.length}
-            postsPerPage={postsPerPage}
-            setCurrentPage={setCurrentPage}
-            currentPage={currentPage}
-          />
+          <div className={styles.paginationWrap}>
+            <Pagination
+              totalPosts={filteredDoctors.length}
+              postsPerPage={postsPerPage}
+              setCurrentPage={setCurrentPage}
+              currentPage={currentPage}
+            />
+          </div>
         </div>
       )}
 
