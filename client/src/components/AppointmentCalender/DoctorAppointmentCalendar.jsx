@@ -31,7 +31,7 @@ const ServerDay = React.memo((props) => {
     <Badge
       key={day.toString()}
       overlap="circular"
-      badgeContent={isHighlighted ? "🌟" : undefined}
+      badgeContent={isHighlighted ? <span className={styles.dayIndicator} /> : undefined}
     >
       <PickersDay
         {...other}
@@ -87,9 +87,9 @@ const DoctorAppointmentCalendar = () => {
           .filter(
             (appointmentDate) =>
               appointmentDate.month() === currentMonth &&
-              appointmentDate.year() === currentYear
+              appointmentDate.year() === currentYear,
           )
-          .map((appointmentDate) => appointmentDate.date())
+          .map((appointmentDate) => appointmentDate.date()),
       ),
     ];
 
@@ -109,14 +109,16 @@ const DoctorAppointmentCalendar = () => {
       const appointmentDate = dayjs(appointment.date);
       if (viewMode === "day") {
         return appointmentDate.isSame(selectedDate, "day");
-      } else if (viewMode === "week") {
+      }
+      if (viewMode === "week") {
         return appointmentDate.isBetween(
           selectedDate.startOf("week"),
           selectedDate.endOf("week"),
           null,
-          "[]"
+          "[]",
         );
-      } else if (viewMode === "month") {
+      }
+      if (viewMode === "month") {
         return appointmentDate.isSame(selectedDate, "month");
       }
       return false;
@@ -148,23 +150,24 @@ const DoctorAppointmentCalendar = () => {
       prevAppointments.map((appointment) =>
         appointment._id === id
           ? { ...appointment, status: "canceled" }
-          : appointment
-      )
+          : appointment,
+      ),
     );
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
       <div className={styles.spinnerContainer}>
         <TableSpinner message="Loading calendar appointments..." />
       </div>
     );
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className={styles.calendarContainer}>
         <div className={styles.calendarSection}>
-          <h2>Your Calendar</h2>
+          <h2 className={styles.sectionTitle}>Your Calendar</h2>
           <div className={styles.viewModeButtons}>
             <button
               onClick={() => handleViewModeChange("day")}
@@ -187,6 +190,7 @@ const DoctorAppointmentCalendar = () => {
           </div>
 
           <DateCalendar
+            className={styles.muiCalendar}
             value={selectedDate}
             onChange={handleDateChange}
             onMonthChange={handleMonthChange}
@@ -196,22 +200,30 @@ const DoctorAppointmentCalendar = () => {
         </div>
 
         <div className={styles.appointmentsSection}>
-          <h2>Appointments</h2>
+          <h2 className={styles.sectionTitle}>Appointments</h2>
           <div className={styles.appointmentsList}>
-            <h3>
-              {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
-              Appointments
+            <h3 className={styles.listTitle}>
+              {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} Appointments
             </h3>
             {filteredAppointments.length > 0 ? (
               filteredAppointments.map((appointment) => (
                 <div
                   key={appointment._id}
-                  className={`${styles.appointmentItem} ${
-                    styles[appointment.status]
-                  }`}
+                  className={styles.appointmentItem}
                 >
-                  <strong>Time:</strong> {appointment.time} <br />
-                  <strong>Status:</strong> <span>{appointment.status}</span>
+                  <p>
+                    <strong>Time:</strong> {appointment.time}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    <span
+                      className={`${styles.statusChip} ${
+                        styles[`status_${appointment.status}`]
+                      }`}
+                    >
+                      {appointment.status}
+                    </span>
+                  </p>
                   <button
                     className={styles.button}
                     onClick={() => handleViewDetails(appointment)}
@@ -227,14 +239,14 @@ const DoctorAppointmentCalendar = () => {
             )}
           </div>
         </div>
-        {selectedAppointment && (
-          <DoctorAppointmentDetails
-            appointment={selectedAppointment}
-            onClose={closeDetailsModal}
-            onCancel={handleCancelAppointment}
-          />
-        )}
       </div>
+      {selectedAppointment && (
+        <DoctorAppointmentDetails
+          appointment={selectedAppointment}
+          onClose={closeDetailsModal}
+          onCancel={handleCancelAppointment}
+        />
+      )}
     </LocalizationProvider>
   );
 };

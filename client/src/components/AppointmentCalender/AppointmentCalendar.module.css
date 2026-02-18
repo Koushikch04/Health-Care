@@ -1,143 +1,160 @@
 .calendarContainer {
-  display: flex;
-  max-width: 1500px; /* Increase container width */
-  margin: 40px auto;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0.8rem auto 0;
+  padding: 1rem;
+  min-height: calc(100vh - 240px);
+  align-content: center;
 }
 
-.calendarSection {
-  width: 50%; /* Narrower width for calendar */
-  border-right: 1px solid #ddd;
-  padding-right: 20px;
-}
-
+.calendarSection,
 .appointmentsSection {
-  width: 50%; /* Wider width for appointments */
-  padding-left: 20px;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--surface-shadow);
+  padding: 1rem;
 }
 
-.calendarSection h2,
-.appointmentsSection h2 {
-  font-size: 2rem;
-  color: #2c3e50;
-  margin-bottom: 20px;
-  text-align: center;
+.sectionTitle {
+  margin: 0 0 0.9rem;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  line-height: 1.2;
 }
 
 .viewModeButtons {
   display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 0.45rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
 }
 
 .viewModeButtons button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  background-color: #2980b9;
-  color: white;
-  font-weight: bold;
+  border: 1px solid var(--surface-border);
+  border-radius: 9px;
+  padding: 0.42rem 0.75rem;
+  background: #fff;
+  color: var(--text-dark);
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
 .viewModeButtons button:hover {
-  background-color: #1c5980;
+  border-color: #9eb1d8;
+  background: var(--surface-bg);
+}
+
+.activeViewMode {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #fff !important;
+}
+
+.dayIndicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary-color);
+}
+
+.muiCalendar {
+  border-radius: 10px;
+  background: #fff;
+}
+
+.muiCalendar :global(.MuiDayCalendar-header),
+.muiCalendar :global(.MuiPickersCalendarHeader-root) {
+  color: var(--text-dark);
+}
+
+.muiCalendar :global(.MuiPickersDay-root) {
+  border-radius: 8px;
+}
+
+.muiCalendar :global(.Mui-selected) {
+  background-color: var(--primary-color) !important;
 }
 
 .appointmentsList {
-  margin-top: 20px;
-  max-height: 400px;
+  max-height: 430px;
   overflow-y: auto;
-  background-color: #f1f1f1;
-  padding: 15px;
-  border-radius: 8px;
-  border-top: 2px solid #2980b9;
+  padding-right: 0.2rem;
 }
 
-/* Custom scrollbar styling */
-.appointmentsList::-webkit-scrollbar {
-  width: 8px;
-}
-
-.appointmentsList::-webkit-scrollbar-track {
-  background: #e0e0e0;
-  border-radius: 10px;
-}
-
-.appointmentsList::-webkit-scrollbar-thumb {
-  background-color: #2980b9;
-  border-radius: 10px;
-  border: 2px solid #e0e0e0;
-}
-
-.appointmentsList h3 {
-  font-size: 1.5rem;
-  color: #34495e;
-  margin: 15px 0;
-  text-align: center;
+.listTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 700;
 }
 
 .appointmentItem {
-  border: 1px solid #ddd;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  background-color: #ffffff;
-  transition: background-color 0.3s, transform 0.3s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  background: var(--surface-bg);
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.65rem;
 }
 
-.appointmentItem:hover {
-  background-color: #ecf6fd;
-  transform: translateY(-2px);
+.appointmentItem p {
+  margin: 0.2rem 0;
+  color: var(--text-dark);
+  line-height: 1.35;
 }
 
-.appointmentItem strong {
-  color: #2c3e50;
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: capitalize;
 }
 
-.statusBadge {
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-  display: inline-block;
+.statusChip.status_scheduled,
+.status_scheduled {
+  background: #e6f0ff;
+  color: #224f9e;
 }
 
-.scheduled {
-  background: #ffadad;
-  color: #d80000;
+.statusChip.status_canceled,
+.status_canceled {
+  background: #fde7e7;
+  color: #b43333;
 }
 
-.canceled {
-  background: #83b6d6;
-  color: white;
-}
-.activeViewMode {
-  background-color: #005a9e;
-  color: white;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  transform: scale(1.05);
-  transition: transform 0.2s ease, background-color 0.3s ease;
+.statusChip.status_completed,
+.status_completed {
+  background: #e7f7ee;
+  color: #176c46;
 }
 
-.completed {
-  color: green;
-  background: rgba(145, 254, 159, 0.5);
+.noAppointments {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 1.1rem 0.5rem;
 }
 
 .spinnerContainer {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 50vh;
+  min-height: 45vh;
 }
 
-.noAppointments {
-  text-align: center;
-  color: #777;
-  font-style: italic;
-  margin-top: 10px;
+@media (max-width: 900px) {
+  .calendarContainer {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    align-content: start;
+  }
+
+  .appointmentsList {
+    max-height: 360px;
+  }
 }
