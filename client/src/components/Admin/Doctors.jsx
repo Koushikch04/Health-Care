@@ -122,7 +122,7 @@ function Doctors() {
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentDoctors = filteredDoctors.slice(
     indexOfFirstPost,
-    indexOfLastPost
+    indexOfLastPost,
   );
 
   // Open modal with full doctor details
@@ -181,7 +181,8 @@ function Doctors() {
     const previousFilteredDoctors = filteredDoctors;
 
     const specializationName =
-      uniqueSpecializations.find((spec) => spec._id === newDoctor.specialty)?.name ||
+      uniqueSpecializations.find((spec) => spec._id === newDoctor.specialty)
+        ?.name ||
       selectedDoctor?.specialization ||
       "";
 
@@ -311,15 +312,16 @@ function Doctors() {
             <option value="Inactive">Inactive</option>
           </select>
         </div>
-        <button onClick={handleFilterChange}>Apply Filters</button>
+        <div className={styles.filterActions}>
+          <button onClick={handleFilterChange}>Apply Filters</button>
+          <button
+            className={styles.addDoctorButton}
+            onClick={() => handleEditDoctor()}
+          >
+            + Add New Doctor
+          </button>
+        </div>
       </div>
-
-      <button
-        className={styles.addDoctorButton}
-        onClick={() => handleEditDoctor()}
-      >
-        + Add New Doctor
-      </button>
 
       {createEditModal && (
         <Modal onClose={() => setCreateEditModal(false)}>
@@ -467,7 +469,7 @@ function Doctors() {
       )}
       {error && <p className={styles.error}>{error}</p>}
       {!loading && !error && (
-        <div>
+        <div className={styles.resultsSection}>
           <div className={styles.doctors}>
             {currentDoctors.length > 0 ? (
               currentDoctors.map((doctor) => (

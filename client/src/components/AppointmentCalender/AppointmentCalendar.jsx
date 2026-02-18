@@ -20,6 +20,7 @@ const ServerDay = React.memo((props) => {
     selectedDate,
     ...other
   } = props;
+
   const isHighlighted =
     highlightedDays.includes(day.date()) &&
     !outsideCurrentMonth &&
@@ -30,7 +31,7 @@ const ServerDay = React.memo((props) => {
     <Badge
       key={day.toString()}
       overlap="circular"
-      badgeContent={isHighlighted ? "🌟" : undefined}
+      badgeContent={isHighlighted ? <span className={styles.dayIndicator} /> : undefined}
     >
       <PickersDay
         {...other}
@@ -65,8 +66,6 @@ const AppointmentCalendar = () => {
       }
 
       const data = await response.json();
-      console.log(data);
-
       setAllAppointments(data);
     } catch (error) {
       console.error(error);
@@ -89,9 +88,9 @@ const AppointmentCalendar = () => {
           .map((appointment) => dayjs(appointment.date))
           .filter(
             (date) =>
-              date.month() === currentMonth && date.year() === currentYear
+              date.month() === currentMonth && date.year() === currentYear,
           )
-          .map((date) => date.date())
+          .map((date) => date.date()),
       ),
     ];
   }, [allAppointments, selectedDate]);
@@ -101,14 +100,16 @@ const AppointmentCalendar = () => {
       const appointmentDate = dayjs(appointment.date);
       if (viewMode === "day") {
         return appointmentDate.isSame(selectedDate, "day");
-      } else if (viewMode === "week") {
+      }
+      if (viewMode === "week") {
         return appointmentDate.isBetween(
           selectedDate.startOf("week"),
           selectedDate.endOf("week"),
           null,
-          "[]"
+          "[]",
         );
-      } else if (viewMode === "month") {
+      }
+      if (viewMode === "month") {
         return appointmentDate.isSame(selectedDate, "month");
       }
       return false;
@@ -130,7 +131,7 @@ const AppointmentCalendar = () => {
   if (loading) {
     return (
       <div className={styles.spinnerContainer}>
-        <TableSpinner message="Loading Appointments..." />
+        <TableSpinner message="Loading appointments..." />
       </div>
     );
   }
@@ -139,7 +140,7 @@ const AppointmentCalendar = () => {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className={styles.calendarContainer}>
         <div className={styles.calendarSection}>
-          <h2>Your Calendar</h2>
+          <h2 className={styles.sectionTitle}>Your Calendar</h2>
           <div className={styles.viewModeButtons}>
             <button
               onClick={() => handleViewModeChange("day")}
@@ -162,6 +163,7 @@ const AppointmentCalendar = () => {
           </div>
 
           <DateCalendar
+            className={styles.muiCalendar}
             value={selectedDate}
             onChange={handleDateChange}
             onMonthChange={handleMonthChange}
@@ -171,28 +173,36 @@ const AppointmentCalendar = () => {
         </div>
 
         <div className={styles.appointmentsSection}>
-          <h2>Appointments</h2>
+          <h2 className={styles.sectionTitle}>Appointments</h2>
           <div className={styles.appointmentsList}>
-            <h3>
-              {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
-              Appointments
+            <h3 className={styles.listTitle}>
+              {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} Appointments
             </h3>
 
             {filteredAppointments.length > 0 ? (
               filteredAppointments.map((appointment) => (
                 <div
                   key={appointment._id}
-                  className={`${styles.appointmentItem} ${
-                    styles[appointment.status]
-                  }`}
+                  className={styles.appointmentItem}
                 >
-                  <strong>Time:</strong> {appointment.time} <br />
-                  <strong>Doctor:</strong>{" "}
-                  {appointment.doctor.name.firstName +
-                    " " +
-                    appointment.doctor.name.lastName}{" "}
-                  <br />
-                  <strong>Status:</strong> <span>{appointment.status}</span>
+                  <p>
+                    <strong>Time:</strong> {appointment.time}
+                  </p>
+                  <p>
+                    <strong>Doctor:</strong>{" "}
+                    {appointment.doctor.name.firstName}{" "}
+                    {appointment.doctor.name.lastName}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    <span
+                      className={`${styles.statusChip} ${
+                        styles[`status_${appointment.status}`]
+                      }`}
+                    >
+                      {appointment.status}
+                    </span>
+                  </p>
                 </div>
               ))
             ) : (
