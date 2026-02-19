@@ -77,7 +77,10 @@ const Navbar = () => {
               </Link>
             </li>
             <li>
-              <Link to="/chat" onClick={closeMenu}>
+              <Link
+                to={userLoggedIn ? "/chat" : "/auth/login?redirect=/chat"}
+                onClick={closeMenu}
+              >
                 Consultation
               </Link>
             </li>
@@ -92,7 +95,10 @@ const Navbar = () => {
               </Link>
             </li> */}
             <li>
-              <Link to="/reviews" onClick={closeMenu}>
+              <Link
+                to={userLoggedIn ? "/reviews" : "/auth/login?redirect=/reviews"}
+                onClick={closeMenu}
+              >
                 Reviews
               </Link>
             </li>
