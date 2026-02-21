@@ -2,7 +2,10 @@ import axios from "axios";
 import dotenv from "dotenv";
 
 import getAuthToken from "../temp1.js";
-import { specializationMapping } from "../data/specilizationMapping.js";
+import {
+  analyzeSymptomsWithAI,
+  generateMedicalChatReply,
+} from "../services/aiSpecialityService.js";
 
 dotenv.config();
 
@@ -39,7 +42,7 @@ export const getBodySublocations = async (req, res) => {
           token: token,
           language: "en-gb",
         },
-      }
+      },
     );
     console.log(response.data);
     res.json(response.data);
@@ -63,7 +66,7 @@ export const getSymptoms = async (req, res) => {
           token: token,
           language: "en-gb",
         },
-      }
+      },
     );
     res.json(response.data);
   } catch (error) {
@@ -74,39 +77,70 @@ export const getSymptoms = async (req, res) => {
 // Function to retrieve specializations based on symptoms
 export const getSpecializations = async (req, res) => {
   const { symptoms, gender, yearOfBirth } = req.query;
-  const token = await getAuthToken();
+  console.log("Received symptoms:", symptoms, gender, yearOfBirth);
+
+  if (!symptoms) {
+    return res.status(400).json({ message: "Please describe your symptoms" });
+  }
 
   try {
-    console.log("Received symptoms:", symptoms);
-    // const symptomsArray = symptoms ? JSON.parse(symptoms) : [];
-    const symptomsArray = JSON.parse(symptoms);
-    // const symptomsArray = Array.isArray(symptoms) ? symptoms : [];
+    // Call the AI Service
+    const data = await analyzeSymptomsWithAI(symptoms);
 
-    const response = await axios.get(
-      `${PRIAID_API_URL}/diagnosis/specialisations`,
-      {
-        params: {
-          token,
-          symptoms: symptoms.length > 0 ? symptoms : ["29"],
-          gender: gender || "male",
-          year_of_birth: yearOfBirth || 1981,
-          language: "en-gb",
-        },
-      }
-    );
-    console.log(response.data);
+    console.log("AI Service returned:", data);
 
-    const mappedSpecializations = response.data.map((spec) => ({
-      ...spec,
-      doctor: specializationMapping[spec.Name] || spec.Name, // Map to local name or use original
+    // The frontend expects a list, so we map the AI response to your frontend format
+    const mappedResponse = data.recommended_specialties.map((item) => ({
+      Name: item.specialty, // This matches your existing frontend logic
+      Accuracy: item.confidence === "High" ? 90 : 70,
+      Reason: item.reason,
     }));
-    console.log(mappedSpecializations);
 
-    res.json(mappedSpecializations);
+    res.json(mappedResponse);
   } catch (error) {
     const errorMessage = error.response?.data || error.message;
     console.error("Error fetching specializations:", errorMessage);
     res.status(500).json({ error: errorMessage });
+  }
+};
+
+export const chatConsultation = async (req, res) => {
+  const { message, history } = req.body;
+
+  if (!message || !message.trim()) {
+    return res.status(400).json({ message: "Message is required" });
+  }
+
+  console.log("Received chat message:", message);
+  console.log("Chat history:", history);
+
+  try {
+    const data = await generateMedicalChatReply({
+      message: message.trim(),
+      history,
+    });
+
+    console.log("AI Chat Service returned:", data);
+
+    const mappedSpecializations = data.recommended_specialties.map((item) => ({
+      Name: item.specialty,
+      Accuracy:
+        item.confidence === "High" ? 90 : item.confidence === "Low" ? 55 : 75,
+      Reason: item.reason,
+    }));
+
+    return res.json({
+      reply: data.reply,
+      disclaimer: data.disclaimer,
+      specializations: mappedSpecializations,
+    });
+  } catch (error) {
+    const errorMessage = error.response?.data || error.message;
+    console.error("Error generating AI chat response:", errorMessage);
+    return res.status(500).json({
+      message: "Unable to process consultation right now.",
+      error: errorMessage,
+    });
   }
 };
 
@@ -116,7 +150,7 @@ export const getAllSpecialties = async (req, res) => {
   const token = await getAuthToken();
   try {
     const response = await fetch(
-      `${PRIAID_API_URL}/specialisations?token=${token}&language=en-gb`
+      `${PRIAID_API_URL}/specialisations?token=${token}&language=en-gb`,
     );
     // axios.get(`${PRIAID_API_URL}/specialisations`, {
     //   params: {

@@ -1,235 +1,167 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 import { baseURL } from "../../api/api.js";
 import styles from "./chatConsultation.module.css";
-import { useNavigate } from "react-router-dom";
+
+const INITIAL_ASSISTANT_MESSAGE =
+  "Hi, I can help you discuss symptoms in natural language. Tell me what you are feeling, when it started, and how severe it is.";
 
 const ChatConsultation = () => {
   const navigate = useNavigate();
-
   const [messages, setMessages] = useState([
-    {
-      sender: "bot",
-      text: "Hello! I'm here to help you. Would you like to continue this chat?",
-    },
+    { id: "init-assistant", role: "assistant", text: INITIAL_ASSISTANT_MESSAGE },
   ]);
-  const [gender, setGender] = useState("");
-  const [yearOfBirth, setYearOfBirth] = useState("");
-  const [bodyLocations, setBodyLocations] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [bodySublocations, setBodySublocations] = useState([]);
-  const [selectedSublocation, setSelectedSublocation] = useState(null);
-  const [symptoms, setSymptoms] = useState([]);
-  const [selectedSymptoms, setSelectedSymptoms] = useState([]);
+  const [input, setInput] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [disclaimer, setDisclaimer] = useState(
+    "This is informational only and not a diagnosis.",
+  );
   const [specializations, setSpecializations] = useState([]);
-  const [step, setStep] = useState(1);
+  const endRef = useRef(null);
 
-  useEffect(() => {
-    fetchBodyLocations();
-  }, []);
+  const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
 
-  const fetchBodyLocations = async () => {
-    try {
-      const response = await axios.get(
-        `${baseURL}/health/specialty/body-locations`
-      );
-      setBodyLocations(response.data);
-    } catch (error) {
-      console.error("Error fetching body locations", error);
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
+  };
+
+  const handleSpecializationSelect = (specialtyName) => {
+    navigate(`/appointments?specialty=${encodeURIComponent(specialtyName)}`);
+  };
+
+  const buildHistory = (existingMessages) =>
+    existingMessages
+      .filter((msg) => msg.role === "user" || msg.role === "assistant")
+      .slice(-8)
+      .map((msg) => ({ role: msg.role, text: msg.text }));
+
+  const sendMessage = async () => {
+    const text = input.trim();
+    if (!text || isSending) {
+      return;
     }
-  };
 
-  const fetchBodySublocations = async (locationId) => {
+    const userMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      text,
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInput("");
+    setIsSending(true);
+    scrollToBottom();
+
     try {
-      const response = await axios.get(
-        `${baseURL}/health/specialty/body-locations/${locationId}`
-      );
-      setBodySublocations(response.data);
-    } catch (error) {
-      console.error("Error fetching body sublocations", error);
-    }
-  };
+      const response = await axios.post(`${baseURL}/health/specialty/chat`, {
+        message: text,
+        history: buildHistory(updatedMessages),
+      });
 
-  const handleSpecializationSelect = (specialization) => {
-    navigate(`/appointments?specialty=${specialization.doctor}`);
-  };
+      const assistantReply =
+        response?.data?.reply || "Could you share a bit more detail about your symptoms?";
 
-  const fetchSymptoms = async (sublocationId) => {
-    try {
-      const response = await axios.get(
-        `${baseURL}/health/specialty/symptoms/${sublocationId}/man`
-      );
-      setSymptoms(response.data);
-    } catch (error) {
-      console.error("Error fetching symptoms", error);
-    }
-  };
-
-  const fetchSpecializations = async () => {
-    try {
-      const response = await axios.get(
-        `${baseURL}/health/specialty/specializations`,
+      setMessages((prev) => [
+        ...prev,
         {
-          params: {
-            symptoms: JSON.stringify(selectedSymptoms),
-            gender,
-            yearOfBirth,
-          },
-        }
-      );
-      setSpecializations(response.data);
-      addBotMessage("Here are the recommended specializations.");
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          text: assistantReply,
+        },
+      ]);
+
+      setDisclaimer(response?.data?.disclaimer || disclaimer);
+      setSpecializations(Array.isArray(response?.data?.specializations) ? response.data.specializations : []);
     } catch (error) {
-      console.error("Error fetching specializations", error);
+      console.error("Consultation chat failed:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-error-${Date.now()}`,
+          role: "assistant",
+          text: "I could not process that message right now. Please try again.",
+        },
+      ]);
+    } finally {
+      setIsSending(false);
+      scrollToBottom();
     }
   };
 
-  const addBotMessage = (text) => {
-    setMessages((prev) => [...prev, { sender: "bot", text }]);
-  };
-
-  const addUserMessage = (text) => {
-    setMessages((prev) => [...prev, { sender: "user", text }]);
-  };
-
-  const handleSelection = async (input) => {
-    addUserMessage(input.Name || input);
-
-    switch (step) {
-      case 1:
-        setGender(input.Name);
-        addBotMessage("Enter your year of birth.");
-        setStep(2);
-        break;
-
-      case 2:
-        setYearOfBirth(input);
-        addBotMessage("Select a body location from the options.");
-        setStep(3);
-        break;
-
-      case 3:
-        setSelectedLocation(input);
-        await fetchBodySublocations(input.ID);
-        addBotMessage("Select a sublocation.");
-        setStep(4);
-        break;
-
-      case 4:
-        setSelectedSublocation(input);
-        await fetchSymptoms(input.ID);
-        addBotMessage("Choose your symptoms.");
-        setStep(5);
-        break;
-
-      case 5:
-        toggleSymptom(input.ID);
-        break;
-
-      case 6:
-        await fetchSpecializations();
-        break;
-
-      default:
-        break;
+  const onInputKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
     }
   };
-
-  const toggleSymptom = (symptomId) => {
-    const isSelected = selectedSymptoms.includes(symptomId);
-    const newSymptoms = isSelected
-      ? selectedSymptoms.filter((id) => id !== symptomId)
-      : [...selectedSymptoms, symptomId];
-
-    setSelectedSymptoms(newSymptoms);
-
-    // Update messages based on selection
-    const symptomText = symptoms.find((s) => s.ID === symptomId).Name;
-    if (isSelected) {
-      addUserMessage(`Removed symptom: ${symptomText}`);
-    } else {
-      addUserMessage(`Selected symptom: ${symptomText}`);
-    }
-  };
-
-  const renderButtons = (options, onClickHandler) =>
-    options.map((option, index) => {
-      const isSelected = selectedSymptoms.includes(option.ID);
-      if (step == 6) console.log(option);
-
-      return (
-        <button
-          key={`${option.ID}-${index}`}
-          onClick={() =>
-            step === 6
-              ? handleSpecializationSelect(option)
-              : onClickHandler(option)
-          }
-          className={`${styles.optionButton} ${
-            isSelected ? styles.selectedSymptom : ""
-          }`}
-        >
-          {option.Name}
-        </button>
-      );
-    });
-
-  // const renderButtons = (options, onClickHandler) =>
-  //   options.map((option, index) => (
-  //     <button
-  //       key={`${option.ID}-${index}`}
-  //       onClick={() => onClickHandler(option)}
-  //       className={styles.optionButton}
-  //     >
-  //       {option.Name}
-  //     </button>
-  //   ));
 
   return (
-    <div className={styles.chatContainer}>
-      <div className={styles.chatHeader}>Instant Consultation</div>
-      <div className={styles.chatMessages}>
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`${styles.message} ${styles[msg.sender]}`}>
-            {msg.text}
-          </div>
-        ))}
-      </div>
-      <div className={styles.chatOptions}>
-        {step === 1 &&
-          renderButtons(
-            [{ Name: "Male" }, { Name: "Female" }],
-            handleSelection
-          )}
-        {step === 2 && (
-          <input
-            type="number"
-            placeholder="Enter your year of birth..."
-            onKeyDown={(e) =>
-              e.key === "Enter" && handleSelection(e.target.value)
-            }
-          />
-        )}
-        {step === 3 && renderButtons(bodyLocations, handleSelection)}
-        {step === 4 && renderButtons(bodySublocations, handleSelection)}
-        {step === 5 && (
-          <>
-            {renderButtons(symptoms, handleSelection)}
-            <button
-              onClick={() => {
-                setStep(6);
-                fetchSpecializations();
-              }}
-              className={styles.proceedButton}
+    <section className={styles.page}>
+      <div className={styles.chatCard}>
+        <header className={styles.header}>
+          <h1>Instant Consultation</h1>
+          <p>Describe your symptoms naturally. I will guide and suggest relevant specialties.</p>
+        </header>
+
+        <div className={styles.messageList}>
+          {messages.map((message) => (
+            <article
+              key={message.id}
+              className={`${styles.messageBubble} ${
+                message.role === "user" ? styles.userBubble : styles.assistantBubble
+              }`}
             >
-              Proceed
-            </button>
-          </>
+              {message.text}
+            </article>
+          ))}
+          {isSending && (
+            <article className={`${styles.messageBubble} ${styles.assistantBubble}`}>
+              Thinking...
+            </article>
+          )}
+          <div ref={endRef} />
+        </div>
+
+        <footer className={styles.composer}>
+          <textarea
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={onInputKeyDown}
+            placeholder="Example: I have had chest tightness and dry cough for 3 days."
+            rows={2}
+          />
+          <button type="button" disabled={!canSend} onClick={sendMessage}>
+            Send
+          </button>
+        </footer>
+
+        {specializations.length > 0 && (
+          <section className={styles.specializations}>
+            <h2>Suggested Specialties</h2>
+            <div className={styles.specializationList}>
+              {specializations.map((item, index) => (
+                <button
+                  key={`${item.Name}-${index}`}
+                  type="button"
+                  className={styles.specializationChip}
+                  onClick={() => handleSpecializationSelect(item.Name)}
+                  title={item.Reason || ""}
+                >
+                  {item.Name}
+                </button>
+              ))}
+            </div>
+          </section>
         )}
-        {step === 6 && renderButtons(specializations, () => {})}
+
+        <p className={styles.disclaimer}>{disclaimer}</p>
       </div>
-    </div>
+    </section>
   );
 };
 

@@ -253,6 +253,22 @@ export const findSpecialtySchemas = {
     }),
     params: Joi.object({}),
   },
+  chatConsultationBody: {
+    body: Joi.object({
+      message: Joi.string().trim().min(1).max(1500).required(),
+      history: Joi.array()
+        .items(
+          Joi.object({
+            role: Joi.string().valid("user", "assistant").required(),
+            text: Joi.string().trim().min(1).max(1500).required(),
+          }),
+        )
+        .max(16)
+        .optional(),
+    }),
+    query: Joi.object({}),
+    params: Joi.object({}),
+  },
   noInput: {
     body: Joi.object({}),
     query: Joi.object({}),

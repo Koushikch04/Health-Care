@@ -5,6 +5,7 @@ import {
   getSymptoms,
   getSpecializations,
   getAllSpecialties,
+  chatConsultation,
 } from "../controllers/findSpecialty.js";
 import { validateRequest } from "../middleware/requestValidation.js";
 import { findSpecialtySchemas } from "../validation/schemas.js";
@@ -43,6 +44,12 @@ router.get(
   "/all-specializations",
   validateRequest(findSpecialtySchemas.noInput),
   getAllSpecialties
+);
+
+router.post(
+  "/chat",
+  validateRequest(findSpecialtySchemas.chatConsultationBody),
+  chatConsultation,
 );
 
 export default router;

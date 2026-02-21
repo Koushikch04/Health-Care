@@ -12,6 +12,6 @@ router.get("/", validateRequest(specialtySchemas.noInput), getAllSpecialties);
 router.get(
   "/details",
   validateRequest(specialtySchemas.noInput),
-  getSpecialityDetails
+  getSpecialityDetails,
 );
 export default router;
