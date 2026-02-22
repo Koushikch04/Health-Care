@@ -3,10 +3,12 @@ import {
   getBodySublocations,
   getBodyLocations,
   getSymptoms,
-  getSpecializations,
   getAllSpecialties,
-  chatConsultation,
 } from "../controllers/findSpecialty.js";
+import {
+  chatConsultation,
+  getSpecializations,
+} from "../controllers/instantConsultation.js";
 import { validateRequest } from "../middleware/requestValidation.js";
 import { findSpecialtySchemas } from "../validation/schemas.js";
 

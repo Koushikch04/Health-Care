@@ -1,5 +1,5 @@
 import { HfInference } from "@huggingface/inference";
-import Specialty from "../models/Specialty.js";
+import { getCachedSpecialtyNames } from "./specialtyCatalogService.js";
 
 const HF_MODEL =
   process.env.HF_TRIAGE_MODEL || "mistralai/Mistral-7B-Instruct-v0.2";
@@ -326,8 +326,7 @@ const callHfJson = async ({
 
 export const analyzeSymptomsWithAI = async (userSymptoms) => {
   try {
-    const validSpecialties = await Specialty.find({}, "name");
-    const specialtyNames = validSpecialties.map((item) => item.name);
+    const specialtyNames = await getCachedSpecialtyNames();
     const specialtyList = specialtyNames.join(", ");
 
     const parsed = await callHfJson({
@@ -386,8 +385,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
   }
 
   try {
-    const validSpecialties = await Specialty.find({}, "name");
-    const specialtyNames = validSpecialties.map((item) => item.name);
+    const specialtyNames = await getCachedSpecialtyNames();
     const specialtyList = specialtyNames.join(", ");
 
     const parsed = await callHfJson({
