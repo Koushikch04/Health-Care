@@ -1,7 +1,8 @@
 import { HfInference } from "@huggingface/inference";
 import Specialty from "../models/Specialty.js";
 
-const HF_MODEL = process.env.HF_TRIAGE_MODEL || "Qwen/Qwen2.5-7B-Instruct";
+const HF_MODEL =
+  process.env.HF_TRIAGE_MODEL || "mistralai/Mistral-7B-Instruct-v0.2";
 
 const hf = process.env.HF_API_KEY
   ? new HfInference(process.env.HF_API_KEY)
@@ -11,8 +12,8 @@ const DEFAULT_DISCLAIMER =
   "This is informational only and not a diagnosis. If symptoms are severe or worsening, seek urgent medical care.";
 
 const HF_MODEL_FALLBACKS = [
-  "Qwen/Qwen2.5-7B-Instruct",
   "mistralai/Mistral-7B-Instruct-v0.2",
+  "Qwen/Qwen2.5-7B-Instruct",
 ];
 
 const safeJsonParse = (text, fallback) => {
@@ -85,13 +86,58 @@ const inferSpecialtiesFromReply = (reply, specialtyNames) => {
     return [];
   }
 
-  const lowerReply = reply.toLowerCase();
-  const inferred = [];
+  const normalizedReply = reply
+    .toLowerCase()
+    .replace(/[*_`#]/g, " ")
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const aliasToSpecialty = new Map();
+  const addAlias = (alias, specialty) => {
+    const normalizedAlias = alias.toLowerCase().trim();
+    if (normalizedAlias) {
+      aliasToSpecialty.set(normalizedAlias, specialty);
+    }
+  };
 
   for (const name of specialtyNames) {
-    if (lowerReply.includes(name.toLowerCase())) {
+    addAlias(name, name);
+    const lowered = name.toLowerCase();
+    if (lowered.includes("dermat")) {
+      addAlias("dermatologist", name);
+      addAlias("dermatology", name);
+      addAlias("skin specialist", name);
+    }
+    if (lowered.includes("general physician") || lowered.includes("general")) {
+      addAlias("gp", name);
+      addAlias("general doctor", name);
+      addAlias("family doctor", name);
+      addAlias("primary care", name);
+    }
+    if (lowered.includes("ent")) {
+      addAlias("ear nose throat specialist", name);
+      addAlias("otolaryngologist", name);
+    }
+    if (lowered.includes("gyne")) {
+      addAlias("obgyn", name);
+      addAlias("gynaecologist", name);
+      addAlias("obstetrician", name);
+    }
+    if (lowered.includes("orthopedic")) {
+      addAlias("orthopaedic", name);
+      addAlias("bone specialist", name);
+    }
+  }
+
+  const inferred = [];
+  const used = new Set();
+
+  for (const [alias, mappedSpecialty] of aliasToSpecialty.entries()) {
+    if (normalizedReply.includes(alias) && !used.has(mappedSpecialty)) {
+      used.add(mappedSpecialty);
       inferred.push({
-        specialty: name,
+        specialty: mappedSpecialty,
         reason: "Mentioned in triage response",
         confidence: "Medium",
       });
@@ -127,7 +173,10 @@ const buildCondensedUserPrompt = ({
   userPrompt,
 }) => {
   const historyBlock = safeHistoryMessages
-    .map((message, index) => `User(${index + 1}): ${message.content}`)
+    .map(
+      (message, index) =>
+        `${message.role}(${index + 1}): ${message.content}`,
+    )
     .join("\n");
 
   return `${systemPrompt}
@@ -159,6 +208,38 @@ const getCandidateModels = () => {
   return models;
 };
 
+const modelState = new Map();
+const MODEL_COOLDOWN_MS = 90 * 1000;
+const PROVIDER_5XX_COOLDOWN_MS = 10 * 60 * 1000;
+
+const markModelFailure = (model, status) => {
+  const current = modelState.get(model) || {
+    failedAt: 0,
+    failures: 0,
+    cooldownMs: MODEL_COOLDOWN_MS,
+  };
+  const cooldownMs = status >= 500 ? PROVIDER_5XX_COOLDOWN_MS : MODEL_COOLDOWN_MS;
+
+  modelState.set(model, {
+    failedAt: Date.now(),
+    failures: current.failures + 1,
+    cooldownMs,
+  });
+};
+
+const isModelCoolingDown = (model) => {
+  const state = modelState.get(model);
+  if (!state) {
+    return false;
+  }
+  return Date.now() - state.failedAt < (state.cooldownMs || MODEL_COOLDOWN_MS);
+};
+
+const markModelSuccess = (model) => {
+  modelState.delete(model);
+  console.log(`HF chatCompletion success model: ${model}`);
+};
+
 const callHfJson = async ({
   systemPrompt,
   userPrompt,
@@ -169,8 +250,20 @@ const callHfJson = async ({
     return fallback;
   }
 
-  const historyMessages = toProviderSafeHistory(history);
-  const candidateModels = getCandidateModels();
+  // Keep full chat turns in text form and send as a single user prompt.
+  // This avoids provider-side chat template crashes with some OSS models.
+  const historyMessages = toChatMessages(history);
+  const condensedPrompt = buildCondensedUserPrompt({
+    systemPrompt: "",
+    safeHistoryMessages: historyMessages,
+    userPrompt,
+  });
+
+  const allCandidateModels = getCandidateModels();
+  const warmedModels = allCandidateModels.filter(
+    (model) => !isModelCoolingDown(model),
+  );
+  const candidateModels = warmedModels.length > 0 ? warmedModels : allCandidateModels;
   let lastError = null;
   const maxAttemptsPerModel = 2;
 
@@ -181,8 +274,7 @@ const callHfJson = async ({
           model,
           messages: [
             { role: "system", content: systemPrompt },
-            ...historyMessages,
-            { role: "user", content: userPrompt },
+            { role: "user", content: condensedPrompt },
           ],
           temperature: 0.2,
           max_tokens: 500,
@@ -191,6 +283,7 @@ const callHfJson = async ({
         const content = response?.choices?.[0]?.message?.content || "";
         const parsed = parseStructuredResponse(content, fallback);
         if (parsed) {
+          markModelSuccess(model);
           return parsed;
         }
       } catch (error) {
@@ -204,45 +297,19 @@ const callHfJson = async ({
 
         if (isModelNotSupportedError(error)) {
           // Model can never work on this provider setup; skip remaining attempts for this model.
+          markModelFailure(model, status);
           break;
         }
 
-        if (status >= 500 && attempt < maxAttemptsPerModel) {
-          await sleep(250 * attempt);
+        if (status >= 500) {
+          // Provider-side outage/noise: cool this model down and move to next model immediately.
+          markModelFailure(model, status);
+          break;
+        }
+
+        if (attempt < maxAttemptsPerModel) {
+          await sleep(200 * attempt);
           continue;
-        }
-      }
-
-      // Retry with a condensed, single-user prompt for provider stability.
-      try {
-        const condensedPrompt = buildCondensedUserPrompt({
-          systemPrompt,
-          safeHistoryMessages: historyMessages,
-          userPrompt,
-        });
-        const retryResponse = await hf.chatCompletion({
-          model,
-          messages: [{ role: "user", content: condensedPrompt }],
-          max_tokens: 400,
-        });
-
-        const retryContent =
-          retryResponse?.choices?.[0]?.message?.content || "";
-        const parsedRetry = parseStructuredResponse(retryContent, fallback);
-        if (parsedRetry) {
-          return parsedRetry;
-        }
-      } catch (retryError) {
-        lastError = retryError;
-        const retryMessage = retryError?.message || "unknown error";
-        const retryStatus = retryError?.httpResponse?.status;
-        const retryBody = retryError?.httpResponse?.body;
-        console.warn(
-          `HF condensed retry failed (${model}): ${retryMessage}; status=${retryStatus}; body=${JSON.stringify(retryBody)}`,
-        );
-
-        if (isModelNotSupportedError(retryError)) {
-          break;
         }
       }
     }
