@@ -8,6 +8,40 @@ import styles from "./chatConsultation.module.css";
 const INITIAL_ASSISTANT_MESSAGE =
   "Hi, I can help you discuss symptoms in natural language. Tell me what you are feeling, when it started, and how severe it is.";
 
+const renderSimpleMarkdown = (text) => {
+  if (typeof text !== "string" || !text) {
+    return text;
+  }
+
+  const segments = [];
+  const tokenRegex = /(\*\*[^*]+\*\*|\*[^*\n]+\*)/g;
+  let cursor = 0;
+  let tokenMatch;
+
+  while ((tokenMatch = tokenRegex.exec(text)) !== null) {
+    if (tokenMatch.index > cursor) {
+      segments.push(text.slice(cursor, tokenMatch.index));
+    }
+
+    const token = tokenMatch[0];
+    if (token.startsWith("**")) {
+      segments.push(
+        <strong key={`strong-${tokenMatch.index}`}>{token.slice(2, -2)}</strong>,
+      );
+    } else {
+      segments.push(<em key={`em-${tokenMatch.index}`}>{token.slice(1, -1)}</em>);
+    }
+
+    cursor = tokenMatch.index + token.length;
+  }
+
+  if (cursor < text.length) {
+    segments.push(text.slice(cursor));
+  }
+
+  return segments;
+};
+
 const ChatConsultation = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([
@@ -116,7 +150,7 @@ const ChatConsultation = () => {
                 message.role === "user" ? styles.userBubble : styles.assistantBubble
               }`}
             >
-              {message.text}
+              {renderSimpleMarkdown(message.text)}
             </article>
           ))}
           {isSending && (
