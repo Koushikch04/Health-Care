@@ -265,6 +265,7 @@ const callHfJson = async ({
   );
   const candidateModels = warmedModels.length > 0 ? warmedModels : allCandidateModels;
   let lastError = null;
+  let hadUnstructuredResponse = false;
   const maxAttemptsPerModel = 2;
 
   for (const model of candidateModels) {
@@ -286,6 +287,7 @@ const callHfJson = async ({
           markModelSuccess(model);
           return parsed;
         }
+        hadUnstructuredResponse = true;
       } catch (error) {
         lastError = error;
         const errorMessage = error?.message || "unknown error";
@@ -315,7 +317,7 @@ const callHfJson = async ({
     }
   }
 
-  if (lastError) {
+  if (lastError && !hadUnstructuredResponse) {
     throw lastError;
   }
 
