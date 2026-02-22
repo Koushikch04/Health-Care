@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -54,6 +54,8 @@ const ChatConsultation = () => {
   );
   const [specializations, setSpecializations] = useState([]);
   const endRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const requestAbortControllerRef = useRef(null);
 
   const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
 
@@ -91,11 +93,22 @@ const ChatConsultation = () => {
     setIsSending(true);
     scrollToBottom();
 
+    const requestAbortController = new AbortController();
+    requestAbortControllerRef.current = requestAbortController;
+
     try {
-      const response = await axios.post(`${baseURL}/health/specialty/chat`, {
-        message: text,
-        history: buildHistory(updatedMessages),
-      });
+      const response = await axios.post(
+        `${baseURL}/health/specialty/chat`,
+        {
+          message: text,
+          history: buildHistory(updatedMessages),
+        },
+        { signal: requestAbortController.signal },
+      );
+
+      if (!isMountedRef.current) {
+        return;
+      }
 
       const assistantReply =
         response?.data?.reply || "Could you share a bit more detail about your symptoms?";
@@ -112,6 +125,12 @@ const ChatConsultation = () => {
       setDisclaimer(response?.data?.disclaimer || disclaimer);
       setSpecializations(Array.isArray(response?.data?.specializations) ? response.data.specializations : []);
     } catch (error) {
+      if (error?.code === "ERR_CANCELED") {
+        return;
+      }
+      if (!isMountedRef.current) {
+        return;
+      }
       console.error("Consultation chat failed:", error);
       setMessages((prev) => [
         ...prev,
@@ -122,10 +141,23 @@ const ChatConsultation = () => {
         },
       ]);
     } finally {
+      if (requestAbortControllerRef.current === requestAbortController) {
+        requestAbortControllerRef.current = null;
+      }
+      if (!isMountedRef.current) {
+        return;
+      }
       setIsSending(false);
       scrollToBottom();
     }
   };
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      requestAbortControllerRef.current?.abort();
+    };
+  }, []);
 
   const onInputKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
