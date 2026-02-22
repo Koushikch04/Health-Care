@@ -1,13 +1,19 @@
 import { HfInference } from "@huggingface/inference";
 import Specialty from "../models/Specialty.js";
 
-const HF_MODEL =
-  process.env.HF_TRIAGE_MODEL || "mistralai/Mistral-7B-Instruct-v0.2";
+const HF_MODEL = process.env.HF_TRIAGE_MODEL || "Qwen/Qwen2.5-7B-Instruct";
 
-const hf = process.env.HF_API_KEY ? new HfInference(process.env.HF_API_KEY) : null;
+const hf = process.env.HF_API_KEY
+  ? new HfInference(process.env.HF_API_KEY)
+  : null;
 
 const DEFAULT_DISCLAIMER =
   "This is informational only and not a diagnosis. If symptoms are severe or worsening, seek urgent medical care.";
+
+const HF_MODEL_FALLBACKS = [
+  "Qwen/Qwen2.5-7B-Instruct",
+  "mistralai/Mistral-7B-Instruct-v0.2",
+];
 
 const safeJsonParse = (text, fallback) => {
   try {
@@ -23,6 +29,19 @@ const safeJsonParse = (text, fallback) => {
     }
     return fallback;
   }
+};
+
+const parseStructuredResponse = (text, fallback) => {
+  const parsed = safeJsonParse(text, fallback);
+  return parsed === fallback ? null : parsed;
+};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isModelNotSupportedError = (error) => {
+  const status = error?.httpResponse?.status;
+  const code = error?.httpResponse?.body?.error?.code;
+  return status === 400 && code === "model_not_supported";
 };
 
 const normalizeRecommendedSpecialties = (raw, specialtyNames) => {
@@ -61,23 +80,179 @@ const normalizeRecommendedSpecialties = (raw, specialtyNames) => {
   return normalized.slice(0, 4);
 };
 
-const callHfJson = async ({ systemPrompt, userPrompt, fallback }) => {
+const inferSpecialtiesFromReply = (reply, specialtyNames) => {
+  if (!reply || typeof reply !== "string") {
+    return [];
+  }
+
+  const lowerReply = reply.toLowerCase();
+  const inferred = [];
+
+  for (const name of specialtyNames) {
+    if (lowerReply.includes(name.toLowerCase())) {
+      inferred.push({
+        specialty: name,
+        reason: "Mentioned in triage response",
+        confidence: "Medium",
+      });
+    }
+  }
+
+  return inferred.slice(0, 3);
+};
+
+const toChatMessages = (history = []) =>
+  history
+    .slice(-12)
+    .map((entry) => {
+      const role = entry?.role === "assistant" ? "assistant" : "user";
+      const content = typeof entry?.text === "string" ? entry.text.trim() : "";
+      if (!content) {
+        return null;
+      }
+      return { role, content };
+    })
+    .filter(Boolean);
+
+const toProviderSafeHistory = (history = []) =>
+  toChatMessages(history)
+    // HF router can intermittently fail with assistant role messages on some providers.
+    // Keeping user-only history preserves key context while improving reliability.
+    .filter((message) => message.role === "user")
+    .slice(-8);
+
+const buildCondensedUserPrompt = ({
+  systemPrompt,
+  safeHistoryMessages,
+  userPrompt,
+}) => {
+  const historyBlock = safeHistoryMessages
+    .map((message, index) => `User(${index + 1}): ${message.content}`)
+    .join("\n");
+
+  return `${systemPrompt}
+
+Known user context:
+${historyBlock || "No prior user context"}
+
+Task:
+${userPrompt}`;
+};
+
+const getCandidateModels = () => {
+  const models = [];
+  const normalizedPrimary = (HF_MODEL || "").trim();
+
+  if (normalizedPrimary) {
+    if (normalizedPrimary === "mistralai/Mistral-7B") {
+      models.push("mistralai/Mistral-7B-Instruct-v0.2");
+    }
+    models.push(normalizedPrimary);
+  }
+
+  for (const fallbackModel of HF_MODEL_FALLBACKS) {
+    if (!models.includes(fallbackModel)) {
+      models.push(fallbackModel);
+    }
+  }
+
+  return models;
+};
+
+const callHfJson = async ({
+  systemPrompt,
+  userPrompt,
+  fallback,
+  history = [],
+}) => {
   if (!hf) {
     return fallback;
   }
 
-  const response = await hf.chatCompletion({
-    model: HF_MODEL,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    temperature: 0.2,
-    max_tokens: 900,
-  });
+  const historyMessages = toProviderSafeHistory(history);
+  const candidateModels = getCandidateModels();
+  let lastError = null;
+  const maxAttemptsPerModel = 2;
 
-  const content = response?.choices?.[0]?.message?.content || "";
-  return safeJsonParse(content, fallback);
+  for (const model of candidateModels) {
+    for (let attempt = 1; attempt <= maxAttemptsPerModel; attempt += 1) {
+      try {
+        const response = await hf.chatCompletion({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...historyMessages,
+            { role: "user", content: userPrompt },
+          ],
+          temperature: 0.2,
+          max_tokens: 500,
+        });
+
+        const content = response?.choices?.[0]?.message?.content || "";
+        const parsed = parseStructuredResponse(content, fallback);
+        if (parsed) {
+          return parsed;
+        }
+      } catch (error) {
+        lastError = error;
+        const errorMessage = error?.message || "unknown error";
+        const status = error?.httpResponse?.status;
+        const body = error?.httpResponse?.body;
+        console.warn(
+          `HF chatCompletion failed (${model}, attempt ${attempt}): ${errorMessage}; status=${status}; body=${JSON.stringify(body)}`,
+        );
+
+        if (isModelNotSupportedError(error)) {
+          // Model can never work on this provider setup; skip remaining attempts for this model.
+          break;
+        }
+
+        if (status >= 500 && attempt < maxAttemptsPerModel) {
+          await sleep(250 * attempt);
+          continue;
+        }
+      }
+
+      // Retry with a condensed, single-user prompt for provider stability.
+      try {
+        const condensedPrompt = buildCondensedUserPrompt({
+          systemPrompt,
+          safeHistoryMessages: historyMessages,
+          userPrompt,
+        });
+        const retryResponse = await hf.chatCompletion({
+          model,
+          messages: [{ role: "user", content: condensedPrompt }],
+          max_tokens: 400,
+        });
+
+        const retryContent =
+          retryResponse?.choices?.[0]?.message?.content || "";
+        const parsedRetry = parseStructuredResponse(retryContent, fallback);
+        if (parsedRetry) {
+          return parsedRetry;
+        }
+      } catch (retryError) {
+        lastError = retryError;
+        const retryMessage = retryError?.message || "unknown error";
+        const retryStatus = retryError?.httpResponse?.status;
+        const retryBody = retryError?.httpResponse?.body;
+        console.warn(
+          `HF condensed retry failed (${model}): ${retryMessage}; status=${retryStatus}; body=${JSON.stringify(retryBody)}`,
+        );
+
+        if (isModelNotSupportedError(retryError)) {
+          break;
+        }
+      }
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  return fallback;
 };
 
 export const analyzeSymptomsWithAI = async (userSymptoms) => {
@@ -146,47 +321,40 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
     const specialtyNames = validSpecialties.map((item) => item.name);
     const specialtyList = specialtyNames.join(", ");
 
-    const trimmedHistory = Array.isArray(history) ? history.slice(-8) : [];
-    const formattedHistory = trimmedHistory
-      .map((entry) => {
-        const role = entry?.role === "assistant" ? "assistant" : "user";
-        const text = typeof entry?.text === "string" ? entry.text.trim() : "";
-        if (!text) {
-          return null;
-        }
-        return `${role}: ${text}`;
-      })
-      .filter(Boolean)
-      .join("\n");
-
     const parsed = await callHfJson({
-      systemPrompt:
-        "You are a healthcare triage assistant. Be concise, safe, and conversational. Never provide a definitive diagnosis.",
+      systemPrompt: `You are a healthcare triage assistant.
+        Rules:
+        1) Be concise, safe, and conversational.
+        2) Never provide a definitive diagnosis.
+        3) Use previous chat context as source of truth. Do not ignore prior user facts.
+        4) Do not ask for information already provided unless there is a real contradiction.
+        5) Never reveal or volunteer model/provider/version details unless the user explicitly asks.
+        6) Do not invent facts, durations, or symptoms not present in user messages.
+        7) Keep focus on symptom triage and next best follow-up questions.`,
       userPrompt: `
-Conversation history:
-${formattedHistory || "No prior messages"}
+        Latest user message:
+        ${message}
 
-Latest user message:
-${message}
+        Available specialties (choose only from this list):
+        [${specialtyList}]
 
-Available specialties (choose only from this list):
-[${specialtyList}]
+        Return valid JSON only in this exact format:
+        {
+          "reply": "Concise conversational response",
+          "recommended_specialties": [
+            {
+              "specialty": "Exact name from list",
+              "reason": "Why this specialty fits",
+              "confidence": "High/Medium/Low"
+            }
+          ],
+          "disclaimer": "Short medical safety disclaimer"
+        }
 
-Return valid JSON only in this exact format:
-{
-  "reply": "Concise conversational response",
-  "recommended_specialties": [
-    {
-      "specialty": "Exact name from list",
-      "reason": "Why this specialty fits",
-      "confidence": "High/Medium/Low"
-    }
-  ],
-  "disclaimer": "Short medical safety disclaimer"
-}
-
-If more details are needed, ask 1-2 follow-up questions and keep recommended_specialties empty.
-      `,
+        If more details are needed, ask 1-2 follow-up questions and keep recommended_specialties empty.
+        Before asking, check whether that detail is already present in prior user messages.
+              `,
+      history,
       fallback: {
         reply:
           "Thanks for sharing. How long have you had these symptoms, and how severe are they right now?",
@@ -200,12 +368,18 @@ If more details are needed, ask 1-2 follow-up questions and keep recommended_spe
         ? parsed.reply.trim()
         : "Thanks for sharing. Could you tell me more about your symptoms?";
 
+    const normalizedSpecialties = normalizeRecommendedSpecialties(
+      parsed.recommended_specialties,
+      specialtyNames,
+    );
+    const inferredSpecialties =
+      normalizedSpecialties.length > 0
+        ? normalizedSpecialties
+        : inferSpecialtiesFromReply(reply, specialtyNames);
+
     return {
       reply,
-      recommended_specialties: normalizeRecommendedSpecialties(
-        parsed.recommended_specialties,
-        specialtyNames,
-      ),
+      recommended_specialties: inferredSpecialties,
       disclaimer:
         typeof parsed.disclaimer === "string" && parsed.disclaimer.trim()
           ? parsed.disclaimer.trim()
