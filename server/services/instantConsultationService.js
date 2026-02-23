@@ -34,6 +34,9 @@ export const resolveConsultationChatResponse = async ({ message, history = [] })
   return {
     reply: aiResult.reply,
     disclaimer: aiResult.disclaimer,
+    suggested_followups: Array.isArray(aiResult.suggested_followups)
+      ? aiResult.suggested_followups
+      : [],
     specializations: mapSpecialtyRecommendations(
       aiResult.recommended_specialties,
       {

@@ -77,12 +77,42 @@
 .composer {
   display: grid;
   grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "quick quick"
+    "input action";
   gap: 10px;
   padding: 14px 16px;
   border-top: 1px solid #edf3fa;
 }
 
+.quickReplyList {
+  grid-area: quick;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quickReplyChip {
+  border: 1px solid #d7e6f7;
+  background: #f8fbff;
+  color: #1c4d7f;
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.quickReplyChip:hover {
+  background: #edf5ff;
+}
+
+.quickReplyChip:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .composer textarea {
+  grid-area: input;
   resize: none;
   width: 100%;
   border-radius: 10px;
@@ -99,7 +129,8 @@
   box-shadow: 0 0 0 3px rgba(11, 92, 173, 0.12);
 }
 
-.composer button {
+.sendButton {
+  grid-area: action;
   min-width: 96px;
   border: none;
   border-radius: 10px;
@@ -110,7 +141,7 @@
   cursor: pointer;
 }
 
-.composer button:disabled {
+.sendButton:disabled {
   background: #9bb5d1;
   cursor: not-allowed;
 }
@@ -169,9 +200,13 @@
 
   .composer {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "quick"
+      "input"
+      "action";
   }
 
-  .composer button {
+  .sendButton {
     height: 42px;
   }
 }
