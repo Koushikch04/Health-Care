@@ -10,6 +10,37 @@ const hf = process.env.HF_API_KEY
 
 const DEFAULT_DISCLAIMER =
   "This is informational only and not a diagnosis. If symptoms are severe or worsening, seek urgent medical care.";
+const DEFAULT_SUGGESTED_FOLLOWUPS = [
+  "What can I do at home right now to feel better?",
+  "When should I seek urgent care for these symptoms?",
+  "Should I book a doctor appointment now or monitor for a day?",
+];
+const SAFE_FOLLOWUP_POOL = [
+  "What are the warning signs that mean I should not wait?",
+  "Is it okay to monitor this at home for 24 hours?",
+  "What over-the-counter options are usually used for this kind of symptom?",
+  "Should I avoid any foods, activity, or medicine until I see a doctor?",
+];
+const FOLLOWUP_DIAGNOSIS_TERMS =
+  /\b(diagnos(?:is|e|ed)|strep|pneumonia|bronchitis|tonsillitis|covid|flu|migraine|cancer|appendicitis)\b/i;
+const FOLLOWUP_INTAKE_STYLE_PATTERNS = [
+  /^have you\b/i,
+  /^are you\b/i,
+  /^did you\b/i,
+  /^do you\b/i,
+  /^can you\b/i,
+  /^could you\b/i,
+  /^how long have you\b/i,
+  /^when did you\b/i,
+];
+const FOLLOWUP_USER_VOICE_PATTERNS = [
+  /^what\b/i,
+  /^when\b/i,
+  /^should i\b/i,
+  /^can i\b/i,
+  /^is it okay\b/i,
+  /^could i\b/i,
+];
 
 const HF_MODEL_FALLBACKS = [
   "mistralai/Mistral-7B-Instruct-v0.2",
@@ -79,6 +110,75 @@ const normalizeRecommendedSpecialties = (raw, specialtyNames) => {
   }
 
   return normalized.slice(0, 4);
+};
+
+const normalizeSuggestedFollowups = (raw) => {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const normalized = [];
+  const used = new Set();
+
+  for (const item of raw) {
+    if (typeof item !== "string") {
+      continue;
+    }
+    const text = item.replace(/\s+/g, " ").trim();
+    if (!text) {
+      continue;
+    }
+    const dedupeKey = text.toLowerCase();
+    if (used.has(dedupeKey)) {
+      continue;
+    }
+    used.add(dedupeKey);
+    normalized.push(text);
+    if (normalized.length >= 4) {
+      break;
+    }
+  }
+
+  return normalized;
+};
+
+const buildSafeSuggestedFollowups = (raw) => {
+  const normalized = normalizeSuggestedFollowups(raw);
+  const rewritten = normalized.map((item) => {
+    if (/^how long have you been experiencing\b/i.test(item)) {
+      return "When should I see a doctor if these symptoms continue?";
+    }
+    if (/^how long have you\b/i.test(item)) {
+      return "How long is it usually safe to monitor this before seeing a doctor?";
+    }
+    return item;
+  });
+  const safe = rewritten.filter((item) => {
+    if (FOLLOWUP_DIAGNOSIS_TERMS.test(item)) {
+      return false;
+    }
+    if (item.length > 120 || !item.endsWith("?")) {
+      return false;
+    }
+    if (FOLLOWUP_INTAKE_STYLE_PATTERNS.some((pattern) => pattern.test(item))) {
+      return false;
+    }
+    return FOLLOWUP_USER_VOICE_PATTERNS.some((pattern) => pattern.test(item));
+  });
+  if (safe.length >= 2) {
+    return safe.slice(0, 4);
+  }
+
+  const combined = [...safe];
+  for (const item of SAFE_FOLLOWUP_POOL) {
+    if (!combined.includes(item)) {
+      combined.push(item);
+    }
+    if (combined.length >= 4) {
+      break;
+    }
+  }
+  return combined;
 };
 
 const inferSpecialtiesFromReply = (reply, specialtyNames) => {
@@ -380,6 +480,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
       reply:
         "I can help with symptom triage, but AI chat is unavailable right now. Please try again shortly.",
       recommended_specialties: [],
+      suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
       disclaimer: DEFAULT_DISCLAIMER,
     };
   }
@@ -397,7 +498,10 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         4) Do not ask for information already provided unless there is a real contradiction.
         5) Never reveal or volunteer model/provider/version details unless the user explicitly asks.
         6) Do not invent facts, durations, or symptoms not present in user messages.
-        7) Keep focus on symptom triage and next best follow-up questions.`,
+        7) Keep focus on symptom triage and next best follow-up questions.
+        8) Do not provide or imply a diagnosis in reply or follow-up suggestions.
+        9) suggested_followups must be written as user-to-assistant questions (first person), such as "What can I do now?".
+        10) Never write clinician intake prompts in suggested_followups (avoid "Have you...", "Are you...", "Did you...").`,
       userPrompt: `
         Latest user message:
         ${message}
@@ -415,6 +519,10 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
               "confidence": "High/Medium/Low"
             }
           ],
+          "suggested_followups": [
+            "What can I do at home right now to reduce these symptoms?",
+            "When should I seek urgent care for this?"
+          ],
           "disclaimer": "Short medical safety disclaimer"
         }
 
@@ -426,6 +534,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         reply:
           "Thanks for sharing. How long have you had these symptoms, and how severe are they right now?",
         recommended_specialties: [],
+        suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
         disclaimer: DEFAULT_DISCLAIMER,
       },
     });
@@ -443,10 +552,15 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
       normalizedSpecialties.length > 0
         ? normalizedSpecialties
         : inferSpecialtiesFromReply(reply, specialtyNames);
+    const normalizedFollowups = buildSafeSuggestedFollowups(parsed.suggested_followups);
 
     return {
       reply,
       recommended_specialties: inferredSpecialties,
+      suggested_followups:
+        normalizedFollowups.length > 0
+          ? normalizedFollowups
+          : DEFAULT_SUGGESTED_FOLLOWUPS,
       disclaimer:
         typeof parsed.disclaimer === "string" && parsed.disclaimer.trim()
           ? parsed.disclaimer.trim()
@@ -458,6 +572,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
       reply:
         "I could not process that right now. Please try again in a moment, or contact a clinician for urgent concerns.",
       recommended_specialties: [],
+      suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
       disclaimer: DEFAULT_DISCLAIMER,
     };
   }

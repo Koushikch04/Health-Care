@@ -7,6 +7,76 @@ import styles from "./chatConsultation.module.css";
 
 const INITIAL_ASSISTANT_MESSAGE =
   "Hi, I can help you discuss symptoms in natural language. Tell me what you are feeling, when it started, and how severe it is.";
+const FALLBACK_QUICK_REPLIES = [
+  "It started 2 days ago.",
+  "Symptoms are moderate right now.",
+  "What warning signs should I watch for?",
+  "Should I book with a specialist now?",
+  "Is it okay to monitor this at home for 24 hours?",
+  "What can I do right now to feel better safely?",
+  "When should I see a doctor if this does not improve?",
+  "Can I use over-the-counter medicine for this?",
+];
+
+const normalizeQuickReplies = (value) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const normalized = value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter(Boolean);
+  return Array.from(new Set(normalized)).slice(0, 4);
+};
+
+const getNonRepeatingQuickReplies = ({
+  apiReplies,
+  fallbackReplies,
+  seenReplies,
+  limit = 4,
+}) => {
+  const normalizedApi = normalizeQuickReplies(apiReplies);
+  const normalizedFallback = normalizeQuickReplies(fallbackReplies);
+  const normalizedSeen = new Set(
+    Array.from(seenReplies).map((item) => item.toLowerCase()),
+  );
+
+  const pickUnique = (replies, selected) => {
+    for (const reply of replies) {
+      const key = reply.toLowerCase();
+      if (normalizedSeen.has(key) || selected.has(key)) {
+        continue;
+      }
+      selected.add(key);
+      if (selected.size >= limit) {
+        break;
+      }
+    }
+  };
+
+  const selected = new Set();
+  pickUnique(normalizedApi, selected);
+  pickUnique(normalizedFallback, selected);
+
+  if (selected.size === 0) {
+    normalizedSeen.clear();
+    pickUnique(normalizedApi, selected);
+    pickUnique(normalizedFallback, selected);
+  }
+
+  const selectedReplies = [];
+  for (const key of selected) {
+    const original =
+      normalizedApi.find((item) => item.toLowerCase() === key) ||
+      normalizedFallback.find((item) => item.toLowerCase() === key);
+    if (original) {
+      selectedReplies.push(original);
+    }
+  }
+
+  return {
+    selectedReplies: selectedReplies.slice(0, limit),
+  };
+};
 
 const renderSimpleMarkdown = (text) => {
   if (typeof text !== "string" || !text) {
@@ -53,9 +123,11 @@ const ChatConsultation = () => {
     "This is informational only and not a diagnosis.",
   );
   const [specializations, setSpecializations] = useState([]);
+  const [quickReplies, setQuickReplies] = useState(FALLBACK_QUICK_REPLIES);
   const endRef = useRef(null);
   const isMountedRef = useRef(true);
   const requestAbortControllerRef = useRef(null);
+  const seenQuickRepliesRef = useRef(new Set());
 
   const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
 
@@ -75,8 +147,8 @@ const ChatConsultation = () => {
       .slice(-8)
       .map((msg) => ({ role: msg.role, text: msg.text }));
 
-  const sendMessage = async () => {
-    const text = input.trim();
+  const sendMessage = async (draftText) => {
+    const text = typeof draftText === "string" ? draftText.trim() : input.trim();
     if (!text || isSending) {
       return;
     }
@@ -91,6 +163,7 @@ const ChatConsultation = () => {
     setMessages(updatedMessages);
     setInput("");
     setIsSending(true);
+    setQuickReplies([]);
     scrollToBottom();
 
     const requestAbortController = new AbortController();
@@ -124,6 +197,23 @@ const ChatConsultation = () => {
 
       setDisclaimer(response?.data?.disclaimer || disclaimer);
       setSpecializations(Array.isArray(response?.data?.specializations) ? response.data.specializations : []);
+      const predictedReplies = normalizeQuickReplies(
+        response?.data?.suggested_followups ||
+          response?.data?.quickReplies ||
+          response?.data?.suggestedFollowUps ||
+          response?.data?.followUps,
+      );
+      const { selectedReplies } = getNonRepeatingQuickReplies({
+        apiReplies: predictedReplies,
+        fallbackReplies: FALLBACK_QUICK_REPLIES,
+        seenReplies: seenQuickRepliesRef.current,
+      });
+      selectedReplies.forEach((reply) =>
+        seenQuickRepliesRef.current.add(reply.toLowerCase()),
+      );
+      setQuickReplies(
+        selectedReplies.length > 0 ? selectedReplies : FALLBACK_QUICK_REPLIES,
+      );
     } catch (error) {
       if (error?.code === "ERR_CANCELED") {
         return;
@@ -140,6 +230,17 @@ const ChatConsultation = () => {
           text: "I could not process that message right now. Please try again.",
         },
       ]);
+      const { selectedReplies } = getNonRepeatingQuickReplies({
+        apiReplies: [],
+        fallbackReplies: FALLBACK_QUICK_REPLIES,
+        seenReplies: seenQuickRepliesRef.current,
+      });
+      selectedReplies.forEach((reply) =>
+        seenQuickRepliesRef.current.add(reply.toLowerCase()),
+      );
+      setQuickReplies(
+        selectedReplies.length > 0 ? selectedReplies : FALLBACK_QUICK_REPLIES,
+      );
     } finally {
       if (requestAbortControllerRef.current === requestAbortController) {
         requestAbortControllerRef.current = null;
@@ -164,6 +265,13 @@ const ChatConsultation = () => {
       event.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleQuickReplySelect = (reply) => {
+    if (!reply || isSending) {
+      return;
+    }
+    sendMessage(reply);
   };
 
   return (
@@ -194,6 +302,21 @@ const ChatConsultation = () => {
         </div>
 
         <footer className={styles.composer}>
+          {quickReplies.length > 0 && (
+            <div className={styles.quickReplyList}>
+              {quickReplies.map((reply, index) => (
+                <button
+                  key={`quick-reply-${index}`}
+                  type="button"
+                  className={styles.quickReplyChip}
+                  onClick={() => handleQuickReplySelect(reply)}
+                  disabled={isSending}
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          )}
           <textarea
             value={input}
             onChange={(event) => setInput(event.target.value)}
@@ -201,7 +324,12 @@ const ChatConsultation = () => {
             placeholder="Example: I have had chest tightness and dry cough for 3 days."
             rows={2}
           />
-          <button type="button" disabled={!canSend} onClick={sendMessage}>
+          <button
+            type="button"
+            className={styles.sendButton}
+            disabled={!canSend}
+            onClick={sendMessage}
+          >
             Send
           </button>
         </footer>
