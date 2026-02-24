@@ -22,6 +22,10 @@ describe("Instant consultation routes", () => {
       mockResolveConsultationChatResponse.mockResolvedValue({
         reply: "Please monitor symptoms and stay hydrated.",
         disclaimer: "Not a diagnosis.",
+        suggested_followups: [
+          "How long have you had these symptoms?",
+          "Have they been getting worse?",
+        ],
         specializations: [
           { Name: "General Physician", Accuracy: 75, Reason: "Initial triage" },
         ],
@@ -38,6 +42,10 @@ describe("Instant consultation routes", () => {
       expect(res.body).toEqual({
         reply: "Please monitor symptoms and stay hydrated.",
         disclaimer: "Not a diagnosis.",
+        suggested_followups: [
+          "How long have you had these symptoms?",
+          "Have they been getting worse?",
+        ],
         specializations: [
           { Name: "General Physician", Accuracy: 75, Reason: "Initial triage" },
         ],
