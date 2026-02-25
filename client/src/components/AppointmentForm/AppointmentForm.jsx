@@ -10,6 +10,8 @@ import { baseURL } from "../../api/api";
 import { useDispatch, useSelector } from "react-redux";
 import { authActions } from "../../store/auth/auth-slice";
 
+const CONSULTATION_PREFILL_STORAGE_KEY = "consultationPrefill";
+
 const AppointmentForm = ({
   doctorId,
   image,
@@ -19,6 +21,7 @@ const AppointmentForm = ({
   profile,
   onSubmit,
   cost,
+  bookingPrefill,
 }) => {
   const CACHE_TTL_MS = 60 * 1000;
   const token = useSelector((state) => state.auth.userToken);
@@ -26,14 +29,28 @@ const AppointmentForm = ({
   const slotsCacheRef = useRef(new Map());
   const inFlightControllerRef = useRef(null);
 
+  const prefillReason =
+    typeof bookingPrefill?.reasonForVisit === "string"
+      ? bookingPrefill.reasonForVisit.trim()
+      : "";
+  const prefillAdditionalNotes =
+    typeof bookingPrefill?.additionalNotes === "string"
+      ? bookingPrefill.additionalNotes.trim()
+      : "";
+  const prefillAiSummary =
+    typeof bookingPrefill?.aiSummary === "string"
+      ? bookingPrefill.aiSummary.trim()
+      : "";
+
   const [formData, setFormData] = useState({
     doctorId,
     date: "",
     time: "",
     patientName: "",
-    additionalNotes: "",
-    reasonForVisit: "",
+    additionalNotes: prefillAdditionalNotes,
+    reasonForVisit: prefillReason,
   });
+  const [shareAiSummary, setShareAiSummary] = useState(Boolean(prefillAiSummary));
 
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
   const [availabilityHint, setAvailabilityHint] = useState("");
@@ -179,6 +196,14 @@ const AppointmentForm = ({
       return;
     }
 
+    const payload = { ...formData };
+    if (shareAiSummary && prefillAiSummary) {
+      payload.aiTriage = {
+        summary: prefillAiSummary,
+        isShared: true,
+      };
+    }
+
     const selectedSlot = formData.time;
     const previousSlots = availableTimeSlots;
     setIsBooking(true);
@@ -194,7 +219,7 @@ const AppointmentForm = ({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -215,6 +240,7 @@ const AppointmentForm = ({
 
       dispatch(authActions.addUpdate(newUpdate));
       slotsCacheRef.current.delete(`${doctorId}:${formData.date}`);
+      sessionStorage.removeItem(CONSULTATION_PREFILL_STORAGE_KEY);
 
       alert.success({
         message: "Appointment booked successfully!",
@@ -349,6 +375,32 @@ const AppointmentForm = ({
               onChange={handleInputChange}
             />
           </div>
+
+          {prefillAiSummary && (
+            <>
+              <div className={styles.field}>
+                <label htmlFor="aiSummary">AI Summary</label>
+                <textarea
+                  id="aiSummary"
+                  name="aiSummary"
+                  value={prefillAiSummary}
+                  readOnly
+                  rows={4}
+                />
+              </div>
+              <div className={styles.shareToggle}>
+                <input
+                  id="shareAiSummary"
+                  type="checkbox"
+                  checked={shareAiSummary}
+                  onChange={(event) => setShareAiSummary(event.target.checked)}
+                />
+                <label htmlFor="shareAiSummary">
+                  Share AI summary with doctor
+                </label>
+              </div>
+            </>
+          )}
 
           <button
             type="submit"

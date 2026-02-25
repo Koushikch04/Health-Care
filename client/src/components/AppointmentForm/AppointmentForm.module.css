@@ -79,6 +79,17 @@
   font-size: 18px;
 }
 
+.form_group .field textarea {
+  width: 100%;
+  border: 1px solid lightgrey;
+  border-radius: 5px;
+  padding: 10px 12px;
+  font-size: 15px;
+  line-height: 1.4;
+  resize: vertical;
+  background-color: #f8fafc;
+}
+
 .form_group .field select {
   height: 100%;
   width: 100%;
@@ -125,5 +136,25 @@
   font-size: 0.82rem;
   color: #4a5568;
   text-align: left;
+  line-height: 1.35;
+}
+
+.shareToggle {
+  width: 250px;
+  margin: -8px 0 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #1f2937;
+  text-align: left;
+}
+
+.shareToggle input {
+  margin-top: 3px;
+}
+
+.shareToggle label {
+  position: static;
+  font-size: 0.9rem;
   line-height: 1.35;
 }

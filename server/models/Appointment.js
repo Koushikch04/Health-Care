@@ -25,6 +25,14 @@ const appointmentSchema = new Schema(
     additionalNotes: {
       type: String,
     },
+    aiTriage: {
+      summary: {
+        type: String,
+      },
+      isShared: {
+        type: Boolean,
+      },
+    },
 
     date: { type: Date, required: true },
     time: { type: String, required: true },

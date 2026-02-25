@@ -69,6 +69,10 @@ export const appointmentSchemas = {
       patientName: nonEmptyString.required(),
       reasonForVisit: Joi.string().allow("").optional(),
       additionalNotes: Joi.string().allow("").optional(),
+      aiTriage: Joi.object({
+        summary: Joi.string().trim().max(3000).required(),
+        isShared: Joi.boolean().optional(),
+      }).optional(),
       date: flexibleDate.required(),
       time: hhmm.required(),
       doctorId: objectId.required(),

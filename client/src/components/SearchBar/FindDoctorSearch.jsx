@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { FaSearch } from "react-icons/fa";
 import CloseIcon from "@mui/icons-material/Close";
+import { useLocation } from "react-router-dom";
 
 import styles from "./FindDoctorSearch.module.css";
 import SearchBarResults from "./SearchBarResults";
@@ -9,7 +10,40 @@ import AvailableDoctors from "../DoctorListPagination/AvailableDoctors";
 import { baseURL } from "../../api/api";
 import { createTrieIndex, searchPrefix } from "../../utils/trie";
 
+const CONSULTATION_PREFILL_STORAGE_KEY = "consultationPrefill";
+
+const normalizeConsultationPrefill = (value) => {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const reasonForVisit =
+    typeof value.reasonForVisit === "string" ? value.reasonForVisit.trim() : "";
+  const additionalNotes =
+    typeof value.additionalNotes === "string" ? value.additionalNotes.trim() : "";
+  const aiSummary =
+    typeof value.aiSummary === "string" ? value.aiSummary.trim() : "";
+
+  if (!reasonForVisit && !additionalNotes && !aiSummary) {
+    return null;
+  }
+
+  return {
+    source:
+      typeof value.source === "string" && value.source.trim()
+        ? value.source.trim()
+        : "instant_consultation",
+    specialty: typeof value.specialty === "string" ? value.specialty.trim() : "",
+    reasonForVisit,
+    additionalNotes,
+    aiSummary,
+    generatedAt:
+      typeof value.generatedAt === "string" ? value.generatedAt : new Date().toISOString(),
+  };
+};
+
 const FindDoctorSearch = () => {
+  const location = useLocation();
   const [specialties, setSpecialties] = useState([]);
   const [search, setSearch] = useState("");
   const [searchData, setSearchData] = useState([]);
@@ -17,6 +51,7 @@ const FindDoctorSearch = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedDoctors, setSelectedDoctors] = useState([]);
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
+  const [consultationPrefill, setConsultationPrefill] = useState(null);
   const [moveToTop, setMoveToTop] = useState(false);
   const [showImage, setShowImage] = useState(true);
 
@@ -152,6 +187,29 @@ const FindDoctorSearch = () => {
   }, [searchRef]);
 
   useEffect(() => {
+    const fromLocation = normalizeConsultationPrefill(
+      location.state?.consultationPrefill,
+    );
+    if (fromLocation) {
+      setConsultationPrefill(fromLocation);
+      return;
+    }
+
+    try {
+      const storedPrefill = sessionStorage.getItem(CONSULTATION_PREFILL_STORAGE_KEY);
+      if (!storedPrefill) {
+        setConsultationPrefill(null);
+        return;
+      }
+      const parsedPrefill = JSON.parse(storedPrefill);
+      setConsultationPrefill(normalizeConsultationPrefill(parsedPrefill));
+    } catch (error) {
+      console.error("Failed to restore consultation prefill:", error);
+      setConsultationPrefill(null);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
     const fetchSpecialties = async () => {
       setLoadingSpecialty(true);
       try {
@@ -260,6 +318,7 @@ const FindDoctorSearch = () => {
           <AvailableDoctors
             doctorData={selectedDoctors}
             selectedSpecialty={selectedSpecialty}
+            bookingPrefill={consultationPrefill}
           />
         </div>
       )}

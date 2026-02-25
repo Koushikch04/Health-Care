@@ -13,6 +13,7 @@ const DoctorCard = ({
   rating,
   profile,
   cost,
+  bookingPrefill,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ const DoctorCard = ({
             rating={rating}
             profile={profile}
             cost={cost}
+            bookingPrefill={bookingPrefill}
             onSubmit={closeModalHandler}
           />
         </Modal>
