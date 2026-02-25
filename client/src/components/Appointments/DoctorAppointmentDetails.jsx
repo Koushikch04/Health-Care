@@ -13,6 +13,8 @@ const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
   const { alert } = useAlert();
   const canCancel =
     appointment.status !== "canceled" && appointment.status !== "completed";
+  const aiSummary =
+    appointment?.aiTriage?.isShared === false ? "" : appointment?.aiTriage?.summary;
 
   const handleCancel = async () => {
     setLoading(true);
@@ -59,6 +61,19 @@ const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
         <strong>Description:</strong>{" "}
         {appointment.reasonForVisit || "No description available."}
       </p>
+      <p className={styles.p}>
+        <strong>Additional Info:</strong>{" "}
+        {appointment.additionalNotes || "No additional details provided."}
+      </p>
+      {aiSummary && (
+        <div className={styles.aiSummaryBlock}>
+          <p className={styles.p}>
+            <strong>AI Summary:</strong>{" "}
+            <span className={styles.aiTag}>AI-generated</span>
+          </p>
+          <p className={styles.p}>{aiSummary}</p>
+        </div>
+      )}
       <p className={styles.p}>
         <strong>Status:</strong> {appointment.status || "Not specified"}
       </p>

@@ -40,8 +40,15 @@ const getDoctorProfileId = async (req) => {
 };
 
 export const createAppointment = async (req, res) => {
-  const { patientName, reasonForVisit, additionalNotes, date, time, doctorId } =
-    req.body;
+  const {
+    patientName,
+    reasonForVisit,
+    additionalNotes,
+    aiTriage,
+    date,
+    time,
+    doctorId,
+  } = req.body;
 
   const userProfileId = await getUserProfileId(req);
 
@@ -76,12 +83,24 @@ export const createAppointment = async (req, res) => {
       });
     }
 
+    let normalizedAiTriage;
+    const summary =
+      typeof aiTriage?.summary === "string" ? aiTriage.summary.trim() : "";
+    const isShared = aiTriage?.isShared !== false;
+    if (summary && isShared) {
+      normalizedAiTriage = {
+        summary,
+        isShared: true,
+      };
+    }
+
     const newAppointment = new Appointment({
       doctor: doctorId,
       user: userProfileId,
       patientName,
       reasonForVisit,
       additionalNotes,
+      aiTriage: normalizedAiTriage,
       date: dayBounds.start,
       time,
     });
