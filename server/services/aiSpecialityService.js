@@ -481,6 +481,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         "I can help with symptom triage, but AI chat is unavailable right now. Please try again shortly.",
       recommended_specialties: [],
       suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
+      clinical_summary: "",
       disclaimer: DEFAULT_DISCLAIMER,
     };
   }
@@ -501,7 +502,11 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         7) Keep focus on symptom triage and next best follow-up questions.
         8) Do not provide or imply a diagnosis in reply or follow-up suggestions.
         9) suggested_followups must be written as user-to-assistant questions (first person), such as "What can I do now?".
-        10) Never write clinician intake prompts in suggested_followups (avoid "Have you...", "Are you...", "Did you...").`,
+        10) Never write clinician intake prompts in suggested_followups (avoid "Have you...", "Are you...", "Did you...").
+        11) clinical_summary must be objective, clinical, and third-person (charting style).
+        12) clinical_summary must only summarize facts explicitly provided by the user across current and prior user messages.
+        13) Do not add diagnoses, probabilities, impressions, advice, or assumptions in clinical_summary.
+        14) Start clinical_summary with "Patient reports..." and keep it concise.`,
       userPrompt: `
         Latest user message:
         ${message}
@@ -523,6 +528,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
             "What can I do at home right now to reduce these symptoms?",
             "When should I seek urgent care for this?"
           ],
+          "clinical_summary": "Patient reports ...",
           "disclaimer": "Short medical safety disclaimer"
         }
 
@@ -530,14 +536,15 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         Before asking, check whether that detail is already present in prior user messages.
               `,
       history,
-      fallback: {
-        reply:
-          "Thanks for sharing. How long have you had these symptoms, and how severe are they right now?",
-        recommended_specialties: [],
-        suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
-        disclaimer: DEFAULT_DISCLAIMER,
-      },
-    });
+        fallback: {
+          reply:
+            "Thanks for sharing. How long have you had these symptoms, and how severe are they right now?",
+          recommended_specialties: [],
+          suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
+          clinical_summary: "",
+          disclaimer: DEFAULT_DISCLAIMER,
+        },
+      });
 
     const reply =
       typeof parsed.reply === "string" && parsed.reply.trim()
@@ -553,6 +560,8 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         ? normalizedSpecialties
         : inferSpecialtiesFromReply(reply, specialtyNames);
     const normalizedFollowups = buildSafeSuggestedFollowups(parsed.suggested_followups);
+    const clinicalSummary =
+      typeof parsed.clinical_summary === "string" ? parsed.clinical_summary.trim() : "";
 
     return {
       reply,
@@ -561,6 +570,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         normalizedFollowups.length > 0
           ? normalizedFollowups
           : DEFAULT_SUGGESTED_FOLLOWUPS,
+      clinical_summary: clinicalSummary,
       disclaimer:
         typeof parsed.disclaimer === "string" && parsed.disclaimer.trim()
           ? parsed.disclaimer.trim()
@@ -573,6 +583,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         "I could not process that right now. Please try again in a moment, or contact a clinician for urgent concerns.",
       recommended_specialties: [],
       suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
+      clinical_summary: "",
       disclaimer: DEFAULT_DISCLAIMER,
     };
   }
