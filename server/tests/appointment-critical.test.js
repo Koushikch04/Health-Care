@@ -2,7 +2,6 @@ import request from "supertest";
 
 import Appointment from "../models/Appointment.js";
 import { app, createDoctorFixture, createUserWithToken } from "./helpers/fixtures.js";
-import { getUtcDateStringWithOffset } from "./helpers/time.js";
 
 describe("Appointment critical flows", () => {
   const getNextWeekdayIsoDate = (daysAhead = 1) => {
@@ -22,7 +21,7 @@ describe("Appointment critical flows", () => {
       email: "state-doctor@example.com",
     });
 
-    const date = getUtcDateStringWithOffset(2);
+    const date = getNextWeekdayIsoDate(2);
     const createRes = await request(app)
       .post("/appointment")
       .set("Authorization", `Bearer ${token}`)
@@ -61,7 +60,7 @@ describe("Appointment critical flows", () => {
       patientName: "Race User",
       reasonForVisit: "Race",
       additionalNotes: "",
-      date: getUtcDateStringWithOffset(3),
+      date: getNextWeekdayIsoDate(3),
       time: "10:00",
       doctorId: doctor._id.toString(),
     };
@@ -83,7 +82,7 @@ describe("Appointment critical flows", () => {
       email: "date-doctor@example.com",
     });
 
-    const day = getUtcDateStringWithOffset(4);
+    const day = getNextWeekdayIsoDate(4);
     const createRes = await request(app)
       .post("/appointment")
       .set("Authorization", `Bearer ${token}`)
