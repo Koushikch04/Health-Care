@@ -10,8 +10,6 @@ import { baseURL } from "../../api/api";
 import { useDispatch, useSelector } from "react-redux";
 import { authActions } from "../../store/auth/auth-slice";
 
-const CONSULTATION_PREFILL_STORAGE_KEY = "consultationPrefill";
-
 const AppointmentForm = ({
   doctorId,
   image,
@@ -240,7 +238,6 @@ const AppointmentForm = ({
 
       dispatch(authActions.addUpdate(newUpdate));
       slotsCacheRef.current.delete(`${doctorId}:${formData.date}`);
-      sessionStorage.removeItem(CONSULTATION_PREFILL_STORAGE_KEY);
 
       alert.success({
         message: "Appointment booked successfully!",

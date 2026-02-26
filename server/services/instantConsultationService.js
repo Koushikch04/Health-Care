@@ -33,6 +33,7 @@ export const resolveConsultationChatResponse = async ({ message, history = [] })
   const aiResult = await generateMedicalChatReply({ message, history });
   return {
     reply: aiResult.reply,
+    ai_summary: aiResult.clinical_summary || "",
     disclaimer: aiResult.disclaimer,
     suggested_followups: Array.isArray(aiResult.suggested_followups)
       ? aiResult.suggested_followups

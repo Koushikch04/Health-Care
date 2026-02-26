@@ -10,8 +10,6 @@ import AvailableDoctors from "../DoctorListPagination/AvailableDoctors";
 import { baseURL } from "../../api/api";
 import { createTrieIndex, searchPrefix } from "../../utils/trie";
 
-const CONSULTATION_PREFILL_STORAGE_KEY = "consultationPrefill";
-
 const normalizeConsultationPrefill = (value) => {
   if (!value || typeof value !== "object") {
     return null;
@@ -105,6 +103,7 @@ const FindDoctorSearch = () => {
     setShowImage(true);
     setMoveToTop(false);
     setSelectedSpecialty("");
+    setConsultationPrefill(null);
   };
 
   const handleSpecialtySelect = (specialty) => {
@@ -190,23 +189,7 @@ const FindDoctorSearch = () => {
     const fromLocation = normalizeConsultationPrefill(
       location.state?.consultationPrefill,
     );
-    if (fromLocation) {
-      setConsultationPrefill(fromLocation);
-      return;
-    }
-
-    try {
-      const storedPrefill = sessionStorage.getItem(CONSULTATION_PREFILL_STORAGE_KEY);
-      if (!storedPrefill) {
-        setConsultationPrefill(null);
-        return;
-      }
-      const parsedPrefill = JSON.parse(storedPrefill);
-      setConsultationPrefill(normalizeConsultationPrefill(parsedPrefill));
-    } catch (error) {
-      console.error("Failed to restore consultation prefill:", error);
-      setConsultationPrefill(null);
-    }
+    setConsultationPrefill(fromLocation || null);
   }, [location.state]);
 
   useEffect(() => {

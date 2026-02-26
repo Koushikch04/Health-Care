@@ -21,6 +21,8 @@ describe("Instant consultation routes", () => {
     test("returns AI consultation payload on success", async () => {
       mockResolveConsultationChatResponse.mockResolvedValue({
         reply: "Please monitor symptoms and stay hydrated.",
+        ai_summary:
+          "Patient reports headache and mild fever since yesterday.",
         disclaimer: "Not a diagnosis.",
         suggested_followups: [
           "How long have you had these symptoms?",
@@ -41,6 +43,8 @@ describe("Instant consultation routes", () => {
       expect(res.status).toBe(200);
       expect(res.body).toEqual({
         reply: "Please monitor symptoms and stay hydrated.",
+        ai_summary:
+          "Patient reports headache and mild fever since yesterday.",
         disclaimer: "Not a diagnosis.",
         suggested_followups: [
           "How long have you had these symptoms?",

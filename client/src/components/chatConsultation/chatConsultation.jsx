@@ -7,7 +7,6 @@ import styles from "./chatConsultation.module.css";
 
 const INITIAL_ASSISTANT_MESSAGE =
   "Hi, I can help you discuss symptoms in natural language. Tell me what you are feeling, when it started, and how severe it is.";
-const CONSULTATION_PREFILL_STORAGE_KEY = "consultationPrefill";
 const FALLBACK_QUICK_REPLIES = [
   "It started 2 days ago.",
   "Symptoms are moderate right now.",
@@ -113,31 +112,22 @@ const renderSimpleMarkdown = (text) => {
   return segments;
 };
 
-const buildConsultationPrefill = ({ messages, specialtyName }) => {
+const buildConsultationPrefill = ({ messages, specialtyName, aiSummary }) => {
   const userMessages = messages
     .filter((message) => message.role === "user" && typeof message.text === "string")
     .map((message) => message.text.trim())
     .filter(Boolean);
-  const assistantMessages = messages
-    .filter(
-      (message) =>
-        message.role === "assistant" &&
-        typeof message.text === "string" &&
-        message.text.trim() &&
-        message.text.trim() !== INITIAL_ASSISTANT_MESSAGE,
-    )
-    .map((message) => message.text.trim());
-
   const reasonForVisit = userMessages[userMessages.length - 1] || "";
   const additionalNotes = userMessages.slice(-3, -1).join(" ").trim();
-  const aiSummary = assistantMessages[assistantMessages.length - 1] || "";
+  const normalizedAiSummary =
+    typeof aiSummary === "string" ? aiSummary.trim() : "";
 
   return {
     source: "instant_consultation",
     specialty: specialtyName || "",
     reasonForVisit,
     additionalNotes,
-    aiSummary,
+    aiSummary: normalizedAiSummary,
     generatedAt: new Date().toISOString(),
   };
 };
@@ -154,6 +144,7 @@ const ChatConsultation = () => {
   );
   const [specializations, setSpecializations] = useState([]);
   const [quickReplies, setQuickReplies] = useState(FALLBACK_QUICK_REPLIES);
+  const [latestClinicalSummary, setLatestClinicalSummary] = useState("");
   const endRef = useRef(null);
   const isMountedRef = useRef(true);
   const requestAbortControllerRef = useRef(null);
@@ -171,16 +162,8 @@ const ChatConsultation = () => {
     const consultationPrefill = buildConsultationPrefill({
       messages,
       specialtyName,
+      aiSummary: latestClinicalSummary,
     });
-
-    try {
-      sessionStorage.setItem(
-        CONSULTATION_PREFILL_STORAGE_KEY,
-        JSON.stringify(consultationPrefill),
-      );
-    } catch (error) {
-      console.error("Failed to persist consultation prefill:", error);
-    }
 
     navigate(`/appointments?specialty=${encodeURIComponent(specialtyName)}`, {
       state: { consultationPrefill },
@@ -242,6 +225,11 @@ const ChatConsultation = () => {
       ]);
 
       setDisclaimer(response?.data?.disclaimer || disclaimer);
+      setLatestClinicalSummary(
+        typeof response?.data?.ai_summary === "string"
+          ? response.data.ai_summary
+          : "",
+      );
       setSpecializations(Array.isArray(response?.data?.specializations) ? response.data.specializations : []);
       const predictedReplies = normalizeQuickReplies(
         response?.data?.suggested_followups ||
