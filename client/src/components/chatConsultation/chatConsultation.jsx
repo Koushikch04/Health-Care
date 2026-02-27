@@ -159,6 +159,10 @@ const ChatConsultation = () => {
   };
 
   const handleSpecializationSelect = (specialtyName) => {
+    if (isSending) {
+      return;
+    }
+
     const consultationPrefill = buildConsultationPrefill({
       messages,
       specialtyName,
@@ -336,7 +340,7 @@ const ChatConsultation = () => {
         </div>
 
         <footer className={styles.composer}>
-          {quickReplies.length > 0 && (
+          {!isSending && quickReplies.length > 0 && (
             <div className={styles.quickReplyList}>
               {quickReplies.map((reply, index) => (
                 <button
@@ -368,7 +372,7 @@ const ChatConsultation = () => {
           </button>
         </footer>
 
-        {specializations.length > 0 && (
+        {!isSending && specializations.length > 0 && (
           <section className={styles.specializations}>
             <h2>Suggested Specialties</h2>
             <div className={styles.specializationList}>
@@ -378,6 +382,7 @@ const ChatConsultation = () => {
                   type="button"
                   className={styles.specializationChip}
                   onClick={() => handleSpecializationSelect(item.Name)}
+                  disabled={isSending}
                   title={item.Reason || ""}
                 >
                   {item.Name}
