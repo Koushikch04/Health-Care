@@ -46,6 +46,63 @@ const HF_MODEL_FALLBACKS = [
   "mistralai/Mistral-7B-Instruct-v0.2",
   "Qwen/Qwen2.5-7B-Instruct",
 ];
+const MAX_USER_TEXT_LENGTH = 1500;
+const MAX_PROMPT_BLOCK_LENGTH = 12000;
+const MAX_SPECIALTY_NAME_LENGTH = 120;
+
+const normalizeText = (value) => {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  try {
+    return value.normalize("NFKC");
+  } catch (_error) {
+    return value;
+  }
+};
+
+const stripControlChars = (value) =>
+  value
+    .replace(/[\u0000-\u0008\u000B-\u001F\u007F]/g, " ")
+    .replace(/\r\n?/g, "\n");
+
+const sanitizeUserText = (value, { maxLength = MAX_USER_TEXT_LENGTH } = {}) => {
+  const normalized = stripControlChars(normalizeText(value))
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.slice(0, maxLength);
+};
+
+const sanitizePromptBlock = (value, { maxLength = MAX_PROMPT_BLOCK_LENGTH } = {}) => {
+  const normalized = stripControlChars(normalizeText(value))
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.slice(0, maxLength);
+};
+
+const sanitizeSpecialtyName = (value) =>
+  sanitizeUserText(value, { maxLength: MAX_SPECIALTY_NAME_LENGTH });
+
+const sanitizeHistory = (history = []) =>
+  history
+    .slice(-12)
+    .map((entry) => {
+      const role = entry?.role === "assistant" ? "assistant" : "user";
+      const content = sanitizeUserText(entry?.text);
+      if (!content) {
+        return null;
+      }
+      return { role, text: content };
+    })
+    .filter(Boolean);
 
 const safeJsonParse = (text, fallback) => {
   try {
@@ -248,15 +305,10 @@ const inferSpecialtiesFromReply = (reply, specialtyNames) => {
 };
 
 const toChatMessages = (history = []) =>
-  history
-    .slice(-12)
+  sanitizeHistory(history)
     .map((entry) => {
-      const role = entry?.role === "assistant" ? "assistant" : "user";
-      const content = typeof entry?.text === "string" ? entry.text.trim() : "";
-      if (!content) {
-        return null;
-      }
-      return { role, content };
+      const role = entry.role === "assistant" ? "assistant" : "user";
+      return { role, content: entry.text };
     })
     .filter(Boolean);
 
@@ -358,6 +410,7 @@ const callHfJson = async ({
     safeHistoryMessages: historyMessages,
     userPrompt,
   });
+  const safeCondensedPrompt = sanitizePromptBlock(condensedPrompt);
 
   const allCandidateModels = getCandidateModels();
   const warmedModels = allCandidateModels.filter(
@@ -375,7 +428,7 @@ const callHfJson = async ({
           model,
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: condensedPrompt },
+            { role: "user", content: safeCondensedPrompt },
           ],
           temperature: 0.2,
           max_tokens: 500,
@@ -426,14 +479,21 @@ const callHfJson = async ({
 
 export const analyzeSymptomsWithAI = async (userSymptoms) => {
   try {
-    const specialtyNames = await getCachedSpecialtyNames();
+    const sanitizedSymptoms = sanitizeUserText(userSymptoms);
+    if (!sanitizedSymptoms) {
+      return { recommended_specialties: [] };
+    }
+
+    const specialtyNames = (await getCachedSpecialtyNames())
+      .map(sanitizeSpecialtyName)
+      .filter(Boolean);
     const specialtyList = specialtyNames.join(", ");
 
     const parsed = await callHfJson({
       systemPrompt:
         "You are a cautious medical triage assistant. Return valid JSON only.",
       userPrompt: `
-User symptoms: "${userSymptoms}"
+User symptoms: "${sanitizedSymptoms}"
 
 Available specialties (choose only from this list):
 [${specialtyList}]
@@ -487,7 +547,21 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
   }
 
   try {
-    const specialtyNames = await getCachedSpecialtyNames();
+    const sanitizedMessage = sanitizeUserText(message);
+    const sanitizedHistory = sanitizeHistory(history);
+    if (!sanitizedMessage) {
+      return {
+        reply: "Please describe your symptoms so I can help with triage.",
+        recommended_specialties: [],
+        suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
+        clinical_summary: "",
+        disclaimer: DEFAULT_DISCLAIMER,
+      };
+    }
+
+    const specialtyNames = (await getCachedSpecialtyNames())
+      .map(sanitizeSpecialtyName)
+      .filter(Boolean);
     const specialtyList = specialtyNames.join(", ");
 
     const parsed = await callHfJson({
@@ -509,7 +583,7 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         14) Start clinical_summary with "Patient reports..." and keep it concise.`,
       userPrompt: `
         Latest user message:
-        ${message}
+        ${sanitizedMessage}
 
         Available specialties (choose only from this list):
         [${specialtyList}]
@@ -535,8 +609,8 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
         If more details are needed, ask 1-2 follow-up questions and keep recommended_specialties empty.
         Before asking, check whether that detail is already present in prior user messages.
               `,
-      history,
-        fallback: {
+      history: sanitizedHistory,
+      fallback: {
           reply:
             "Thanks for sharing. How long have you had these symptoms, and how severe are they right now?",
           recommended_specialties: [],
