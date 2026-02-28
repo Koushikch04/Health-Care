@@ -17,6 +17,7 @@ const FALLBACK_QUICK_REPLIES = [
   "When should I see a doctor if this does not improve?",
   "Can I use over-the-counter medicine for this?",
 ];
+const MAX_STREAM_REPLY_LENGTH = 6000;
 
 const normalizeQuickReplies = (value) => {
   if (!Array.isArray(value)) {
@@ -96,10 +97,14 @@ const renderSimpleMarkdown = (text) => {
     const token = tokenMatch[0];
     if (token.startsWith("**")) {
       segments.push(
-        <strong key={`strong-${tokenMatch.index}`}>{token.slice(2, -2)}</strong>,
+        <strong key={`strong-${tokenMatch.index}`}>
+          {token.slice(2, -2)}
+        </strong>,
       );
     } else {
-      segments.push(<em key={`em-${tokenMatch.index}`}>{token.slice(1, -1)}</em>);
+      segments.push(
+        <em key={`em-${tokenMatch.index}`}>{token.slice(1, -1)}</em>,
+      );
     }
 
     cursor = tokenMatch.index + token.length;
@@ -112,9 +117,91 @@ const renderSimpleMarkdown = (text) => {
   return segments;
 };
 
+const parseSseFrames = async ({ response, signal, onEvent }) => {
+  if (!response.ok) {
+    throw new Error(`SSE request failed with status ${response.status}`);
+  }
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("text/event-stream")) {
+    const maybeJson = await response.json().catch(() => null);
+    if (maybeJson && typeof maybeJson === "object") {
+      onEvent("done", maybeJson);
+      return;
+    }
+    throw new Error("Expected SSE response but received non-SSE payload");
+  }
+  if (!response.body) {
+    throw new Error("SSE response body is missing");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  const parseFrame = (frameText) => {
+    const lines = frameText.split("\n");
+    let eventName = "message";
+    const dataLines = [];
+
+    for (const line of lines) {
+      if (!line || line.startsWith(":")) {
+        continue;
+      }
+      if (line.startsWith("event:")) {
+        eventName = line.slice(6).trim();
+        continue;
+      }
+      if (line.startsWith("data:")) {
+        dataLines.push(line.slice(5).trimStart());
+      }
+    }
+
+    if (dataLines.length === 0) {
+      return;
+    }
+
+    const raw = dataLines.join("\n");
+    let payload = raw;
+    try {
+      payload = JSON.parse(raw);
+    } catch (_error) {
+      // Keep raw payload for non-JSON events.
+    }
+    onEvent(eventName, payload);
+  };
+
+  while (true) {
+    if (signal?.aborted) {
+      const abortError = new Error("Aborted");
+      abortError.name = "AbortError";
+      throw abortError;
+    }
+
+    const { value, done } = await reader.read();
+    if (done) {
+      break;
+    }
+    buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
+
+    let separatorIndex = buffer.indexOf("\n\n");
+    while (separatorIndex !== -1) {
+      const frame = buffer.slice(0, separatorIndex);
+      buffer = buffer.slice(separatorIndex + 2);
+      parseFrame(frame);
+      separatorIndex = buffer.indexOf("\n\n");
+    }
+  }
+
+  if (buffer.trim()) {
+    parseFrame(buffer.trim());
+  }
+};
+
 const buildConsultationPrefill = ({ messages, specialtyName, aiSummary }) => {
   const userMessages = messages
-    .filter((message) => message.role === "user" && typeof message.text === "string")
+    .filter(
+      (message) => message.role === "user" && typeof message.text === "string",
+    )
     .map((message) => message.text.trim())
     .filter(Boolean);
   const reasonForVisit = userMessages[userMessages.length - 1] || "";
@@ -135,7 +222,11 @@ const buildConsultationPrefill = ({ messages, specialtyName, aiSummary }) => {
 const ChatConsultation = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([
-    { id: "init-assistant", role: "assistant", text: INITIAL_ASSISTANT_MESSAGE },
+    {
+      id: "init-assistant",
+      role: "assistant",
+      text: INITIAL_ASSISTANT_MESSAGE,
+    },
   ]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -150,7 +241,10 @@ const ChatConsultation = () => {
   const requestAbortControllerRef = useRef(null);
   const seenQuickRepliesRef = useRef(new Set());
 
-  const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
+  const canSend = useMemo(
+    () => input.trim().length > 0 && !isSending,
+    [input, isSending],
+  );
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -180,8 +274,45 @@ const ChatConsultation = () => {
       .slice(-8)
       .map((msg) => ({ role: msg.role, text: msg.text }));
 
+  const applyConsultationMetadata = (payload) => {
+    if (!payload || typeof payload !== "object") {
+      return;
+    }
+
+    setDisclaimer((prev) =>
+      typeof payload.disclaimer === "string" && payload.disclaimer.trim()
+        ? payload.disclaimer.trim()
+        : prev,
+    );
+    setLatestClinicalSummary(
+      typeof payload.ai_summary === "string" ? payload.ai_summary : "",
+    );
+    setSpecializations(
+      Array.isArray(payload.specializations) ? payload.specializations : [],
+    );
+
+    const predictedReplies = normalizeQuickReplies(
+      payload.suggested_followups ||
+        payload.quickReplies ||
+        payload.suggestedFollowUps ||
+        payload.followUps,
+    );
+    const { selectedReplies } = getNonRepeatingQuickReplies({
+      apiReplies: predictedReplies,
+      fallbackReplies: FALLBACK_QUICK_REPLIES,
+      seenReplies: seenQuickRepliesRef.current,
+    });
+    selectedReplies.forEach((reply) =>
+      seenQuickRepliesRef.current.add(reply.toLowerCase()),
+    );
+    setQuickReplies(
+      selectedReplies.length > 0 ? selectedReplies : FALLBACK_QUICK_REPLIES,
+    );
+  };
+
   const sendMessage = async (draftText) => {
-    const text = typeof draftText === "string" ? draftText.trim() : input.trim();
+    const text =
+      typeof draftText === "string" ? draftText.trim() : input.trim();
     if (!text || isSending) {
       return;
     }
@@ -192,8 +323,16 @@ const ChatConsultation = () => {
       text,
     };
 
+    const assistantMessageId = `assistant-${Date.now()}`;
     const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    setMessages([
+      ...updatedMessages,
+      {
+        id: assistantMessageId,
+        role: "assistant",
+        text: "",
+      },
+    ]);
     setInput("");
     setIsSending(true);
     setQuickReplies([]);
@@ -201,85 +340,172 @@ const ChatConsultation = () => {
 
     const requestAbortController = new AbortController();
     requestAbortControllerRef.current = requestAbortController;
+    let streamStartTimeout = null;
 
     try {
-      const response = await axios.post(
-        `${baseURL}/health/specialty/chat`,
-        {
+      let streamedReply = "";
+      let hasDoneEvent = false;
+      let hasAnyStreamEvent = false;
+      const streamStartTimeoutMs = 12000;
+      const streamResponse = await fetch(`${baseURL}/health/specialty/chat/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           message: text,
           history: buildHistory(updatedMessages),
-        },
-        { signal: requestAbortController.signal },
-      );
+        }),
+        signal: requestAbortController.signal,
+      });
+      streamStartTimeout = setTimeout(() => {
+        if (!hasAnyStreamEvent && !hasDoneEvent) {
+          requestAbortController.abort();
+        }
+      }, streamStartTimeoutMs);
 
-      if (!isMountedRef.current) {
-        return;
+      await parseSseFrames({
+        response: streamResponse,
+        signal: requestAbortController.signal,
+        onEvent: (eventName, payload) => {
+          if (!isMountedRef.current) {
+            return;
+          }
+
+          if (eventName === "start") {
+            hasAnyStreamEvent = true;
+            return;
+          }
+
+          if (eventName === "token") {
+            hasAnyStreamEvent = true;
+            const token = typeof payload?.token === "string" ? payload.token : "";
+            if (!token) {
+              return;
+            }
+            if (streamedReply.length >= MAX_STREAM_REPLY_LENGTH) {
+              return;
+            }
+            const remaining = MAX_STREAM_REPLY_LENGTH - streamedReply.length;
+            const safeToken = token.slice(0, remaining);
+            streamedReply += safeToken;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? { ...msg, text: `${msg.text || ""}${safeToken}` }
+                  : msg,
+              ),
+            );
+            return;
+          }
+
+          if (eventName === "meta") {
+            hasAnyStreamEvent = true;
+            applyConsultationMetadata(payload);
+            return;
+          }
+
+          if (eventName === "done") {
+            hasAnyStreamEvent = true;
+            hasDoneEvent = true;
+            const finalReply =
+              typeof payload?.reply === "string" && payload.reply.trim()
+                ? payload.reply
+                : streamedReply ||
+                  "Could you share a bit more detail about your symptoms?";
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId ? { ...msg, text: finalReply } : msg,
+              ),
+            );
+            applyConsultationMetadata(payload);
+            return;
+          }
+
+          if (eventName === "error") {
+            throw new Error(
+              payload?.message || "Unable to process consultation right now.",
+            );
+          }
+        },
+      });
+      if (streamStartTimeout) {
+        clearTimeout(streamStartTimeout);
+        streamStartTimeout = null;
       }
 
-      const assistantReply =
-        response?.data?.reply || "Could you share a bit more detail about your symptoms?";
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          text: assistantReply,
-        },
-      ]);
-
-      setDisclaimer(response?.data?.disclaimer || disclaimer);
-      setLatestClinicalSummary(
-        typeof response?.data?.ai_summary === "string"
-          ? response.data.ai_summary
-          : "",
-      );
-      setSpecializations(Array.isArray(response?.data?.specializations) ? response.data.specializations : []);
-      const predictedReplies = normalizeQuickReplies(
-        response?.data?.suggested_followups ||
-          response?.data?.quickReplies ||
-          response?.data?.suggestedFollowUps ||
-          response?.data?.followUps,
-      );
-      const { selectedReplies } = getNonRepeatingQuickReplies({
-        apiReplies: predictedReplies,
-        fallbackReplies: FALLBACK_QUICK_REPLIES,
-        seenReplies: seenQuickRepliesRef.current,
-      });
-      selectedReplies.forEach((reply) =>
-        seenQuickRepliesRef.current.add(reply.toLowerCase()),
-      );
-      setQuickReplies(
-        selectedReplies.length > 0 ? selectedReplies : FALLBACK_QUICK_REPLIES,
-      );
+      if (!hasDoneEvent) {
+        throw new Error("Stream ended before completion");
+      }
     } catch (error) {
+      if (streamStartTimeout) {
+        clearTimeout(streamStartTimeout);
+        streamStartTimeout = null;
+      }
       if (error?.code === "ERR_CANCELED") {
         return;
       }
       if (!isMountedRef.current) {
         return;
       }
-      console.error("Consultation chat failed:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `assistant-error-${Date.now()}`,
-          role: "assistant",
-          text: "I could not process that message right now. Please try again.",
-        },
-      ]);
-      const { selectedReplies } = getNonRepeatingQuickReplies({
-        apiReplies: [],
-        fallbackReplies: FALLBACK_QUICK_REPLIES,
-        seenReplies: seenQuickRepliesRef.current,
-      });
-      selectedReplies.forEach((reply) =>
-        seenQuickRepliesRef.current.add(reply.toLowerCase()),
-      );
-      setQuickReplies(
-        selectedReplies.length > 0 ? selectedReplies : FALLBACK_QUICK_REPLIES,
-      );
+      try {
+        const response = await axios.post(
+          `${baseURL}/health/specialty/chat`,
+          {
+            message: text,
+            history: buildHistory(updatedMessages),
+          },
+          { signal: requestAbortController.signal },
+        );
+
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        const assistantReply =
+          response?.data?.reply ||
+          "Could you share a bit more detail about your symptoms?";
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId ? { ...msg, text: assistantReply } : msg,
+          ),
+        );
+        applyConsultationMetadata(response?.data || {});
+      } catch (legacyError) {
+        if (
+          legacyError?.code === "ERR_CANCELED" ||
+          legacyError?.name === "AbortError"
+        ) {
+          return;
+        }
+        console.error("Consultation chat failed:", error, legacyError);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? {
+                  ...msg,
+                  text: "I could not process that message right now. Please try again.",
+                }
+              : msg,
+          ),
+        );
+        const { selectedReplies } = getNonRepeatingQuickReplies({
+          apiReplies: [],
+          fallbackReplies: FALLBACK_QUICK_REPLIES,
+          seenReplies: seenQuickRepliesRef.current,
+        });
+        selectedReplies.forEach((reply) =>
+          seenQuickRepliesRef.current.add(reply.toLowerCase()),
+        );
+        setQuickReplies(
+          selectedReplies.length > 0 ? selectedReplies : FALLBACK_QUICK_REPLIES,
+        );
+      }
     } finally {
+      if (streamStartTimeout) {
+        clearTimeout(streamStartTimeout);
+        streamStartTimeout = null;
+      }
       if (requestAbortControllerRef.current === requestAbortController) {
         requestAbortControllerRef.current = null;
       }
@@ -317,7 +543,10 @@ const ChatConsultation = () => {
       <div className={styles.chatCard}>
         <header className={styles.header}>
           <h1>Instant Consultation</h1>
-          <p>Describe your symptoms naturally. I will guide and suggest relevant specialties.</p>
+          <p>
+            Describe your symptoms naturally. I will guide and suggest relevant
+            specialties.
+          </p>
         </header>
 
         <div className={styles.messageList}>
@@ -325,17 +554,17 @@ const ChatConsultation = () => {
             <article
               key={message.id}
               className={`${styles.messageBubble} ${
-                message.role === "user" ? styles.userBubble : styles.assistantBubble
+                message.role === "user"
+                  ? styles.userBubble
+                  : styles.assistantBubble
               }`}
             >
-              {renderSimpleMarkdown(message.text)}
+              {renderSimpleMarkdown(
+                message.text ||
+                  (isSending && message.role === "assistant" ? "Thinking..." : ""),
+              )}
             </article>
           ))}
-          {isSending && (
-            <article className={`${styles.messageBubble} ${styles.assistantBubble}`}>
-              Thinking...
-            </article>
-          )}
           <div ref={endRef} />
         </div>
 

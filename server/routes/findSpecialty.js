@@ -7,6 +7,7 @@ import {
 } from "../controllers/findSpecialty.js";
 import {
   chatConsultation,
+  chatConsultationStream,
   getSpecializations,
 } from "../controllers/instantConsultation.js";
 import { validateRequest } from "../middleware/requestValidation.js";
@@ -18,40 +19,46 @@ const router = express.Router();
 router.get(
   "/body-locations",
   validateRequest(findSpecialtySchemas.noInput),
-  getBodyLocations
+  getBodyLocations,
 );
 
 // Route to get sublocations for a given body location
 router.get(
   "/body-locations/:locationId",
   validateRequest(findSpecialtySchemas.locationParam),
-  getBodySublocations
+  getBodySublocations,
 );
 
 // Route to get symptoms for a given location and status (man, woman, boy, girl)
 router.get(
   "/symptoms/:locationId/:selectorStatus",
   validateRequest(findSpecialtySchemas.symptomsParams),
-  getSymptoms
+  getSymptoms,
 );
 
 // Route to get specializations based on symptoms, gender, and birth year
 router.get(
   "/specializations",
   validateRequest(findSpecialtySchemas.specializationsQuery),
-  getSpecializations
+  getSpecializations,
 );
 
 router.get(
   "/all-specializations",
   validateRequest(findSpecialtySchemas.noInput),
-  getAllSpecialties
+  getAllSpecialties,
 );
 
 router.post(
   "/chat",
   validateRequest(findSpecialtySchemas.chatConsultationBody),
   chatConsultation,
+);
+
+router.post(
+  "/chat/stream",
+  validateRequest(findSpecialtySchemas.chatConsultationBody),
+  chatConsultationStream,
 );
 
 export default router;

@@ -49,6 +49,14 @@ const HF_MODEL_FALLBACKS = [
 const MAX_USER_TEXT_LENGTH = 1500;
 const MAX_PROMPT_BLOCK_LENGTH = 12000;
 const MAX_SPECIALTY_NAME_LENGTH = 120;
+const DEFAULT_MAX_STREAM_REPLY_LENGTH = 6000;
+const MAX_STREAM_REPLY_LENGTH = (() => {
+  const configured = Number(process.env.HF_STREAM_MAX_REPLY_CHARS);
+  if (!Number.isFinite(configured)) {
+    return DEFAULT_MAX_STREAM_REPLY_LENGTH;
+  }
+  return Math.max(500, Math.min(Math.floor(configured), 20000));
+})();
 
 const normalizeText = (value) => {
   if (typeof value !== "string") {
@@ -77,7 +85,10 @@ const sanitizeUserText = (value, { maxLength = MAX_USER_TEXT_LENGTH } = {}) => {
   return normalized.slice(0, maxLength);
 };
 
-const sanitizePromptBlock = (value, { maxLength = MAX_PROMPT_BLOCK_LENGTH } = {}) => {
+const sanitizePromptBlock = (
+  value,
+  { maxLength = MAX_PROMPT_BLOCK_LENGTH } = {},
+) => {
   const normalized = stripControlChars(normalizeText(value))
     .replace(/[^\S\n]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
@@ -90,6 +101,16 @@ const sanitizePromptBlock = (value, { maxLength = MAX_PROMPT_BLOCK_LENGTH } = {}
 
 const sanitizeSpecialtyName = (value) =>
   sanitizeUserText(value, { maxLength: MAX_SPECIALTY_NAME_LENGTH });
+
+const truncateReply = (text, maxLength = MAX_STREAM_REPLY_LENGTH) => {
+  if (typeof text !== "string") {
+    return "";
+  }
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.slice(0, maxLength);
+};
 
 const sanitizeHistory = (history = []) =>
   history
@@ -326,8 +347,7 @@ const buildCondensedUserPrompt = ({
 }) => {
   const historyBlock = safeHistoryMessages
     .map(
-      (message, index) =>
-        `${message.role}(${index + 1}): ${message.content}`,
+      (message, index) => `${message.role}(${index + 1}): ${message.content}`,
     )
     .join("\n");
 
@@ -370,7 +390,8 @@ const markModelFailure = (model, status) => {
     failures: 0,
     cooldownMs: MODEL_COOLDOWN_MS,
   };
-  const cooldownMs = status >= 500 ? PROVIDER_5XX_COOLDOWN_MS : MODEL_COOLDOWN_MS;
+  const cooldownMs =
+    status >= 500 ? PROVIDER_5XX_COOLDOWN_MS : MODEL_COOLDOWN_MS;
 
   modelState.set(model, {
     failedAt: Date.now(),
@@ -390,6 +411,125 @@ const isModelCoolingDown = (model) => {
 const markModelSuccess = (model) => {
   modelState.delete(model);
   console.log(`HF chatCompletion success model: ${model}`);
+};
+
+const extractStreamingToken = (chunk) => {
+  const choice = chunk?.choices?.[0];
+  if (!choice) {
+    return "";
+  }
+
+  if (typeof choice?.delta?.content === "string") {
+    return choice.delta.content;
+  }
+  if (typeof choice?.message?.content === "string") {
+    return choice.message.content;
+  }
+  if (typeof choice?.text === "string") {
+    return choice.text;
+  }
+  return "";
+};
+
+const streamHfText = async ({
+  systemPrompt,
+  userPrompt,
+  history = [],
+  onToken,
+  signal,
+}) => {
+  if (!hf) {
+    throw new Error("HF client unavailable");
+  }
+
+  const historyMessages = toChatMessages(history);
+  const condensedPrompt = buildCondensedUserPrompt({
+    systemPrompt: "",
+    safeHistoryMessages: historyMessages,
+    userPrompt,
+  });
+  const safeCondensedPrompt = sanitizePromptBlock(condensedPrompt);
+  const allCandidateModels = getCandidateModels();
+  const warmedModels = allCandidateModels.filter(
+    (model) => !isModelCoolingDown(model),
+  );
+  const candidateModels =
+    warmedModels.length > 0 ? warmedModels : allCandidateModels;
+  let lastError = null;
+  const maxAttemptsPerModel = 2;
+
+  for (const model of candidateModels) {
+    for (let attempt = 1; attempt <= maxAttemptsPerModel; attempt += 1) {
+      try {
+        const stream = hf.chatCompletionStream({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: safeCondensedPrompt },
+          ],
+          temperature: 0.2, //How much the model is allowed to take risks when picking the next word.
+          max_tokens: 500, // The maximum number of words to generate in the completion.
+          signal,
+        });
+
+        let reply = "";
+        for await (const chunk of stream) {
+          await sleep(200);
+          if (signal?.aborted) {
+            throw new Error("Request aborted");
+          }
+          const token = extractStreamingToken(chunk);
+          if (!token) {
+            continue;
+          }
+          const remaining = MAX_STREAM_REPLY_LENGTH - reply.length;
+          if (remaining <= 0) {
+            break;
+          }
+          const safeToken = token.slice(0, remaining);
+          reply += safeToken;
+          if (typeof onToken === "function") {
+            onToken(safeToken);
+          }
+          if (safeToken.length < token.length) {
+            break;
+          }
+        }
+
+        if (reply.trim()) {
+          markModelSuccess(model);
+          return { reply: reply.trim(), model };
+        }
+      } catch (error) {
+        lastError = error;
+        const errorMessage = error?.message || "unknown error";
+        const status = error?.httpResponse?.status;
+        const body = error?.httpResponse?.body;
+        console.warn(
+          `HF chatCompletionStream failed (${model}, attempt ${attempt}): ${errorMessage}; status=${status}; body=${JSON.stringify(body)}`,
+        );
+
+        if (isModelNotSupportedError(error)) {
+          markModelFailure(model, status);
+          break;
+        }
+        if (status >= 500) {
+          markModelFailure(model, status);
+          break;
+        }
+        if (attempt < maxAttemptsPerModel) {
+          await sleep(200 * attempt);
+          continue;
+        }
+      }
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new Error("HF streaming response unavailable");
 };
 
 const callHfJson = async ({
@@ -416,7 +556,8 @@ const callHfJson = async ({
   const warmedModels = allCandidateModels.filter(
     (model) => !isModelCoolingDown(model),
   );
-  const candidateModels = warmedModels.length > 0 ? warmedModels : allCandidateModels;
+  const candidateModels =
+    warmedModels.length > 0 ? warmedModels : allCandidateModels;
   let lastError = null;
   let hadUnstructuredResponse = false;
   const maxAttemptsPerModel = 2;
@@ -611,14 +752,14 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
               `,
       history: sanitizedHistory,
       fallback: {
-          reply:
-            "Thanks for sharing. How long have you had these symptoms, and how severe are they right now?",
-          recommended_specialties: [],
-          suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
-          clinical_summary: "",
-          disclaimer: DEFAULT_DISCLAIMER,
-        },
-      });
+        reply:
+          "Thanks for sharing. How long have you had these symptoms, and how severe are they right now?",
+        recommended_specialties: [],
+        suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
+        clinical_summary: "",
+        disclaimer: DEFAULT_DISCLAIMER,
+      },
+    });
 
     const reply =
       typeof parsed.reply === "string" && parsed.reply.trim()
@@ -633,9 +774,13 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
       normalizedSpecialties.length > 0
         ? normalizedSpecialties
         : inferSpecialtiesFromReply(reply, specialtyNames);
-    const normalizedFollowups = buildSafeSuggestedFollowups(parsed.suggested_followups);
+    const normalizedFollowups = buildSafeSuggestedFollowups(
+      parsed.suggested_followups,
+    );
     const clinicalSummary =
-      typeof parsed.clinical_summary === "string" ? parsed.clinical_summary.trim() : "";
+      typeof parsed.clinical_summary === "string"
+        ? parsed.clinical_summary.trim()
+        : "";
 
     return {
       reply,
@@ -655,6 +800,146 @@ export const generateMedicalChatReply = async ({ message, history = [] }) => {
     return {
       reply:
         "I could not process that right now. Please try again in a moment, or contact a clinician for urgent concerns.",
+      recommended_specialties: [],
+      suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
+      clinical_summary: "",
+      disclaimer: DEFAULT_DISCLAIMER,
+    };
+  }
+};
+
+export const streamMedicalChatReply = async ({
+  message,
+  history = [],
+  onToken,
+  signal,
+}) => {
+  const sanitizedMessage = sanitizeUserText(message);
+  const sanitizedHistory = sanitizeHistory(history);
+  if (!sanitizedMessage) {
+    return {
+      reply: "Please describe your symptoms so I can help with triage.",
+    };
+  }
+
+  const { reply } = await streamHfText({
+    systemPrompt: `You are a healthcare triage assistant.
+      Rules:
+      1) Be concise, safe, and conversational.
+      2) Never provide a definitive diagnosis.
+      3) Use previous chat context as source of truth. Do not ignore prior user facts.
+      4) Do not ask for information already provided unless there is a real contradiction.
+      5) Keep focus on symptom triage and next best follow-up questions.
+      6) Do not reveal JSON, code blocks, or internal formatting.
+      7) Output only the assistant reply text in plain language.`,
+    userPrompt: `
+      Latest user message:
+      ${sanitizedMessage}
+
+      Write only a concise conversational reply to the user.
+      If details are missing, ask 1-2 follow-up questions.
+    `,
+    history: sanitizedHistory,
+    onToken,
+    signal,
+  });
+
+  return { reply: truncateReply(reply) };
+};
+
+export const generateMedicalChatMetadata = async ({
+  message,
+  history = [],
+  reply = "",
+}) => {
+  const sanitizedMessage = sanitizeUserText(message);
+  const sanitizedHistory = sanitizeHistory(history);
+  if (!sanitizedMessage) {
+    return {
+      recommended_specialties: [],
+      suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
+      clinical_summary: "",
+      disclaimer: DEFAULT_DISCLAIMER,
+    };
+  }
+
+  try {
+    const specialtyNames = (await getCachedSpecialtyNames())
+      .map(sanitizeSpecialtyName)
+      .filter(Boolean);
+    const specialtyList = specialtyNames.join(", ");
+
+    const parsed = await callHfJson({
+      systemPrompt: `You are a healthcare triage metadata assistant.
+        Rules:
+        1) Never provide or imply diagnosis.
+        2) suggested_followups must be user-to-assistant questions in first person.
+        3) clinical_summary must be objective and start with "Patient reports...".
+        4) Use only facts from user history, latest message, and assistant reply.`,
+      userPrompt: `
+        Latest user message:
+        ${sanitizedMessage}
+
+        Assistant reply already shown to user:
+        ${sanitizePromptBlock(reply, { maxLength: 2500 })}
+
+        Available specialties (choose only from this list):
+        [${specialtyList}]
+
+        Return valid JSON only:
+        {
+          "recommended_specialties": [
+            {
+              "specialty": "Exact name from list",
+              "reason": "Why this specialty fits",
+              "confidence": "High/Medium/Low"
+            }
+          ],
+          "suggested_followups": [
+            "What can I do at home right now to reduce these symptoms?",
+            "When should I seek urgent care for this?"
+          ],
+          "clinical_summary": "Patient reports ...",
+          "disclaimer": "Short medical safety disclaimer"
+        }
+
+        If uncertain, recommended_specialties can be empty.
+      `,
+      history: sanitizedHistory,
+      fallback: {
+        recommended_specialties: [],
+        suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
+        clinical_summary: "",
+        disclaimer: DEFAULT_DISCLAIMER,
+      },
+    });
+
+    const normalizedSpecialties = normalizeRecommendedSpecialties(
+      parsed.recommended_specialties,
+      specialtyNames,
+    );
+    const inferredSpecialties =
+      normalizedSpecialties.length > 0
+        ? normalizedSpecialties
+        : inferSpecialtiesFromReply(reply, specialtyNames);
+
+    return {
+      recommended_specialties: inferredSpecialties,
+      suggested_followups: buildSafeSuggestedFollowups(
+        parsed.suggested_followups,
+      ),
+      clinical_summary:
+        typeof parsed.clinical_summary === "string"
+          ? parsed.clinical_summary.trim()
+          : "",
+      disclaimer:
+        typeof parsed.disclaimer === "string" && parsed.disclaimer.trim()
+          ? parsed.disclaimer.trim()
+          : DEFAULT_DISCLAIMER,
+    };
+  } catch (error) {
+    console.error("HF Metadata Error:", error);
+    return {
       recommended_specialties: [],
       suggested_followups: DEFAULT_SUGGESTED_FOLLOWUPS,
       clinical_summary: "",
