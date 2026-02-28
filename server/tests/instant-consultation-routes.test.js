@@ -3,10 +3,12 @@ import { jest } from "@jest/globals";
 
 const mockResolveSpecializationsFromSymptoms = jest.fn();
 const mockResolveConsultationChatResponse = jest.fn();
+const mockResolveConsultationChatResponseStream = jest.fn();
 
 jest.unstable_mockModule("../services/instantConsultationService.js", () => ({
   resolveSpecializationsFromSymptoms: mockResolveSpecializationsFromSymptoms,
   resolveConsultationChatResponse: mockResolveConsultationChatResponse,
+  resolveConsultationChatResponseStream: mockResolveConsultationChatResponseStream,
 }));
 
 const { createApp } = await import("../app.js");
@@ -144,6 +146,65 @@ describe("Instant consultation routes", () => {
       expect(res.body).toMatchObject({
         error: "AI backend failed",
       });
+    });
+  });
+
+  describe("POST /health/specialty/chat/stream", () => {
+    test("streams SSE events for consultation response", async () => {
+      mockResolveConsultationChatResponseStream.mockImplementation(
+        async ({ onToken }) => {
+          onToken("Hello ");
+          onToken("there");
+          return {
+            reply: "Hello there",
+            ai_summary: "Patient reports mild headache.",
+            disclaimer: "Not a diagnosis.",
+            suggested_followups: ["What can I do now?"],
+            specializations: [
+              { Name: "General Physician", Accuracy: 75, Reason: "Initial triage" },
+            ],
+            mode: "external_stream",
+          };
+        },
+      );
+
+      const res = await request(app)
+        .post("/health/specialty/chat/stream")
+        .send({
+          message: "Headache today",
+          history: [{ role: "user", text: "Since morning" }],
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.headers["content-type"]).toContain("text/event-stream");
+      expect(res.text).toContain("event: start");
+      expect(res.text).toContain("event: token");
+      expect(res.text).toContain("event: meta");
+      expect(res.text).toContain("event: done");
+      expect(mockResolveConsultationChatResponseStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Headache today",
+          history: [{ role: "user", text: "Since morning" }],
+          signal: expect.any(Object),
+          onToken: expect.any(Function),
+        }),
+      );
+    });
+
+    test("rejects invalid stream request via validation middleware", async () => {
+      const res = await request(app)
+        .post("/health/specialty/chat/stream")
+        .send({ history: [] });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toMatchObject({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Validation failed",
+        },
+      });
+      expect(mockResolveConsultationChatResponseStream).not.toHaveBeenCalled();
     });
   });
 });
