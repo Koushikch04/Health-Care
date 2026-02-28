@@ -474,7 +474,6 @@ const streamHfText = async ({
 
         let reply = "";
         for await (const chunk of stream) {
-          await sleep(200);
           if (signal?.aborted) {
             throw new Error("Request aborted");
           }
