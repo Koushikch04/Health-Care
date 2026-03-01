@@ -21,6 +21,22 @@ const MAX_STREAM_REPLY_LENGTH = 6000;
 const MAX_REASON_LENGTH = 180;
 const MAX_ADDITIONAL_LENGTH = 400;
 
+const getStreamStatusLabel = (status, mode) => {
+  if (status === "connecting") {
+    return "Connecting...";
+  }
+  if (status === "streaming") {
+    return mode === "fallback_fake_stream" ? "Fallback typing..." : "Live stream";
+  }
+  if (status === "fallback") {
+    return "Retrying...";
+  }
+  if (status === "done") {
+    return "Response ready";
+  }
+  return "Ready";
+};
+
 const normalizeQuickReplies = (value) => {
   if (!Array.isArray(value)) {
     return [];
@@ -297,6 +313,9 @@ const ChatConsultation = () => {
   const [specializations, setSpecializations] = useState([]);
   const [quickReplies, setQuickReplies] = useState(FALLBACK_QUICK_REPLIES);
   const [latestClinicalSummary, setLatestClinicalSummary] = useState("");
+  const [streamStatus, setStreamStatus] = useState("idle");
+  const [streamMode, setStreamMode] = useState("");
+  const [activeAssistantId, setActiveAssistantId] = useState(null);
   const endRef = useRef(null);
   const isMountedRef = useRef(true);
   const requestAbortControllerRef = useRef(null);
@@ -385,6 +404,7 @@ const ChatConsultation = () => {
     };
 
     const assistantMessageId = `assistant-${Date.now()}`;
+    setActiveAssistantId(assistantMessageId);
     const updatedMessages = [...messages, userMessage];
     setMessages([
       ...updatedMessages,
@@ -396,6 +416,8 @@ const ChatConsultation = () => {
     ]);
     setInput("");
     setIsSending(true);
+    setStreamStatus("connecting");
+    setStreamMode("");
     setQuickReplies([]);
     scrollToBottom();
 
@@ -435,11 +457,16 @@ const ChatConsultation = () => {
 
           if (eventName === "start") {
             hasAnyStreamEvent = true;
+            setStreamStatus("streaming");
+            if (typeof payload?.mode === "string") {
+              setStreamMode(payload.mode);
+            }
             return;
           }
 
           if (eventName === "token") {
             hasAnyStreamEvent = true;
+            setStreamStatus("streaming");
             const token = typeof payload?.token === "string" ? payload.token : "";
             if (!token) {
               return;
@@ -469,6 +496,10 @@ const ChatConsultation = () => {
           if (eventName === "done") {
             hasAnyStreamEvent = true;
             hasDoneEvent = true;
+            setStreamStatus("done");
+            if (typeof payload?.mode === "string") {
+              setStreamMode(payload.mode);
+            }
             const finalReply =
               typeof payload?.reply === "string" && payload.reply.trim()
                 ? payload.reply
@@ -509,6 +540,8 @@ const ChatConsultation = () => {
       if (!isMountedRef.current) {
         return;
       }
+      setStreamStatus("fallback");
+      setStreamMode("fallback_fake_stream");
       try {
         const response = await axios.post(
           `${baseURL}/health/specialty/chat`,
@@ -532,6 +565,7 @@ const ChatConsultation = () => {
           ),
         );
         applyConsultationMetadata(response?.data || {});
+        setStreamStatus("done");
       } catch (legacyError) {
         if (
           legacyError?.code === "ERR_CANCELED" ||
@@ -539,6 +573,8 @@ const ChatConsultation = () => {
         ) {
           return;
         }
+        setStreamStatus("fallback");
+        setStreamMode("fallback_fake_stream");
         console.error("Consultation chat failed:", error, legacyError);
         setMessages((prev) =>
           prev.map((msg) =>
@@ -574,6 +610,8 @@ const ChatConsultation = () => {
         return;
       }
       setIsSending(false);
+      setActiveAssistantId(null);
+      setStreamStatus("idle");
       scrollToBottom();
     }
   };
@@ -603,7 +641,16 @@ const ChatConsultation = () => {
     <section className={styles.page}>
       <div className={styles.chatCard}>
         <header className={styles.header}>
-          <h1>Instant Consultation</h1>
+          <div className={styles.headerTop}>
+            <h1>Instant Consultation</h1>
+            <span
+              className={`${styles.streamBadge} ${
+                isSending ? styles.streamBadgeActive : ""
+              }`}
+            >
+              {getStreamStatusLabel(streamStatus, streamMode)}
+            </span>
+          </div>
           <p>
             Describe your symptoms naturally. I will guide and suggest relevant
             specialties.
@@ -618,12 +665,23 @@ const ChatConsultation = () => {
                 message.role === "user"
                   ? styles.userBubble
                   : styles.assistantBubble
+              } ${
+                isSending &&
+                message.role === "assistant" &&
+                message.id === activeAssistantId
+                  ? styles.streamingBubble
+                  : ""
               }`}
             >
               {renderSimpleMarkdown(
                 message.text ||
                   (isSending && message.role === "assistant" ? "Thinking..." : ""),
               )}
+              {isSending &&
+                message.role === "assistant" &&
+                message.id === activeAssistantId && (
+                  <span className={styles.typingCursor} aria-hidden="true" />
+                )}
             </article>
           ))}
           <div ref={endRef} />
