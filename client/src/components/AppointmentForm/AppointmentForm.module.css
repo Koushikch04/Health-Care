@@ -1,10 +1,12 @@
 .appointment_form {
-  padding: 15px;
-  text-align: center;
+  padding: 10px 8px;
+  text-align: left;
+  overflow-x: hidden;
 }
 
 .appointment_form .title {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  text-align: center;
 }
 
 .appointment_form h2 {
@@ -14,69 +16,89 @@
 
 .details_booking {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
   position: relative;
+  overflow-x: hidden;
 }
 
 .details_booking::before {
   content: "";
   grid-column: 2 / 3;
   grid-row: 1 / -1;
-  width: 2px;
+  width: 1px;
   height: 100%;
-  background-color: #ccc;
+  background-color: #e5e7eb;
 }
 
 .details {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  overflow: hidden;
   grid-column: 1 / 2;
 }
 
 .form_group {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  grid-column: 3 / 4;
-  /* max-height: 30vh; */
+  align-items: stretch;
+  width: 100%;
+  max-height: 64vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  grid-column: 3 / 4;
 }
 
 .form_group::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+}
+
+.form_group::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
 }
 
 .form_group .fees {
-  font-size: 1.2rem;
-  font-weight: 900;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+  text-align: left;
 }
 
 .form_group .field {
-  width: 250px;
-  min-height: 30px;
-  margin: 20px 0;
+  width: 100%;
+  max-width: 340px;
+  min-height: auto;
+  margin: 0 auto 14px;
   display: flex;
   flex-direction: column;
-  position: relative;
+  gap: 6px;
 }
 
 .form_group label {
-  position: absolute;
-  top: -25px;
-  left: 10px;
+  position: static;
   font-weight: 500;
+  font-size: 0.92rem;
+  color: #1f2937;
 }
 
 .form_group .field input {
-  height: 100%;
+  height: 38px;
   width: 100%;
   border: 1px solid lightgrey;
   border-radius: 5px;
-  padding-left: 15px;
-  font-size: 18px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
 }
 
 .form_group .field textarea {
@@ -84,19 +106,20 @@
   border: 1px solid lightgrey;
   border-radius: 5px;
   padding: 10px 12px;
-  font-size: 15px;
+  font-size: 0.95rem;
   line-height: 1.4;
   resize: vertical;
   background-color: #f8fafc;
+  min-height: 90px;
 }
 
 .form_group .field select {
-  height: 100%;
+  height: 38px;
   width: 100%;
   border: 1px solid lightgrey;
   border-radius: 5px;
-  padding-left: 15px;
-  font-size: 18px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
   appearance: none;
 }
 
@@ -110,12 +133,12 @@
 }
 
 .datePicker :global(.MuiOutlinedInput-root) {
-  height: 30px;
-  font-size: 18px;
+  min-height: 38px;
+  font-size: 0.95rem;
 }
 
 .datePicker :global(.MuiOutlinedInput-input) {
-  padding: 4px 14px;
+  padding: 8px 12px;
 }
 
 .book_button {
@@ -140,8 +163,9 @@
 }
 
 .shareToggle {
-  width: 250px;
-  margin: -8px 0 18px;
+  width: 100%;
+  max-width: 340px;
+  margin: -4px auto 16px;
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -157,4 +181,31 @@
   position: static;
   font-size: 0.9rem;
   line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .details {
+    grid-column: auto;
+  }
+
+  .details_booking {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .details_booking::before {
+    display: none;
+  }
+
+  .form_group {
+    grid-column: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .form_group .field,
+  .shareToggle {
+    max-width: 100%;
+  }
 }

@@ -22,9 +22,9 @@
   position: fixed;
   top: 15vh;
   left: 5%;
-  /* width: 90%; */
-  /* height: 70vh;
-  max-height: 70vh; */
+  width: 90%;
+  max-width: 40rem;
+  max-height: 85vh;
   background-color: white;
   padding: 1rem;
   border-radius: 14px;
@@ -32,6 +32,14 @@
   z-index: 30;
   animation: slide-down 500ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
   overflow: hidden;
+  overflow-x: hidden;
+}
+
+.content {
+  max-height: calc(85vh - 2.5rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
 }
 
 @media (min-width: 768px) {
