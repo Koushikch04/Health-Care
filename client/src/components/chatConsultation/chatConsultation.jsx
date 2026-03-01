@@ -18,6 +18,8 @@ const FALLBACK_QUICK_REPLIES = [
   "Can I use over-the-counter medicine for this?",
 ];
 const MAX_STREAM_REPLY_LENGTH = 6000;
+const MAX_REASON_LENGTH = 180;
+const MAX_ADDITIONAL_LENGTH = 400;
 
 const normalizeQuickReplies = (value) => {
   if (!Array.isArray(value)) {
@@ -117,6 +119,69 @@ const renderSimpleMarkdown = (text) => {
   return segments;
 };
 
+const cleanPrefillText = (value) =>
+  typeof value === "string"
+    ? value
+        .replace(/\s+/g, " ")
+        .replace(/[^\S\r\n]+/g, " ")
+        .trim()
+    : "";
+
+const trimTrailingPunctuation = (value) =>
+  typeof value === "string" ? value.replace(/[.,;:\s]+$/g, "").trim() : "";
+
+const splitSummaryForPrefill = (aiSummary) => {
+  const normalized = cleanPrefillText(aiSummary)
+    .replace(/^patient reports\s+/i, "")
+    .replace(/^patient states\s+/i, "");
+
+  if (!normalized) {
+    return { reasonForVisit: "", additionalNotes: "" };
+  }
+
+  const firstSplitIndex = normalized.search(/[.;]|,\s+(?:with|and|accompanied|associated)\b/i);
+  if (firstSplitIndex === -1) {
+    return {
+      reasonForVisit: trimTrailingPunctuation(normalized).slice(0, MAX_REASON_LENGTH),
+      additionalNotes: "",
+    };
+  }
+
+  const reasonForVisit = trimTrailingPunctuation(
+    normalized.slice(0, firstSplitIndex),
+  ).slice(0, MAX_REASON_LENGTH);
+  const additionalNotes = cleanPrefillText(
+    normalized.slice(firstSplitIndex + 1),
+  ).slice(0, MAX_ADDITIONAL_LENGTH);
+
+  return { reasonForVisit, additionalNotes };
+};
+
+const extractFromUserMessages = (messages) => {
+  const userStatements = messages
+    .filter(
+      (message) => message.role === "user" && typeof message.text === "string",
+    )
+    .map((message) => cleanPrefillText(message.text))
+    .filter(Boolean)
+    .filter((text) => !/\?$/.test(text));
+
+  if (userStatements.length === 0) {
+    return { reasonForVisit: "", additionalNotes: "" };
+  }
+
+  const reasonForVisit = trimTrailingPunctuation(
+    userStatements[userStatements.length - 1],
+  ).slice(0, MAX_REASON_LENGTH);
+  const additionalNotes = userStatements
+    .slice(0, -1)
+    .join(" ")
+    .slice(0, MAX_ADDITIONAL_LENGTH)
+    .trim();
+
+  return { reasonForVisit, additionalNotes };
+};
+
 const parseSseFrames = async ({ response, signal, onEvent }) => {
   if (!response.ok) {
     throw new Error(`SSE request failed with status ${response.status}`);
@@ -198,16 +263,12 @@ const parseSseFrames = async ({ response, signal, onEvent }) => {
 };
 
 const buildConsultationPrefill = ({ messages, specialtyName, aiSummary }) => {
-  const userMessages = messages
-    .filter(
-      (message) => message.role === "user" && typeof message.text === "string",
-    )
-    .map((message) => message.text.trim())
-    .filter(Boolean);
-  const reasonForVisit = userMessages[userMessages.length - 1] || "";
-  const additionalNotes = userMessages.slice(-3, -1).join(" ").trim();
-  const normalizedAiSummary =
-    typeof aiSummary === "string" ? aiSummary.trim() : "";
+  const normalizedAiSummary = cleanPrefillText(aiSummary);
+  const fromSummary = splitSummaryForPrefill(normalizedAiSummary);
+  const fromUserMessages = extractFromUserMessages(messages);
+  const reasonForVisit = fromSummary.reasonForVisit || fromUserMessages.reasonForVisit;
+  const additionalNotes =
+    fromSummary.additionalNotes || fromUserMessages.additionalNotes;
 
   return {
     source: "instant_consultation",

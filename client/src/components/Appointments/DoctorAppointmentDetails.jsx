@@ -14,7 +14,7 @@ const DoctorAppointmentDetails = ({ appointment, onClose, onCancel }) => {
   const canCancel =
     appointment.status !== "canceled" && appointment.status !== "completed";
   const aiSummary =
-    appointment?.aiTriage?.isShared === false ? "" : appointment?.aiTriage?.summary;
+    appointment?.aiTriage?.isShared === true ? appointment?.aiTriage?.summary : "";
 
   const handleCancel = async () => {
     setLoading(true);
