@@ -25,10 +25,35 @@
   border-bottom: 1px solid #edf3fa;
 }
 
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .header h1 {
   margin: 0;
   font-size: 1.25rem;
   color: #123d66;
+}
+
+.streamBadge {
+  border: 1px solid #d4e0ec;
+  background: #f4f8fc;
+  color: #4d6883;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.streamBadgeActive {
+  border-color: #9ec6ef;
+  background: #eaf4ff;
+  color: #0d4f8d;
 }
 
 .header p {
@@ -66,12 +91,38 @@
   border-top-left-radius: 4px;
 }
 
+.streamingBubble {
+  box-shadow: inset 0 0 0 1px rgba(11, 92, 173, 0.1);
+}
+
 .userBubble {
   align-self: flex-end;
   color: #ffffff;
   background: #0b5cad;
   border: 1px solid #0b5cad;
   border-top-right-radius: 4px;
+}
+
+.typingCursor {
+  display: inline-block;
+  width: 8px;
+  height: 1em;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  background: #0b5cad;
+  border-radius: 2px;
+  animation: blinkCursor 1s steps(1, end) infinite;
+}
+
+@keyframes blinkCursor {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .composer {
@@ -192,6 +243,11 @@
 
   .chatCard {
     border-radius: 14px;
+  }
+
+  .headerTop {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .messageList {
