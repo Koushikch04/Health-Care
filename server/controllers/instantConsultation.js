@@ -3,10 +3,34 @@ import {
   resolveConsultationChatResponseStream,
   resolveSpecializationsFromSymptoms,
 } from "../services/instantConsultationService.js";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import AiRecommendationFeedback from "../models/AiRecommendationFeedback.js";
 
 const writeSseEvent = (res, event, payload) => {
   res.write(`event: ${event}\n`);
   res.write(`data: ${JSON.stringify(payload)}\n\n`);
+};
+
+const extractAccountIdFromAuthHeader = (authHeader = "") => {
+  if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = authHeader.slice(7).trim();
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded?.accountId || !mongoose.isValidObjectId(decoded.accountId)) {
+      return null;
+    }
+    return decoded.accountId;
+  } catch (_error) {
+    return null;
+  }
 };
 
 export const getSpecializations = async (req, res) => {
@@ -141,4 +165,46 @@ export const chatConsultationStream = async (req, res) => {
       res.end();
     }
   }
+};
+
+export const submitRecommendationFeedback = async (req, res) => {
+  const {
+    sessionId,
+    messageId,
+    requestId = "",
+    helpful,
+    recommendationCount,
+    recommendationNames = [],
+    source = "instant_consultation_chat",
+  } = req.body;
+
+  const accountId = extractAccountIdFromAuthHeader(req.header("Authorization"));
+
+  const normalizedRecommendationNames = Array.isArray(recommendationNames)
+    ? recommendationNames
+        .map((item) => (typeof item === "string" ? item.trim() : ""))
+        .filter(Boolean)
+        .slice(0, 20)
+    : [];
+
+  void (async () => {
+    try {
+      await AiRecommendationFeedback.create({
+        accountId: accountId || undefined,
+        sessionId,
+        messageId,
+        requestId,
+        helpful,
+        recommendationCount,
+        recommendationNames: normalizedRecommendationNames,
+        source,
+      });
+    } catch (error) {
+      if (error?.code !== 11000) {
+        console.error("Failed to store recommendation feedback:", error);
+      }
+    }
+  })();
+
+  return res.status(202).json({ accepted: true });
 };

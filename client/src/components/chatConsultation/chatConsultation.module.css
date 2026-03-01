@@ -114,6 +114,43 @@
   animation: blinkCursor 1s steps(1, end) infinite;
 }
 
+.feedbackActions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.feedbackLabel {
+  font-size: 0.78rem;
+  color: #3f6182;
+}
+
+.feedbackButton {
+  border: 1px solid #c4d7ed;
+  background: #f7fbff;
+  color: #1a4c7d;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.feedbackButton:hover {
+  background: #eaf4ff;
+}
+
+.feedbackButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.feedbackThanks {
+  font-size: 0.74rem;
+  color: #2d6b43;
+}
+
 @keyframes blinkCursor {
   0%,
   50% {
