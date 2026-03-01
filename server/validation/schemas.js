@@ -273,6 +273,22 @@ export const findSpecialtySchemas = {
     query: Joi.object({}),
     params: Joi.object({}),
   },
+  recommendationFeedbackBody: {
+    body: Joi.object({
+      sessionId: Joi.string().trim().min(8).max(120).required(),
+      messageId: Joi.string().trim().min(3).max(120).required(),
+      requestId: Joi.string().trim().max(120).allow("").optional(),
+      helpful: Joi.boolean().required(),
+      recommendationCount: Joi.number().integer().min(1).max(20).required(),
+      recommendationNames: Joi.array()
+        .items(Joi.string().trim().min(1).max(120))
+        .max(20)
+        .optional(),
+      source: Joi.string().valid("instant_consultation_chat").optional(),
+    }),
+    query: Joi.object({}),
+    params: Joi.object({}),
+  },
   noInput: {
     body: Joi.object({}),
     query: Joi.object({}),

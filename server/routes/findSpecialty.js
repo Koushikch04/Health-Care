@@ -9,6 +9,7 @@ import {
   chatConsultation,
   chatConsultationStream,
   getSpecializations,
+  submitRecommendationFeedback,
 } from "../controllers/instantConsultation.js";
 import { validateRequest } from "../middleware/requestValidation.js";
 import { findSpecialtySchemas } from "../validation/schemas.js";
@@ -59,6 +60,12 @@ router.post(
   "/chat/stream",
   validateRequest(findSpecialtySchemas.chatConsultationBody),
   chatConsultationStream,
+);
+
+router.post(
+  "/chat/recommendation-feedback",
+  validateRequest(findSpecialtySchemas.recommendationFeedbackBody),
+  submitRecommendationFeedback,
 );
 
 export default router;

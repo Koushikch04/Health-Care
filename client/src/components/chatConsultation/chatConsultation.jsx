@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 import { baseURL } from "../../api/api.js";
 import styles from "./chatConsultation.module.css";
@@ -20,6 +21,7 @@ const FALLBACK_QUICK_REPLIES = [
 const MAX_STREAM_REPLY_LENGTH = 6000;
 const MAX_REASON_LENGTH = 180;
 const MAX_ADDITIONAL_LENGTH = 400;
+const FEEDBACK_SESSION_PREFIX = "consult-feedback";
 
 const getStreamStatusLabel = (status, mode) => {
   if (status === "connecting") {
@@ -45,6 +47,26 @@ const normalizeQuickReplies = (value) => {
     .map((item) => (typeof item === "string" ? item.trim() : ""))
     .filter(Boolean);
   return Array.from(new Set(normalized)).slice(0, 4);
+};
+
+const getRecommendationNames = (specializations) => {
+  if (!Array.isArray(specializations)) {
+    return [];
+  }
+
+  const names = specializations
+    .map((item) => {
+      if (typeof item === "string") {
+        return item.trim();
+      }
+      if (item && typeof item.Name === "string") {
+        return item.Name.trim();
+      }
+      return "";
+    })
+    .filter(Boolean);
+
+  return Array.from(new Set(names)).slice(0, 20);
 };
 
 const getNonRepeatingQuickReplies = ({
@@ -298,11 +320,13 @@ const buildConsultationPrefill = ({ messages, specialtyName, aiSummary }) => {
 
 const ChatConsultation = () => {
   const navigate = useNavigate();
+  const userToken = useSelector((state) => state.auth.userToken);
   const [messages, setMessages] = useState([
     {
       id: "init-assistant",
       role: "assistant",
       text: INITIAL_ASSISTANT_MESSAGE,
+      hasRecommendation: false,
     },
   ]);
   const [input, setInput] = useState("");
@@ -316,10 +340,18 @@ const ChatConsultation = () => {
   const [streamStatus, setStreamStatus] = useState("idle");
   const [streamMode, setStreamMode] = useState("");
   const [activeAssistantId, setActiveAssistantId] = useState(null);
+  const [feedbackByMessageId, setFeedbackByMessageId] = useState({});
+  const [currentRecommendationMessageId, setCurrentRecommendationMessageId] =
+    useState("");
   const endRef = useRef(null);
   const isMountedRef = useRef(true);
   const requestAbortControllerRef = useRef(null);
   const seenQuickRepliesRef = useRef(new Set());
+  const feedbackSessionIdRef = useRef(
+    `${FEEDBACK_SESSION_PREFIX}-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 10)}`,
+  );
 
   const canSend = useMemo(
     () => input.trim().length > 0 && !isSending,
@@ -354,7 +386,7 @@ const ChatConsultation = () => {
       .slice(-8)
       .map((msg) => ({ role: msg.role, text: msg.text }));
 
-  const applyConsultationMetadata = (payload) => {
+  const applyConsultationMetadata = (payload, assistantMessageId = null) => {
     if (!payload || typeof payload !== "object") {
       return;
     }
@@ -370,6 +402,40 @@ const ChatConsultation = () => {
     setSpecializations(
       Array.isArray(payload.specializations) ? payload.specializations : [],
     );
+
+    if (assistantMessageId) {
+      const recommendationNames = getRecommendationNames(payload.specializations);
+      const recommendationRequestId =
+        typeof payload.requestId === "string" ? payload.requestId : "";
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                hasRecommendation:
+                  recommendationNames.length > 0 || msg.hasRecommendation === true,
+                recommendationCount:
+                  recommendationNames.length > 0
+                    ? recommendationNames.length
+                    : msg.recommendationCount || 0,
+                recommendationNames:
+                  recommendationNames.length > 0
+                    ? recommendationNames
+                    : msg.recommendationNames || [],
+                recommendationRequestId:
+                  recommendationRequestId || msg.recommendationRequestId || "",
+              }
+            : msg,
+        ),
+      );
+
+      if (recommendationNames.length > 0) {
+        setCurrentRecommendationMessageId(assistantMessageId);
+      } else {
+        setCurrentRecommendationMessageId("");
+      }
+    }
 
     const predictedReplies = normalizeQuickReplies(
       payload.suggested_followups ||
@@ -388,6 +454,71 @@ const ChatConsultation = () => {
     setQuickReplies(
       selectedReplies.length > 0 ? selectedReplies : FALLBACK_QUICK_REPLIES,
     );
+  };
+
+  const sendRecommendationFeedback = async ({
+    messageId,
+    helpful,
+    recommendationCount,
+    recommendationNames,
+    requestId,
+  }) => {
+    try {
+      await fetch(`${baseURL}/health/specialty/chat/recommendation-feedback`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(userToken ? { Authorization: `Bearer ${userToken}` } : {}),
+        },
+        body: JSON.stringify({
+          sessionId: feedbackSessionIdRef.current,
+          messageId,
+          requestId: requestId || "",
+          helpful,
+          recommendationCount,
+          recommendationNames,
+          source: "instant_consultation_chat",
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to submit recommendation feedback:", error);
+    }
+  };
+
+  const handleRecommendationFeedback = (message, helpful) => {
+    if (!message?.id || !message?.hasRecommendation) {
+      return;
+    }
+    if (feedbackByMessageId[message.id]) {
+      return;
+    }
+
+    setFeedbackByMessageId((prev) => ({
+      ...prev,
+      [message.id]: helpful ? "helpful" : "not_helpful",
+    }));
+
+    const recommendationCount =
+      typeof message.recommendationCount === "number" &&
+      message.recommendationCount > 0
+        ? message.recommendationCount
+        : Array.isArray(message.recommendationNames)
+          ? message.recommendationNames.length
+          : 0;
+
+    if (recommendationCount < 1) {
+      return;
+    }
+
+    void sendRecommendationFeedback({
+      messageId: message.id,
+      helpful,
+      recommendationCount,
+      recommendationNames: Array.isArray(message.recommendationNames)
+        ? message.recommendationNames
+        : [],
+      requestId: message.recommendationRequestId || "",
+    });
   };
 
   const sendMessage = async (draftText) => {
@@ -412,6 +543,7 @@ const ChatConsultation = () => {
         id: assistantMessageId,
         role: "assistant",
         text: "",
+        hasRecommendation: false,
       },
     ]);
     setInput("");
@@ -489,7 +621,7 @@ const ChatConsultation = () => {
 
           if (eventName === "meta") {
             hasAnyStreamEvent = true;
-            applyConsultationMetadata(payload);
+            applyConsultationMetadata(payload, assistantMessageId);
             return;
           }
 
@@ -510,7 +642,7 @@ const ChatConsultation = () => {
                 msg.id === assistantMessageId ? { ...msg, text: finalReply } : msg,
               ),
             );
-            applyConsultationMetadata(payload);
+            applyConsultationMetadata(payload, assistantMessageId);
             return;
           }
 
@@ -564,7 +696,7 @@ const ChatConsultation = () => {
             msg.id === assistantMessageId ? { ...msg, text: assistantReply } : msg,
           ),
         );
-        applyConsultationMetadata(response?.data || {});
+        applyConsultationMetadata(response?.data || {}, assistantMessageId);
         setStreamStatus("done");
       } catch (legacyError) {
         if (
@@ -637,6 +769,14 @@ const ChatConsultation = () => {
     sendMessage(reply);
   };
 
+  const shouldShowSpecializations =
+    !isSending &&
+    specializations.length > 0 &&
+    !(
+      currentRecommendationMessageId &&
+      Boolean(feedbackByMessageId[currentRecommendationMessageId])
+    );
+
   return (
     <section className={styles.page}>
       <div className={styles.chatCard}>
@@ -682,6 +822,30 @@ const ChatConsultation = () => {
                 message.id === activeAssistantId && (
                   <span className={styles.typingCursor} aria-hidden="true" />
                 )}
+              {!isSending &&
+                message.role === "assistant" &&
+                message.hasRecommendation &&
+                !feedbackByMessageId[message.id] && (
+                  <div className={styles.feedbackActions}>
+                    <span className={styles.feedbackLabel}>Helpful?</span>
+                    <button
+                      type="button"
+                      className={styles.feedbackButton}
+                      onClick={() => handleRecommendationFeedback(message, true)}
+                      disabled={Boolean(feedbackByMessageId[message.id])}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.feedbackButton}
+                      onClick={() => handleRecommendationFeedback(message, false)}
+                      disabled={Boolean(feedbackByMessageId[message.id])}
+                    >
+                      No
+                    </button>
+                  </div>
+                )}
             </article>
           ))}
           <div ref={endRef} />
@@ -720,7 +884,7 @@ const ChatConsultation = () => {
           </button>
         </footer>
 
-        {!isSending && specializations.length > 0 && (
+        {shouldShowSpecializations && (
           <section className={styles.specializations}>
             <h2>Suggested Specialties</h2>
             <div className={styles.specializationList}>
