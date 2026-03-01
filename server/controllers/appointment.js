@@ -86,7 +86,7 @@ export const createAppointment = async (req, res) => {
     let normalizedAiTriage;
     const summary =
       typeof aiTriage?.summary === "string" ? aiTriage.summary.trim() : "";
-    const isShared = aiTriage?.isShared !== false;
+    const isShared = aiTriage?.isShared === true;
     if (summary && isShared) {
       normalizedAiTriage = {
         summary,
