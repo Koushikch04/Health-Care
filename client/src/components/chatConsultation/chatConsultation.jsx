@@ -341,8 +341,6 @@ const ChatConsultation = () => {
   const [streamMode, setStreamMode] = useState("");
   const [activeAssistantId, setActiveAssistantId] = useState(null);
   const [feedbackByMessageId, setFeedbackByMessageId] = useState({});
-  const [currentRecommendationMessageId, setCurrentRecommendationMessageId] =
-    useState("");
   const endRef = useRef(null);
   const isMountedRef = useRef(true);
   const requestAbortControllerRef = useRef(null);
@@ -429,12 +427,6 @@ const ChatConsultation = () => {
             : msg,
         ),
       );
-
-      if (recommendationNames.length > 0) {
-        setCurrentRecommendationMessageId(assistantMessageId);
-      } else {
-        setCurrentRecommendationMessageId("");
-      }
     }
 
     const predictedReplies = normalizeQuickReplies(
@@ -769,14 +761,6 @@ const ChatConsultation = () => {
     sendMessage(reply);
   };
 
-  const shouldShowSpecializations =
-    !isSending &&
-    specializations.length > 0 &&
-    !(
-      currentRecommendationMessageId &&
-      Boolean(feedbackByMessageId[currentRecommendationMessageId])
-    );
-
   return (
     <section className={styles.page}>
       <div className={styles.chatCard}>
@@ -884,7 +868,7 @@ const ChatConsultation = () => {
           </button>
         </footer>
 
-        {shouldShowSpecializations && (
+        {!isSending && specializations.length > 0 && (
           <section className={styles.specializations}>
             <h2>Suggested Specialties</h2>
             <div className={styles.specializationList}>
