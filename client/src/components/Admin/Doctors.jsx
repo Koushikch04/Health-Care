@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { baseURL } from "../../api/api";
+import { baseURL, fetchJson, fetchWithTimeout } from "../../api/api";
 import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx";
 import styles from "./Doctors.module.css";
-import TableSpinner from "../Spinners/TableSpinner.jsx";
+import ErrorState from "../UI/States/ErrorState";
+import EmptyState from "../UI/States/EmptyState";
+import CardListSkeleton from "../UI/States/CardListSkeleton";
 
 function Doctors() {
   const { userToken: token } = useSelector((state) => state.auth);
@@ -39,56 +41,62 @@ function Doctors() {
 
   const [newDoctor, setNewDoctor] = useState(initialDoctorValue);
 
-  const fetchSpecializations = async () => {
-    try {
-      const response = await fetch(`${baseURL}/specialty/`);
-      const result = await response.json();
+  const fetchSpecializations = useCallback(async () => {
+    const result = await fetchJson(
+      `${baseURL}/specialty/`,
+      {},
+      { timeoutMs: 12000, errorMessage: "Failed to load specializations." },
+    );
 
-      setUniqueSpecializations(result);
-    } catch (error) {
-      setError(error.message);
+    setUniqueSpecializations(Array.isArray(result) ? result : []);
+  }, []);
+
+  const fetchDoctors = useCallback(async () => {
+    if (!token) {
+      setDoctors([]);
+      setFilteredDoctors([]);
+      setLoading(false);
+      return;
     }
-  };
 
-  const fetchDoctors = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const response = await fetch(`${baseURL}/admin/doctors`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const data = await fetchJson(
+        `${baseURL}/admin/doctors`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+        { timeoutMs: 15000, errorMessage: "Failed to fetch doctors." },
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch doctors");
-      }
-
-      const data = await response.json();
-
-      setDoctors(data.doctors);
-      setFilteredDoctors(data.doctors);
-
-      // const specializations = Array.from(
-      //   new Set(data.doctors.map((doctor) => doctor.specialization))
-      // );
-      // setUniqueSpecializations(specializations);
-    } catch (error) {
-      setError(error.message);
+      setDoctors(data?.doctors || []);
+      setFilteredDoctors(data?.doctors || []);
+    } catch (fetchError) {
+      setError(fetchError.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchDoctors();
-    fetchSpecializations();
   }, [token]);
 
-  // Filter doctors by name, gender, specialization, experience, and status
+  const loadDoctorsScreen = useCallback(async () => {
+    setError(null);
+    try {
+      await Promise.all([fetchDoctors(), fetchSpecializations()]);
+    } catch (loadError) {
+      setError(loadError.message);
+    }
+  }, [fetchDoctors, fetchSpecializations]);
+
+  useEffect(() => {
+    loadDoctorsScreen();
+  }, [loadDoctorsScreen]);
+
   const handleFilterChange = () => {
     const filtered = doctors.filter((doctor) => {
       const matchesName = `${doctor.name.firstName} ${doctor.name.lastName}`
@@ -100,7 +108,7 @@ function Doctors() {
         specialization === "All" || doctor.specialization === specialization;
       const matchesExperience =
         yearsOfExperience === "All" ||
-        doctor.experience >= parseInt(yearsOfExperience);
+        doctor.experience >= parseInt(yearsOfExperience, 10);
       const doctorStatus =
         doctor.registrationStatus === "approved" ? "Active" : "Inactive";
       const matchesStatus = status === "All" || status === doctorStatus;
@@ -117,15 +125,10 @@ function Doctors() {
     setCurrentPage(1);
   };
 
-  // Pagination logic
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentDoctors = filteredDoctors.slice(
-    indexOfFirstPost,
-    indexOfLastPost,
-  );
+  const currentDoctors = filteredDoctors.slice(indexOfFirstPost, indexOfLastPost);
 
-  // Open modal with full doctor details
   const handleDoctorClick = (doctor) => {
     setSelectedDoctor(doctor);
     setIsModalOpen(true);
@@ -156,18 +159,22 @@ function Doctors() {
     setFilteredDoctors((prev) => prev.filter((doc) => doc._id !== doctorId));
 
     try {
-      const response = await fetch(`${baseURL}/admin/doctor/${doctorId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const response = await fetchWithTimeout(
+        `${baseURL}/admin/doctor/${doctorId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+        15000,
+      );
       if (!response.ok) throw new Error("Failed to delete doctor");
-    } catch (error) {
+    } catch (deleteError) {
       setDoctors(previousDoctors);
       setFilteredDoctors(previousFilteredDoctors);
-      setError(error.message);
+      setError(deleteError.message);
     }
   };
 
@@ -232,22 +239,25 @@ function Doctors() {
     setIsEditMode(false);
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const response = await fetchWithTimeout(
+        url,
+        {
+          method,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newDoctor),
         },
-        body: JSON.stringify(newDoctor),
-      });
+        15000,
+      );
 
       if (!response.ok) throw new Error("Failed to save user");
-
       await fetchDoctors();
-    } catch (error) {
+    } catch (saveError) {
       setDoctors(previousDoctors);
       setFilteredDoctors(previousFilteredDoctors);
-      setError(error.message);
+      setError(saveError.message);
     }
   };
 
@@ -282,13 +292,11 @@ function Doctors() {
             onChange={(e) => setSpecialization(e.target.value)}
           >
             <option value="All">All</option>
-            {uniqueSpecializations.map((spec) => {
-              return (
-                <option key={spec._id} value={spec.name}>
-                  {spec.name}
-                </option>
-              );
-            })}
+            {uniqueSpecializations.map((spec) => (
+              <option key={spec._id} value={spec.name}>
+                {spec.name}
+              </option>
+            ))}
           </select>
         </div>
         <div className={styles.filterItem}>
@@ -334,12 +342,12 @@ function Doctors() {
                   id="firstName"
                   type="text"
                   value={newDoctor.firstName}
-                  onChange={(e) => {
-                    return setNewDoctor({
+                  onChange={(e) =>
+                    setNewDoctor({
                       ...newDoctor,
                       firstName: e.target.value,
-                    });
-                  }}
+                    })
+                  }
                 />
               </div>
               <div className={styles.formGroup}>
@@ -378,7 +386,7 @@ function Doctors() {
               )}
               {!isEditMode && (
                 <div className={styles.formGroup}>
-                  <label htmlFor="phone">phone</label>
+                  <label htmlFor="phone">Phone</label>
                   <input
                     id="contact"
                     value={newDoctor.phone}
@@ -405,7 +413,7 @@ function Doctors() {
               </div>
               {!isEditMode && (
                 <div className={styles.formGroup}>
-                  <label htmlFor="experience">experience</label>
+                  <label htmlFor="experience">Experience</label>
                   <input
                     id="experience"
                     value={newDoctor.experience}
@@ -417,7 +425,7 @@ function Doctors() {
               )}
               {!isEditMode && (
                 <div className={styles.formGroup}>
-                  <label htmlFor="cost">cost</label>
+                  <label htmlFor="cost">Cost</label>
                   <input
                     id="cost"
                     value={newDoctor.cost}
@@ -428,28 +436,25 @@ function Doctors() {
                 </div>
               )}
               <div className={styles.formGroup}>
-                <label htmlFor="specialty">specialty</label>
+                <label htmlFor="specialty">Specialty</label>
                 <select
                   id="specialty"
                   value={newDoctor.specialty}
-                  onChange={(e) => {
-                    return setNewDoctor({
+                  onChange={(e) =>
+                    setNewDoctor({
                       ...newDoctor,
                       specialty: e.target.value,
-                    });
-                  }}
+                    })
+                  }
                 >
                   <option value="">Select Specialty</option>
-                  {uniqueSpecializations.map((spec) => {
-                    return (
-                      <option key={spec._id} value={spec._id}>
-                        {spec.name}
-                      </option>
-                    );
-                  })}
+                  {uniqueSpecializations.map((spec) => (
+                    <option key={spec._id} value={spec._id}>
+                      {spec.name}
+                    </option>
+                  ))}
                 </select>
               </div>
-              <div></div>
               <button
                 type="button"
                 className={styles.button}
@@ -462,12 +467,20 @@ function Doctors() {
         </Modal>
       )}
 
-      {loading && (
+      {error && !createEditModal && !isModalOpen && (
+        <ErrorState
+          title="Could not load doctors"
+          message={error}
+          onRetry={loadDoctorsScreen}
+        />
+      )}
+
+      {!error && loading && (
         <div className={styles.spinnerContainer}>
-          <TableSpinner message="Loading doctors..." />
+          <CardListSkeleton rows={4} />
         </div>
       )}
-      {error && <p className={styles.error}>{error}</p>}
+
       {!loading && !error && (
         <div className={styles.resultsSection}>
           <div className={styles.doctors}>
@@ -475,7 +488,6 @@ function Doctors() {
               currentDoctors.map((doctor) => (
                 <div key={doctor._id} className={styles.doctorCard}>
                   <img
-                    // src={`${baseURL}/${doctor.profileImage}`}
                     src={`${baseURL}/uploads/1730269809274-win ltblue 1920x1200.jpg`}
                     alt={`${doctor.name.firstName}'s profile`}
                     className={styles.profileImage}
@@ -509,7 +521,10 @@ function Doctors() {
                 </div>
               ))
             ) : (
-              <p className={styles.noDoctors}>No doctors found.</p>
+              <EmptyState
+                title="No doctors found"
+                message="Try changing filters or add a new doctor."
+              />
             )}
           </div>
           <div className={styles.paginationWrap}>
@@ -551,7 +566,6 @@ function Doctors() {
                 </tbody>
               </table>
               <img
-                // src={`${baseURL}/${selectedDoctor.profileImage}`}
                 src={`${baseURL}/uploads/1730269809274-win ltblue 1920x1200.jpg`}
                 alt={`${selectedDoctor.name.firstName}'s profile`}
                 className={styles.profileImage}

@@ -18,17 +18,61 @@ const normalizePermissions = (permissions) => {
   return permissions;
 };
 
-const authSlice = createSlice({
-  name: "auth",
-  initialState: {
+const getInitialAuthState = () => {
+  const defaultState = {
     userLoggedIn: false,
     userInfo: null,
     userToken: null,
     expirationTime: null,
     updates: [],
-    // otpSent: "no",
     userRole: null,
-  },
+    authChecked: true,
+  };
+
+  try {
+    const token = localStorage.getItem("token");
+    const expirationTime = localStorage.getItem("expirationTime");
+    const userInfo = localStorage.getItem("userInfo");
+    const userRole = localStorage.getItem("userRole");
+
+    if (!token || !expirationTime) {
+      return defaultState;
+    }
+
+    const currentTime = Date.now();
+    const expirationTimeInMillis = new Date(expirationTime).getTime();
+
+    if (currentTime >= expirationTimeInMillis) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("lastLoggedIn");
+      localStorage.removeItem("expirationTime");
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("userRole");
+      return defaultState;
+    }
+
+    const parsedUserInfo = userInfo ? JSON.parse(userInfo) : null;
+    return {
+      ...defaultState,
+      userLoggedIn: true,
+      userToken: token,
+      expirationTime,
+      userInfo: parsedUserInfo
+        ? {
+            ...parsedUserInfo,
+            permissions: normalizePermissions(parsedUserInfo.permissions),
+          }
+        : null,
+      userRole,
+    };
+  } catch (_error) {
+    return defaultState;
+  }
+};
+
+const authSlice = createSlice({
+  name: "auth",
+  initialState: getInitialAuthState(),
   reducers: {
     login(state, action) {
       const normalizedPermissions = normalizePermissions(
@@ -41,9 +85,9 @@ const authSlice = createSlice({
       state.userLoggedIn = true;
       state.userInfo = normalizedPerson;
       state.userToken = action.payload.token;
-      console.log(action.payload.person);
       state.expirationTime = action.payload.expiresAt;
       state.userRole = action.payload.role;
+      state.authChecked = true;
 
       localStorage.setItem("token", action.payload.token);
       localStorage.setItem("lastLoggedIn", Date.now());
@@ -57,6 +101,7 @@ const authSlice = createSlice({
       state.userToken = null;
       state.expirationTime = null;
       state.updates = [];
+      state.authChecked = true;
       sessionStorage.removeItem("updates");
       localStorage.removeItem("token");
       localStorage.removeItem("lastLoggedIn");
@@ -98,6 +143,7 @@ const authSlice = createSlice({
       sessionStorage.removeItem("updates");
     },
     checkAuth(state, action) {
+      state.authChecked = true;
       const token = localStorage.getItem("token");
       const expirationTime = localStorage.getItem("expirationTime");
       const lastLoggedIn = localStorage.getItem("lastLoggedIn");
@@ -123,6 +169,9 @@ const authSlice = createSlice({
         } else {
           // Token expired, clean up
           state.userLoggedIn = false;
+          state.userInfo = null;
+          state.userRole = null;
+          state.expirationTime = null;
           state.userToken = null;
           localStorage.removeItem("token");
           localStorage.removeItem("lastLoggedIn");
