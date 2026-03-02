@@ -69,16 +69,16 @@ const SignIn = () => {
         );
 
         if (result.role === "doctor") {
-          navigate("/profile/doctor/dashboard");
+          navigate("/profile/doctor/dashboard", { replace: true });
           return;
         }
 
         if (result.role === "admin" || result.role === "superadmin") {
-          navigate("/profile/admin/dashboard");
+          navigate("/profile/admin/dashboard", { replace: true });
           return;
         }
 
-        navigate(redirectParam || "/");
+        navigate(redirectParam || "/", { replace: true });
       }
     } catch (error) {
       console.error("Error during login:", error);

@@ -72,7 +72,6 @@ export const loginAccount = (userData, alert) => async (dispatch) => {
 
     const data = await response.json();
     localStorage.setItem("token", data.token);
-    console.log(data);
 
     const displayName =
       data.person?.name?.firstName || data.account?.email || "there";
@@ -80,7 +79,6 @@ export const loginAccount = (userData, alert) => async (dispatch) => {
       message: `Hello, ${displayName} `,
       title: "Login Success",
     });
-    console.log("logged in as", data);
 
     const personWithEmail = data.person
       ? { ...data.person, email: data.account?.email || data.person.email }
@@ -98,8 +96,6 @@ export const loginAccount = (userData, alert) => async (dispatch) => {
     // dispatch(loginSuccess(data.token));
     // alert("Sign-In Successful");
   } catch (error) {
-    console.log(error);
-
     alert.error({
       message: error.msg || "An unexpected error occurred",
       title: "Login failed",
@@ -115,9 +111,7 @@ export const logoutUser = (alert) => async (dispatch) => {
       message: "Logged out successfully",
       title: "Authentication status",
     });
-  } catch (error) {
-    console.error("Logout error:", error);
-  }
+  } catch (_error) {}
 };
 
 export const checkAuthStatus = () => (dispatch) => {
@@ -197,8 +191,6 @@ export const cancelAppointment = (
 
       return true;
     } catch (error) {
-      console.log(error);
-
       alert.error({
         message: error.msg || "Failed to cancel the appointment.",
         title: "Cancellation Failed",

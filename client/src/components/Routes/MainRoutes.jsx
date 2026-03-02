@@ -23,12 +23,13 @@ const roleMatches = (requiredRole, userRole) => {
 };
 
 function MainRoutes() {
-  const { userLoggedIn, userRole: role } = useSelector((state) => state.auth);
+  const { userLoggedIn, userRole: role, authChecked } = useSelector(
+    (state) => state.auth,
+  );
 
   return (
     <Routes>
       {routes.map((route, index) => {
-        console.log(route.path, role, route.role);
         if (
           userLoggedIn &&
           (route.path === "/auth/login" || route.path === "/auth/signup")
@@ -47,7 +48,7 @@ function MainRoutes() {
             <Route
               key={index}
               path={route.path}
-              element={<Navigate to="/profile/doctor/dashboard" />}
+              element={<Navigate to="/profile/doctor/dashboard" replace />}
             />
           );
         }
@@ -57,7 +58,7 @@ function MainRoutes() {
             <Route
               key={index}
               path={route.path}
-              element={<Navigate to="/profile/admin/dashboard" />}
+              element={<Navigate to="/profile/admin/dashboard" replace />}
             />
           );
         }
@@ -67,7 +68,7 @@ function MainRoutes() {
             <Route
               key={index}
               path={route.path}
-              element={<Navigate to="/" />}
+              element={<Navigate to="/" replace />}
             />
           );
         }
@@ -78,6 +79,7 @@ function MainRoutes() {
             element={route.element}
             userLoggedIn={userLoggedIn}
             userRole={role}
+            authChecked={authChecked}
             requiredRole={route.role}
           />
         ) : (
@@ -93,7 +95,7 @@ function MainRoutes() {
                     <Route
                       key={childIndex}
                       path={child.path}
-                      element={<Navigate to="/profile/details" />}
+                      element={<Navigate to="/profile/details" replace />}
                     />
                   );
                 }
@@ -103,6 +105,7 @@ function MainRoutes() {
                     element={child.element}
                     userLoggedIn={userLoggedIn}
                     userRole={role}
+                    authChecked={authChecked}
                     requiredRole={child.role}
                   />
                 ) : (

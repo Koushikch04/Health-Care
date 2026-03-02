@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { baseURL } from "../../api/api";
+import { baseURL, fetchJson, fetchWithTimeout } from "../../api/api";
 import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx";
 import styles from "./Admins.module.css";
+import ErrorState from "../UI/States/ErrorState";
+import EmptyState from "../UI/States/EmptyState";
+import CardListSkeleton from "../UI/States/CardListSkeleton";
 
 const INITIAL_ADMIN = {
   firstName: "",
@@ -38,33 +41,38 @@ function Admins() {
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [formAdmin, setFormAdmin] = useState(INITIAL_ADMIN);
 
-  /* ================= FETCH ================= */
-  const fetchAdmins = async () => {
+  const fetchAdmins = useCallback(async () => {
+    if (!token) {
+      setAdmins([]);
+      setFilteredAdmins([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(`${baseURL}/admin/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error("Failed to fetch admins");
-
-      const data = await res.json();
-      setAdmins(data.admins);
-      setFilteredAdmins(data.admins);
+      const data = await fetchJson(
+        `${baseURL}/admin/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+        { timeoutMs: 15000, errorMessage: "Failed to fetch admins." },
+      );
+      setAdmins(data?.admins || []);
+      setFilteredAdmins(data?.admins || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchAdmins();
-  }, [token]);
+  }, [fetchAdmins]);
 
-  /* ================= FILTER ================= */
   const applyFilters = () => {
     const filtered = admins.filter((admin) =>
       `${admin.firstName} ${admin.lastName}`
@@ -76,12 +84,10 @@ function Admins() {
     setCurrentPage(1);
   };
 
-  /* ================= PAGINATION ================= */
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentAdmins = filteredAdmins.slice(indexOfFirstPost, indexOfLastPost);
 
-  /* ================= MODALS ================= */
   const openViewModal = (admin) => {
     setSelectedAdmin(admin);
     setIsViewModalOpen(true);
@@ -110,7 +116,6 @@ function Admins() {
     setIsFormModalOpen(true);
   };
 
-  /* ================= FORM ================= */
   const handlePermissionChange = (e) => {
     const { name, checked } = e.target;
     setFormAdmin((prev) => ({
@@ -144,12 +149,11 @@ function Admins() {
     const url = isEditMode
       ? `${baseURL}/admin/${selectedAdmin._id}/permissions`
       : `${baseURL}/admin/create`;
-
     const method = isEditMode ? "PUT" : "POST";
-
     const payload = isEditMode
       ? { permissions: formAdmin.permissions }
       : formAdmin;
+
     const previousAdmins = admins;
     const previousFilteredAdmins = filteredAdmins;
 
@@ -188,17 +192,20 @@ function Admins() {
     setError(null);
 
     try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const res = await fetchWithTimeout(
+        url,
+        {
+          method,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+        15000,
+      );
 
       if (!res.ok) throw new Error("Failed to save admin");
-
       await fetchAdmins();
     } catch (err) {
       setAdmins(previousAdmins);
@@ -207,23 +214,26 @@ function Admins() {
     }
   };
 
-  /* ================= DELETE ================= */
   const handleDeleteAdmin = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this admin? This action cannot be undone.",
     );
-
     if (!confirmed) return;
+
     const previousAdmins = admins;
     const previousFilteredAdmins = filteredAdmins;
     setAdmins((prev) => prev.filter((admin) => admin._id !== id));
     setFilteredAdmins((prev) => prev.filter((admin) => admin._id !== id));
 
     try {
-      const res = await fetch(`${baseURL}/admin/delete/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetchWithTimeout(
+        `${baseURL}/admin/delete/${id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+        15000,
+      );
 
       if (!res.ok) throw new Error("Failed to delete admin");
     } catch (err) {
@@ -233,7 +243,6 @@ function Admins() {
     }
   };
 
-  /* ================= RENDER ================= */
   return (
     <div className={styles.AdminsContainer}>
       <h2 className={styles.title}>Admin Management</h2>
@@ -249,36 +258,46 @@ function Admins() {
         <button onClick={openCreateModal}>+ Add New Admin</button>
       </div>
 
-      {loading && <p className={styles.loading}>Loading Admins...</p>}
-      {error && <p className={styles.error}>{error}</p>}
+      {error && !isFormModalOpen && !isViewModalOpen && (
+        <ErrorState
+          title="Could not load admins"
+          message={error}
+          onRetry={fetchAdmins}
+        />
+      )}
+
+      {!error && loading && <CardListSkeleton rows={5} withAvatar={false} />}
 
       {!loading && !error && (
         <>
           <div className={styles.admins}>
-            {currentAdmins.length === 0 && (
-              <p className={styles.noAdmins}>No Admins found.</p>
+            {currentAdmins.length === 0 ? (
+              <EmptyState
+                title="No admins found"
+                message="Try changing the filters or add a new admin."
+              />
+            ) : (
+              currentAdmins.map((admin) => (
+                <div key={admin._id} className={styles.adminCard}>
+                  <div className={styles.adminInfo}>
+                    <p className={styles.name}>
+                      {admin.firstName} {admin.lastName}
+                    </p>
+                    <p className={styles.email}>{admin.email}</p>
+                  </div>
+
+                  <div className={styles.adminActions}>
+                    <button onClick={() => openViewModal(admin)}>
+                      View Details
+                    </button>
+                    <button onClick={() => openEditModal(admin)}>Edit</button>
+                    <button onClick={() => handleDeleteAdmin(admin._id)}>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
-
-            {currentAdmins.map((admin) => (
-              <div key={admin._id} className={styles.adminCard}>
-                <div className={styles.adminInfo}>
-                  <p className={styles.name}>
-                    {admin.firstName} {admin.lastName}
-                  </p>
-                  <p className={styles.email}>{admin.email}</p>
-                </div>
-
-                <div className={styles.adminActions}>
-                  <button onClick={() => openViewModal(admin)}>
-                    View Details
-                  </button>
-                  <button onClick={() => openEditModal(admin)}>Edit</button>
-                  <button onClick={() => handleDeleteAdmin(admin._id)}>
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
 
           <Pagination
@@ -290,7 +309,6 @@ function Admins() {
         </>
       )}
 
-      {/* VIEW MODAL */}
       {isViewModalOpen && selectedAdmin && (
         <Modal onClose={() => setIsViewModalOpen(false)}>
           <div className={styles.modalContent}>
@@ -309,21 +327,18 @@ function Admins() {
                   <td>Permissions</td>
                 </tr>
 
-                {Object.entries(selectedAdmin.permissions).map(
-                  ([key, value]) => (
-                    <tr key={key}>
-                      <th>{key}</th>
-                      <td>{value ? "true" : "false"}</td>
-                    </tr>
-                  ),
-                )}
+                {Object.entries(selectedAdmin.permissions).map(([key, value]) => (
+                  <tr key={key}>
+                    <th>{key}</th>
+                    <td>{value ? "true" : "false"}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </Modal>
       )}
 
-      {/* CREATE / EDIT MODAL */}
       {isFormModalOpen && (
         <Modal onClose={() => setIsFormModalOpen(false)}>
           <h2>{isEditMode ? "Edit Admin" : "Add New Admin"}</h2>
@@ -394,6 +409,7 @@ function Admins() {
             <button type="button" onClick={handleSaveAdmin}>
               {isEditMode ? "Update Admin" : "Add Admin"}
             </button>
+            {error && <p className={styles.error}>{error}</p>}
           </form>
         </Modal>
       )}

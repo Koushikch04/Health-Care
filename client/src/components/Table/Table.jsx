@@ -7,8 +7,9 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import "./Table.css";
-import TableSpinner from "../Spinners/TableSpinner";
 import Pagination from "../DoctorListPagination/Pagination";
+import TableSkeleton from "../UI/States/TableSkeleton";
+import EmptyState from "../UI/States/EmptyState";
 
 // Function to create styles based on the status
 const makeStyle = (status) => {
@@ -65,7 +66,7 @@ const DynamicTable = ({
       <div className="tableBodyShell">
         {loading ? (
           <div className="tableState">
-            <TableSpinner />
+            <TableSkeleton rows={rowsPerPage} columns={headers.length} />
           </div>
         ) : (
           <TableContainer
@@ -91,7 +92,10 @@ const DynamicTable = ({
                 {rows.length === 0 ? (
                   <TableRow>
                     <TableCell align="center" colSpan={headers.length}>
-                      {emptyMessage}
+                      <EmptyState
+                        title="No records found"
+                        message={emptyMessage}
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (

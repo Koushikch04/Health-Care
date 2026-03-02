@@ -9,13 +9,23 @@ const isRoleAllowed = (requiredRole, userRole) => {
   return userRole === requiredRole;
 };
 
-function ProtectedRoute({ element, userLoggedIn, userRole, requiredRole }) {
+function ProtectedRoute({
+  element,
+  userLoggedIn,
+  userRole,
+  requiredRole,
+  authChecked,
+}) {
+  if (!authChecked) {
+    return null;
+  }
+
   if (!userLoggedIn) {
-    return <Navigate to="/auth/login" />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   if (requiredRole && !isRoleAllowed(requiredRole, userRole)) {
-    return <Navigate to="/profile/details" />;
+    return <Navigate to="/profile/details" replace />;
   }
 
   return element;

@@ -1,0 +1,134 @@
+.stateBox {
+  width: 100%;
+  max-width: 720px;
+  margin: 1rem auto;
+  padding: 1.15rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-bg);
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.stateBox h3 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.stateBox p {
+  margin: 0.55rem 0 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.stateBox button {
+  margin-top: 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stateBox button:hover {
+  background: var(--primary-color-dark);
+}
+
+.stateBoxError {
+  border-color: #f4b9b9;
+  background: #fff5f5;
+}
+
+.skeletonWrap {
+  width: 100%;
+}
+
+.skeletonBlock {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e8edf7;
+}
+
+.skeletonBlock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  animation: shimmer 1.25s infinite;
+}
+
+.tableSkeleton {
+  width: 100%;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 0.8rem;
+  background: var(--surface-card);
+}
+
+.tableHeaderRow,
+.tableDataRow {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.tableHeaderRow {
+  margin-bottom: 0.65rem;
+}
+
+.tableDataRow {
+  margin-top: 0.55rem;
+}
+
+.cardSkeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cardSkeleton {
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface-bg);
+  padding: 0.8rem;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 220px;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.cardBody {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cardActions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 768px) {
+  .tableHeaderRow,
+  .tableDataRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cardSkeleton {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .cardActions {
+    grid-column: 1 / -1;
+  }
+}

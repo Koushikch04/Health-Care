@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styles from "./Appointments.module.css";
-import { baseURL } from "../../api/api";
+import { baseURL, fetchJson } from "../../api/api";
 import AppointmentDetails from "./AppointmentDetails.jsx";
-import TableSpinner from "../Spinners/TableSpinner.jsx";
 import Pagination from "../DoctorListPagination/Pagination.jsx";
+import ErrorState from "../UI/States/ErrorState";
+import EmptyState from "../UI/States/EmptyState";
+import TableSkeleton from "../UI/States/TableSkeleton";
 
 function Appointments() {
   const token = useSelector((state) => state.auth.userToken);
@@ -19,30 +21,39 @@ function Appointments() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 8;
 
-  useEffect(() => {
-    const getAppointments = async () => {
-      if (!token) return;
-      try {
-        const data = await fetch(`${baseURL}/admin/appointments`, {
+  const getAppointments = useCallback(async () => {
+    if (!token) {
+      setAppointments([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const appointmentsData = await fetchJson(
+        `${baseURL}/admin/appointments`,
+        {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        });
-        const appointmentsData = await data.json();
-        console.log(appointmentsData);
-
-        setAppointments(appointmentsData);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getAppointments();
-    console.log("Hello");
+        },
+        { timeoutMs: 15000, errorMessage: "Failed to load appointments." },
+      );
+      setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
+    } catch (fetchError) {
+      setError(fetchError.message);
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
+
+  useEffect(() => {
+    getAppointments();
+  }, [getAppointments]);
 
   const sortedAppointments = [...appointments].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -65,7 +76,7 @@ function Appointments() {
 
   const getSortIndicator = (key) => {
     if (sortConfig.key === key) {
-      return sortConfig.direction === "ascending" ? " ▲" : " ▼";
+      return sortConfig.direction === "ascending" ? " ^" : " v";
     }
     return "";
   };
@@ -81,7 +92,6 @@ function Appointments() {
   };
 
   const handleRescheduleAppointment = (updatedAppointment) => {
-    console.log("Updated appointment:", updatedAppointment);
     setAppointments((prevAppointments) =>
       prevAppointments.map((appointment) =>
         appointment._id === updatedAppointment._id
@@ -106,13 +116,23 @@ function Appointments() {
     indexOfLastPost,
   );
 
-  if (loading)
+  if (loading) {
     return (
       <div className={styles.spinnerContainer}>
-        <TableSpinner message="loading appointments..." />
+        <TableSkeleton />
       </div>
     );
-  if (error) return <p>Error: {error}</p>;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Could not load appointments"
+        message={error}
+        onRetry={getAppointments}
+      />
+    );
+  }
 
   return (
     <div className={styles.appointmentsContainer}>
@@ -155,9 +175,7 @@ function Appointments() {
                       <td>{appointment.patientName}</td>
                       <td>
                         <span
-                          className={`${styles.status} ${
-                            styles[appointment.status]
-                          }`}
+                          className={`${styles.status} ${styles[appointment.status]}`}
                         >
                           {appointment.status}
                         </span>
@@ -183,7 +201,10 @@ function Appointments() {
           </div>
         </>
       ) : (
-        <p>No appointments found.</p>
+        <EmptyState
+          title="No appointments found"
+          message="There are no appointment records to display."
+        />
       )}
 
       {selectedAppointment && (

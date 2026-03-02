@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styles from "./Appointments.module.css";
-import { baseURL } from "../../api/api";
+import { baseURL, fetchJson } from "../../api/api";
 import DoctorAppointmentDetails from "./DoctorAppointmentDetails.jsx";
-import TableSpinner from "../Spinners/TableSpinner.jsx";
 import Pagination from "../DoctorListPagination/Pagination.jsx";
+import ErrorState from "../UI/States/ErrorState";
+import EmptyState from "../UI/States/EmptyState";
+import TableSkeleton from "../UI/States/TableSkeleton";
 
 function DoctorAppointments() {
   const token = useSelector((state) => state.auth.userToken);
   const role = useSelector((state) => state.auth.userRole);
-
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,29 +22,39 @@ function DoctorAppointments() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 8;
 
-  let url = `${baseURL}/doctor/appointment`;
+  const getAppointments = useCallback(async () => {
+    if (!token) {
+      setAppointments([]);
+      setLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    const getAppointments = async () => {
-      if (!token) return;
-      try {
-        const data = await fetch(url, {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const appointmentsData = await fetchJson(
+        `${baseURL}/doctor/appointment`,
+        {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        });
-        const appointmentsData = await data.json();
-        setAppointments(appointmentsData);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getAppointments();
+        },
+        { timeoutMs: 15000, errorMessage: "Failed to load appointments." },
+      );
+      setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
+    } catch (fetchError) {
+      setError(fetchError.message);
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
+
+  useEffect(() => {
+    getAppointments();
+  }, [getAppointments]);
 
   const sortedAppointments = [...appointments].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -66,7 +77,7 @@ function DoctorAppointments() {
 
   const getSortIndicator = (key) => {
     if (sortConfig.key === key) {
-      return sortConfig.direction === "ascending" ? " ▲" : " ▼";
+      return sortConfig.direction === "ascending" ? " ^" : " v";
     }
     return "";
   };
@@ -81,8 +92,8 @@ function DoctorAppointments() {
       prevAppointments.map((appointment) =>
         appointment._id === id
           ? { ...appointment, status: nextStatus }
-          : appointment
-      )
+          : appointment,
+      ),
     );
   };
 
@@ -98,16 +109,26 @@ function DoctorAppointments() {
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentAppointments = sortedAppointments.slice(
     indexOfFirstPost,
-    indexOfLastPost
+    indexOfLastPost,
   );
 
-  if (loading)
+  if (loading) {
     return (
       <div className={styles.spinnerContainer}>
-        <TableSpinner message="loading appointments..." />
+        <TableSkeleton />
       </div>
     );
-  if (error) return <p>Error: {error}</p>;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Could not load appointments"
+        message={error}
+        onRetry={getAppointments}
+      />
+    );
+  }
 
   return (
     <div className={styles.appointmentsContainer}>
@@ -123,7 +144,7 @@ function DoctorAppointments() {
                 <th onClick={() => requestSort("time")}>
                   Time{getSortIndicator("time")}
                 </th>
-                {role == "user" && (
+                {role === "user" && (
                   <th onClick={() => requestSort("doctor.name")}>
                     Doctor{getSortIndicator("doctor.name")}
                   </th>
@@ -143,7 +164,7 @@ function DoctorAppointments() {
                   <tr key={appointment._id}>
                     <td>{new Date(appointment.date).toLocaleDateString()}</td>
                     <td>{appointment.time}</td>
-                    {role == "user" && (
+                    {role === "user" && (
                       <td>
                         {appointment.doctor.name.firstName +
                           " " +
@@ -153,9 +174,7 @@ function DoctorAppointments() {
                     <td>{appointment.patientName}</td>
                     <td>
                       <span
-                        className={`${styles.status} ${
-                          styles[appointment.status]
-                        }`}
+                        className={`${styles.status} ${styles[appointment.status]}`}
                       >
                         {formatStatusLabel(appointment.status)}
                       </span>
@@ -178,7 +197,10 @@ function DoctorAppointments() {
           />
         </div>
       ) : (
-        <p>No appointments found.</p>
+        <EmptyState
+          title="No appointments yet"
+          message="There are no appointments available right now."
+        />
       )}
 
       {selectedAppointment && (
