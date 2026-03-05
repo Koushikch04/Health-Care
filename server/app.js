@@ -3,6 +3,8 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
 
 import authRoutes from "./routes/auth.js";
 import doctorRoutes from "./routes/doctor.js";
@@ -44,7 +46,14 @@ export const createApp = () => {
   const __dirname = path.dirname(__filename);
 
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: false,
+    }),
+  );
   app.use(express.json());
+  app.use(mongoSanitize());
 
   const globalApiLimiter = rateLimit({
     windowMs: Number(process.env.GLOBAL_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
