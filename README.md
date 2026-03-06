@@ -22,6 +22,12 @@ To seed realistic mock data after containers are up:
 docker compose exec server npm run seed
 ```
 
+To use a custom seeded account password:
+
+```bash
+docker compose exec -e SEED_DEFAULT_PASSWORD=YourStrongPassword server npm run seed
+```
+
 Use npm run seed to populate the database with realistic clinical data.
 By default, seeding runs only when the database is empty.
 

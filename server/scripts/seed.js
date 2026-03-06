@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 
@@ -14,7 +15,6 @@ dotenv.config();
 
 const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/HealthCare";
 const SEED_DOMAIN = "@seed.healthcare.local";
-const DEFAULT_PASSWORD = "Seed@123";
 const FORCE_SEED = String(process.env.FORCE_SEED || "").toLowerCase() === "true";
 
 const FIRST_NAMES = [
@@ -441,7 +441,11 @@ const run = async () => {
       await clearPreviousSeedData();
     }
 
-    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+    const seedPassword =
+      process.env.SEED_DEFAULT_PASSWORD?.trim() ||
+      crypto.randomBytes(12).toString("base64url");
+
+    const passwordHash = await bcrypt.hash(seedPassword, 10);
     const specialties = await createSpecialties();
     await createAdmin(passwordHash);
     const doctors = await createDoctors(specialties, passwordHash);
@@ -461,8 +465,8 @@ const run = async () => {
     );
 
     console.log("[seed] Completed.");
-    console.log(`[seed] Admin login: seed.admin${SEED_DOMAIN} / ${DEFAULT_PASSWORD}`);
-    console.log(`[seed] Doctor/User password for all seed accounts: ${DEFAULT_PASSWORD}`);
+    console.log(`[seed] Admin login: seed.admin${SEED_DOMAIN} / ${seedPassword}`);
+    console.log(`[seed] Doctor/User password for all seed accounts: ${seedPassword}`);
     console.log(`[seed] Specialties: ${specialties.length}`);
     console.log(`[seed] Doctors: ${doctors.length}`);
     console.log(`[seed] Users: ${users.length}`);
