@@ -6,6 +6,7 @@ import styles from "./ProfileDetails.module.css";
 import { baseURL } from "../api/api";
 import { authActions } from "../store/auth/auth-slice";
 import CircularSpinner from "../components/Spinners/CircularSpinner";
+import { DEFAULT_PROFILE_IMAGE, resolveImageUrl } from "../utils/image";
 
 const ProfileDetails = () => {
   const userInfo = useSelector((state) => state.auth.userInfo);
@@ -15,10 +16,10 @@ const ProfileDetails = () => {
 
   const dispatch = useDispatch();
   const { alert } = useAlert();
-  const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
+  const profileLink = resolveImageUrl(profileImage, null);
 
   const [uploadedImage, setUploadedImage] = useState(
-    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png"
+    profileLink || DEFAULT_PROFILE_IMAGE
   );
   const [firstName, setFirstName] = useState(name.firstName);
   const [lastName, setLastName] = useState(name.lastName);
@@ -115,7 +116,8 @@ const ProfileDetails = () => {
               firstName,
               lastName,
             },
-            profileImage: data.updatedProfileImage || profileImage,
+            profileImage:
+              data?.updatedProfileImage || data?.user?.profileImage || profileImage,
           })
         );
       } else {
@@ -142,8 +144,8 @@ const ProfileDetails = () => {
   };
 
   const handleReset = () => {
-    setUploadedImage(
-      profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png"
+      setUploadedImage(
+      profileLink || DEFAULT_PROFILE_IMAGE
     );
     const fileInput = document.querySelector("input[type='file']");
     if (fileInput) {
@@ -158,7 +160,7 @@ const ProfileDetails = () => {
           <img
             src={
               uploadedImage ||
-              "https://bootdey.com/img/Content/avatar/avatar1.png"
+              DEFAULT_PROFILE_IMAGE
             }
             alt="Profile"
             className={styles.ui_w_80}
