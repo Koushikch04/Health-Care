@@ -1,5 +1,6 @@
 import Account from "../models/Account.js";
 import UserProfile from "../models/UserProfile.js";
+import { isCloudinaryConfigured, uploadImageBuffer } from "../utils/cloudinary.js";
 
 export const updateProfile = async (req, res) => {
   const { firstName, lastName } = req.body;
@@ -32,12 +33,25 @@ export const updateProfile = async (req, res) => {
     user.name.lastName = lastName;
 
     if (req.file) {
-      user.profileImage = req.file.path;
+      if (!isCloudinaryConfigured()) {
+        return res.status(500).json({ msg: "Image upload service is not configured." });
+      }
+
+      const uploadResult = await uploadImageBuffer(req.file.buffer, {
+        mimeType: req.file.mimetype,
+        publicId: `user-${user._id}-${Date.now()}`,
+      });
+
+      user.profileImage = uploadResult.secureUrl;
     }
 
     await user.save();
 
-    res.status(200).json({ msg: "Profile updated successfully", user });
+    res.status(200).json({
+      msg: "Profile updated successfully",
+      user,
+      updatedProfileImage: user.profileImage,
+    });
   } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({ msg: "Error updating profile" });

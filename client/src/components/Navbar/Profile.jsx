@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom"; // Import Link from react-router-dom
 
 import styles from "./Profile.module.css";
-import { baseURL } from "../../api/api";
 import { logoutUser } from "../../store/auth/auth-actions";
 import useAlert from "../../hooks/useAlert";
+import { DEFAULT_PROFILE_IMAGE, resolveImageUrl } from "../../utils/image";
 
 function Profile() {
   const [toggleMenu, setToggleMenu] = useState(false);
@@ -17,9 +17,8 @@ function Profile() {
   const navigate = useNavigate();
   const logoutInProgressRef = useRef(false);
 
-  const profileLink = profileImage ? `${baseURL}/${profileImage}` : null;
-  const uploadedImage =
-    profileLink || "https://bootdey.com/img/Content/avatar/avatar1.png";
+  const profileLink = resolveImageUrl(profileImage, null);
+  const uploadedImage = profileLink || DEFAULT_PROFILE_IMAGE;
 
   const menuRef = useRef(null);
   const dispatch = useDispatch();
@@ -63,7 +62,7 @@ function Profile() {
       <img
         className={styles.avatar}
         src={
-          uploadedImage || "https://bootdey.com/img/Content/avatar/avatar1.png"
+          uploadedImage || DEFAULT_PROFILE_IMAGE
         }
         alt="User avatar"
         onClick={() => setToggleMenu((prev) => !prev)}

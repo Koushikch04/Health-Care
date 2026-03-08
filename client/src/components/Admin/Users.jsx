@@ -8,6 +8,7 @@ import Pagination from "../DoctorListPagination/Pagination.jsx";
 import Modal from "../UI/Modal/Modal.jsx";
 import styles from "./Users.module.css";
 import TableSpinner from "../Spinners/TableSpinner.jsx";
+import { resolveImageUrl } from "../../utils/image";
 
 const createUserSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required."),
@@ -510,7 +511,7 @@ function Users() {
               currentUsers.map((user) => (
                 <div key={user._id} className={styles.userCard}>
                   <img
-                    src={`${baseURL}/${user.profileImage}`}
+                    src={resolveImageUrl(user.profileImage)}
                     alt={`${user.name.firstName}'s profile`}
                     className={styles.profileImage}
                   />
