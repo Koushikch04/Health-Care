@@ -91,5 +91,8 @@ const doctorProfileSchema = new Schema(
   { timestamps: true }
 );
 
+doctorProfileSchema.index({ isDeleted: 1, createdAt: -1 });
+doctorProfileSchema.index({ isDeleted: 1, specialty: 1, createdAt: -1 });
+
 const DoctorProfile = mongoose.model("DoctorProfile", doctorProfileSchema);
 export default DoctorProfile;

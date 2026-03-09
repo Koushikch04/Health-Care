@@ -11,7 +11,7 @@ import { validateRequest } from "../middleware/requestValidation.js";
 import { doctorSchemas } from "../validation/schemas.js";
 
 const router = express.Router();
-router.get("/", validateRequest(doctorSchemas.noInput), getDoctors);
+router.get("/", validateRequest(doctorSchemas.getDoctors), getDoctors);
 router.get(
   "/specialty/:id",
   validateRequest(doctorSchemas.getDoctorsBySpecialty),
