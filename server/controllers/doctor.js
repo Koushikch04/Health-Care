@@ -8,7 +8,7 @@ import Specialty from "../models/Specialty.js";
 import {
   buildDoctorCatalogCacheKey,
   getDoctorCatalogFromCache,
-  invalidateAllDoctorCatalogCache,
+  invalidateDoctorCatalogListings,
   invalidateDoctorCatalogByDoctorId,
   setDoctorCatalogCache,
 } from "../services/doctorCatalogCacheService.js";
@@ -171,7 +171,7 @@ export const createDoctor = async (req, res) => {
     const savedDoctor = await newDoctor.save({ session });
     await session.commitTransaction();
 
-    await invalidateAllDoctorCatalogCache();
+    await invalidateDoctorCatalogListings();
     res.status(201).json(savedDoctor);
   } catch (error) {
     if (session.inTransaction()) {
@@ -296,7 +296,7 @@ export const deleteDoctor = async (req, res) => {
     ]);
 
     await session.commitTransaction();
-    await invalidateDoctorCatalogByDoctorId(id);
+    await invalidateDoctorCatalogListings();
     res.status(200).json({ message: "Doctor deleted successfully" });
   } catch (error) {
     if (session.inTransaction()) {

@@ -158,3 +158,5 @@ export const invalidateAllDoctorCatalogCache = async () => {
     );
   }
 };
+
+export const invalidateDoctorCatalogListings = invalidateAllDoctorCatalogCache;
