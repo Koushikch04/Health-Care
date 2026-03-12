@@ -5,21 +5,83 @@ import Appointment from "../models/Appointment.js";
 import Account from "../models/Account.js";
 import DoctorProfile from "../models/DoctorProfile.js";
 import Specialty from "../models/Specialty.js";
+import {
+  buildDoctorCatalogCacheKey,
+  getDoctorCatalogFromCache,
+  invalidateDoctorCatalogListings,
+  invalidateDoctorCatalogByDoctorId,
+  setDoctorCatalogCache,
+} from "../services/doctorCatalogCacheService.js";
 import { getUtcDayBounds } from "../utils/date.js";
+import { buildPaginationMeta, normalizePagination } from "../utils/pagination.js";
+
+const mapDoctorPayload = (doctor) => ({
+  ...doctor,
+  rating: doctor.rating?.average ?? 0,
+});
 
 //Get all doctors
 export const getDoctors = async (req, res) => {
+  const { specialtyId, page, limit } = req.query;
+  const isPaginationRequested = page !== undefined || limit !== undefined;
+
   try {
-    const doctors = await DoctorProfile.find({
+    const baseQuery = {
       isDeleted: { $ne: true },
-    }).populate("specialty");
-    const response = doctors.map((doctor) => ({
-      ...doctor.toObject(),
-      rating: doctor.rating?.average ?? 0,
-    }));
-    res.status(200).json(response);
+      ...(specialtyId ? { specialty: specialtyId } : {}),
+    };
+
+    if (!isPaginationRequested) {
+      const doctors = await DoctorProfile.find(baseQuery)
+        .populate("specialty")
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const response = doctors.map(mapDoctorPayload);
+      return res.status(200).json(response);
+    }
+
+    const pagination = normalizePagination({ page, limit });
+    const cacheQueryPayload = {
+      specialtyId: specialtyId || null,
+      page: pagination.page,
+      limit: pagination.limit,
+    };
+    const cacheKey = buildDoctorCatalogCacheKey(cacheQueryPayload);
+    const cachedPayload = await getDoctorCatalogFromCache(cacheKey);
+    if (cachedPayload) {
+      return res.status(200).json(cachedPayload);
+    }
+
+    const [total, doctors] = await Promise.all([
+      DoctorProfile.countDocuments(baseQuery),
+      DoctorProfile.find(baseQuery)
+        .populate("specialty")
+        .sort({ createdAt: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit)
+        .lean(),
+    ]);
+
+    const response = doctors.map(mapDoctorPayload);
+    const payload = {
+      data: response,
+      pagination: buildPaginationMeta({
+        page: pagination.page,
+        limit: pagination.limit,
+        total,
+      }),
+    };
+
+    await setDoctorCatalogCache({
+      cacheKey,
+      payload,
+      doctorIds: doctors.map((doctor) => doctor._id?.toString()),
+    });
+
+    return res.status(200).json(payload);
   } catch (error) {
-    res.status(500).json({ message: "Error retrieving doctors", error });
+    return res.status(500).json({ message: "Error retrieving doctors", error });
   }
 };
 
@@ -36,13 +98,11 @@ export const getDoctorsBySpecialty = async (req, res) => {
     const doctors = await DoctorProfile.find({
       specialty: specialtyId,
       isDeleted: { $ne: true },
-    }).populate(
-      "specialty"
-    );
-    const response = doctors.map((doctor) => ({
-      ...doctor.toObject(),
-      rating: doctor.rating?.average ?? 0,
-    }));
+    })
+      .populate("specialty")
+      .sort({ createdAt: -1 })
+      .lean();
+    const response = doctors.map(mapDoctorPayload);
     res.status(200).json(response);
   } catch (error) {
     res
@@ -111,6 +171,7 @@ export const createDoctor = async (req, res) => {
     const savedDoctor = await newDoctor.save({ session });
     await session.commitTransaction();
 
+    await invalidateDoctorCatalogListings();
     res.status(201).json(savedDoctor);
   } catch (error) {
     if (session.inTransaction()) {
@@ -188,6 +249,7 @@ export const updateDoctor = async (req, res) => {
       );
     }
     await session.commitTransaction();
+    await invalidateDoctorCatalogByDoctorId(id);
     res.status(200).json(updatedDoctor);
   } catch (error) {
     if (session.inTransaction()) {
@@ -234,6 +296,7 @@ export const deleteDoctor = async (req, res) => {
     ]);
 
     await session.commitTransaction();
+    await invalidateDoctorCatalogListings();
     res.status(200).json({ message: "Doctor deleted successfully" });
   } catch (error) {
     if (session.inTransaction()) {

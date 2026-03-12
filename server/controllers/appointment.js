@@ -16,6 +16,7 @@ import {
   getAvailableSlotsWithContext,
   rebuildAvailabilitySnapshotForDoctorDay,
 } from "../services/appointmentService.js";
+import { buildPaginationMeta, normalizePagination } from "../utils/pagination.js";
 
 const getUserProfileId = async (req) => {
   if (req.user?.profileId) return req.user.profileId;
@@ -129,7 +130,8 @@ export const createAppointment = async (req, res) => {
 };
 
 export const getUserAppointments = async (req, res) => {
-  const { status } = req.query;
+  const { status, page, limit } = req.query;
+  const isPaginationRequested = page !== undefined || limit !== undefined;
   const validStatuses = [
     APPOINTMENT_STATUSES.SCHEDULED,
     APPOINTMENT_STATUSES.COMPLETED,
@@ -148,18 +150,61 @@ export const getUserAppointments = async (req, res) => {
       }
       query.status = status;
     }
-    const appointments = await Appointment.find(query)
-      .populate({
-        path: "doctor",
-        select: "name experience rating specialty",
-        populate: {
-          path: "specialty",
-          model: "Specialty",
-          select: "name",
-        },
-      })
-      .sort({ createdAt: -1 });
-    // console.log(appointments);
+    let appointments = [];
+    let total = 0;
+
+    if (!isPaginationRequested) {
+      appointments = await Appointment.find(query)
+        .populate({
+          path: "doctor",
+          select: "name experience rating specialty",
+          populate: {
+            path: "specialty",
+            model: "Specialty",
+            select: "name",
+          },
+        })
+        .sort({ createdAt: -1 });
+    } else {
+      const pagination = normalizePagination({ page, limit });
+      [total, appointments] = await Promise.all([
+        Appointment.countDocuments(query),
+        Appointment.find(query)
+          .populate({
+            path: "doctor",
+            select: "name experience rating specialty",
+            populate: {
+              path: "specialty",
+              model: "Specialty",
+              select: "name",
+            },
+          })
+          .sort({ createdAt: -1 })
+          .skip(pagination.skip)
+          .limit(pagination.limit),
+      ]);
+
+      const response = appointments.map((appointment) => {
+        const doctor = appointment.doctor?.toObject
+          ? appointment.doctor.toObject()
+          : appointment.doctor;
+        return {
+          ...appointment.toObject(),
+          doctor: doctor
+            ? { ...doctor, rating: doctor.rating?.average ?? 0 }
+            : doctor,
+        };
+      });
+
+      return res.status(200).json({
+        data: response,
+        pagination: buildPaginationMeta({
+          page: pagination.page,
+          limit: pagination.limit,
+          total,
+        }),
+      });
+    }
 
     const response = appointments.map((appointment) => {
       const doctor = appointment.doctor?.toObject

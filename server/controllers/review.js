@@ -4,6 +4,7 @@ import DoctorProfile from "../models/DoctorProfile.js";
 import UserProfile from "../models/UserProfile.js";
 import Specialty from "../models/Specialty.js";
 import mongoose from "mongoose";
+import { invalidateDoctorCatalogByDoctorId } from "../services/doctorCatalogCacheService.js";
 
 const getUserProfileId = async (req) => {
   if (req.user?.profileId) return req.user.profileId;
@@ -128,6 +129,7 @@ const createReview = async (req, res) => {
     }
 
     await session.commitTransaction();
+    await invalidateDoctorCatalogByDoctorId(doctorId);
     return res.status(201).json({ message: "Review added successfully.", appointment: appointmentForUpdate });
   } catch (error) {
     if (session.inTransaction()) {

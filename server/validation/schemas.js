@@ -7,6 +7,10 @@ const email = Joi.string().email().trim().lowercase();
 const nonEmptyString = Joi.string().trim().min(1);
 const flexibleDate = Joi.alternatives().try(Joi.date().iso(), Joi.date());
 const adminPermissions = Joi.array().items(Joi.string().trim().min(1));
+const paginationQuery = Joi.object({
+  page: Joi.number().integer().min(1).optional(),
+  limit: Joi.number().integer().min(1).max(50).optional(),
+});
 
 export const authSchemas = {
   registerUser: {
@@ -82,7 +86,7 @@ export const appointmentSchemas = {
   },
   getUserAppointments: {
     body: Joi.object({}),
-    query: Joi.object({
+    query: paginationQuery.keys({
       status: Joi.string().valid("scheduled", "completed", "canceled").optional(),
     }),
     params: Joi.object({}),
@@ -120,6 +124,13 @@ export const doctorSchemas = {
   noInput: {
     body: Joi.object({}),
     query: Joi.object({}),
+    params: Joi.object({}),
+  },
+  getDoctors: {
+    body: Joi.object({}),
+    query: paginationQuery.keys({
+      specialtyId: objectId.optional(),
+    }),
     params: Joi.object({}),
   },
   getDoctorsBySpecialty: {

@@ -11,6 +11,7 @@ import Review from "../models/Review.js";
 import AdminProfile from "../models/AdminProfile.js";
 import InviteToken from "../models/InviteToken.js";
 import { normalizeToUtcDayStart } from "../utils/date.js";
+import { invalidateDoctorCatalogByDoctorId } from "../services/doctorCatalogCacheService.js";
 import sendInviteMail from "../middleware/sendInviteMail.js";
 import {
   APPOINTMENT_ACTIONS,
@@ -437,6 +438,7 @@ export const manageDoctorRegistration = async (req, res) => {
     if (!doctor) {
       return res.status(404).json({ error: "Doctor not found" });
     }
+    await invalidateDoctorCatalogByDoctorId(doctor._id);
     res.status(200).json(doctor);
   } catch (err) {
     res.status(500).json({ error: err.message });

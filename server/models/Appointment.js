@@ -61,6 +61,9 @@ appointmentSchema.index(
     },
   }
 );
+appointmentSchema.index({ user: 1, createdAt: -1 });
+appointmentSchema.index({ user: 1, status: 1, createdAt: -1 });
+appointmentSchema.index({ doctor: 1, date: 1, createdAt: -1 });
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);
 export default Appointment;
